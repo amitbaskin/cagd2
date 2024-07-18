@@ -20,7 +20,7 @@ typedef struct
   curve_type type;
   UINT       order;
   point_vec  ctrl_pts;
-  double_vec    knots;
+  double_vec knots;
   GLubyte    color[3];
 } curve;
 

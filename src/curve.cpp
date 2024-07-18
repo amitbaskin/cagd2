@@ -23,9 +23,22 @@ void print_err( char *str )
 ******************************************************************************/
 void print_debug_curve_data( curve *curveData )
 {
-  printf( "Curve Type: %d\n", curveData->type );
+  char *curve_type = "none";
+  switch( curveData->type )
+  {
+  case CURVE_TYPE_BEZIER:
+    curve_type = "bezier";
+    break;
+  case CURVE_TYPE_BSPLINE:
+    curve_type = "bspline";
+    break;
+  default:
+    break;
+  }
+  printf( "Curve Type: %d (%s)\n", curveData->type, curve_type );
   printf( "Order: %u\n", curveData->order );
 
+  printf( "Number of knots: %u\n", curveData->knots.size() );
   if( !curveData->knots.empty() )
   {
     printf( "Knots: " );
@@ -48,6 +61,37 @@ void print_debug_curve_data( curve *curveData )
 }
 
 /******************************************************************************
+* rtrim  trim from start (in place)
+******************************************************************************/
+static inline void ltrim( std::string &s )
+{
+  s.erase( s.begin(), std::find_if( s.begin(), s.end(), []( unsigned char ch )
+  {
+    return !std::isspace( ch );
+  } ) );
+}
+
+/******************************************************************************
+* rtrim  trim from end (in place)
+******************************************************************************/
+static inline void rtrim( std::string &s )
+{
+  s.erase( std::find_if( s.rbegin(), s.rend(), []( unsigned char ch )
+  {
+    return !std::isspace( ch );
+  } ).base(), s.end() );
+}
+
+/******************************************************************************
+* trim
+******************************************************************************/
+static inline void trim( std::string &s )
+{
+  ltrim( s );
+  rtrim( s );
+}
+
+/******************************************************************************
 * skip_blank_lines_and_comments
 ******************************************************************************/
 void skip_blank_lines_and_comments( std::ifstream &file )
@@ -56,6 +100,7 @@ void skip_blank_lines_and_comments( std::ifstream &file )
   std::string line;
   while( std::getline( file, line ) )
   {
+    ltrim( line );
     if( line.empty() || line[0] == '#' )
     {
       lastPos = file.tellg(); // Record the position before reading the next line
@@ -76,7 +121,7 @@ curve *parse_file( const std::string &filePath )
   std::ifstream file( filePath, std::ios::binary ); // Open file in binary mode
   if( !file.is_open() )
   {
-    std::cerr << "Error opening file" << std::endl;
+    print_err( "Error opening file" );
     return nullptr;
   }
 
@@ -89,14 +134,16 @@ curve *parse_file( const std::string &filePath )
   std::string line;
   if( !std::getline( file, line ) )
   {
-    std::cerr << "Error reading file" << std::endl;
+    print_err( "Error reading file" );
     delete curveData;
     return nullptr;
   }
+
+  ltrim( line );
   std::istringstream issOrder( line );
   if( !( issOrder >> curveData->order ) )
   {
-    std::cerr << "Error reading order" << std::endl;
+    print_err( "Error reading order" );
     delete curveData;
     return nullptr;
   }
@@ -105,7 +152,7 @@ curve *parse_file( const std::string &filePath )
   skip_blank_lines_and_comments( file );
   if( !std::getline( file, line ) )
   {
-    std::cerr << "Error reading file" << std::endl;
+    print_err( "Error reading file" );
     delete curveData;
     return nullptr;
   }
@@ -120,25 +167,33 @@ curve *parse_file( const std::string &filePath )
     if( pos != std::string::npos && posEnd != std::string::npos && pos < posEnd )
     {
       std::string numKnotsStr = line.substr( pos + 1, posEnd - pos - 1 );
+      trim( numKnotsStr );
       int numKnots = std::stoi( numKnotsStr );
 
       // Extract the knots from subsequent lines until a blank or comment line
-      std::istringstream issLine( line.substr( posEnd + 3 ) ); // Start reading after "= "
+      std::string after_equal_sign = line.substr( posEnd + 3 );
+      ltrim( after_equal_sign );
+      std::istringstream issLine( after_equal_sign ); // Start reading after "= "
       double knot;
-      while( issLine >> knot )
+      while( issLine >> knot ) // reading knots after "= "
       {
         curveData->knots.push_back( knot );
         if( curveData->knots.size() == numKnots )
-        {
+        { 
           break;
         }
       }
 
       while( std::getline( file, line ) )
       {
+        ltrim( line );
+
         if( line.empty() || line[0] == '#' )
         {
-          continue; // Skip blank lines and comments
+          if( curveData->knots.size() != numKnots )
+            continue; // still looking for knots in the next line
+          else
+            break;
         }
 
         std::istringstream issLine( line );
@@ -159,7 +214,7 @@ curve *parse_file( const std::string &filePath )
     }
     else
     {
-      std::cerr << "Error parsing knots size" << std::endl;
+      print_err( "Error parsing knots size" );
       delete curveData;
       return nullptr;
     }
@@ -179,6 +234,7 @@ curve *parse_file( const std::string &filePath )
   // Read control points if not already parsed
   while( std::getline( file, line ) )
   {
+    ltrim( line );
     if( line.empty() || line[0] == '#' )
     {
       continue; // Skip blank lines and comments
@@ -218,9 +274,10 @@ void load_curve( int dummy1, int dummy2, void *p_data )
 {
   char *file_path = ( char * )p_data;
   std::string file_str = file_path;
-  curve *curve_data =  parse_file( file_str );
+  curve *curve_data = parse_file( file_str );
 
-  cur_curves.push_back( curve_data );
+  if( curve_data != nullptr )
+    cur_curves.push_back( curve_data );
 
   //TODO: display_curve
 }
@@ -230,4 +287,5 @@ void load_curve( int dummy1, int dummy2, void *p_data )
 ******************************************************************************/
 void save_curve( int dummy1, int dummy2, void *p_data )
 {
+  // TODO
 }
