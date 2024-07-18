@@ -4,8 +4,8 @@
 #include "resource.h"
 #include "color.h"
 
-char myBuffer[BUFSIZ];
-UINT myText;
+char myBuffer2[BUFSIZ];
+UINT myText2;
 
 extern void myMessage( PSTR title, PSTR message, UINT type );
 
@@ -47,7 +47,7 @@ LRESULT CALLBACK myDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM
   switch( LOWORD( wParam ) )
   {
   case IDOK:
-    GetDlgItemText( hDialog, IDC_EDIT, myBuffer, sizeof( myBuffer ) );
+    GetDlgItemText( hDialog, IDC_EDIT, myBuffer2, sizeof( myBuffer2 ) );
     EndDialog( hDialog, TRUE );
     return TRUE;
   case IDCANCEL:
@@ -78,7 +78,7 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
 void left_mouse_click_cb( int x, int y, PVOID userData )
 {
   CAGD_POINT p = { 0.0,0.0,0.0 };
-  cagdHideSegment( myText = cagdAddText( &p, "" ) );
+  cagdHideSegment( myText2 = cagdAddText( &p, "" ) );
 
   UINT id;
   int v;

@@ -5,6 +5,7 @@
 #include "cagd.h"
 #include "internal.h"
 #include "options.h"
+#include "curve.h"
 
 #define LOINT(x) ((int)(short)LOWORD(x))
 #define HIINT(x) ((int)(short)HIWORD(x))
@@ -90,7 +91,7 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
       if( GetOpenFileName( &openFileName ) )
       {
-        cagdRegisterCallback( CAGD_LOADFILE, NULL, ( PVOID )openFileName.lpstrFile );
+        cagdRegisterCallback( CAGD_LOADFILE, load_curve, ( PVOID )openFileName.lpstrFile );
         callback( CAGD_LOADFILE, 0, 0 );
       }
 
@@ -102,7 +103,7 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
       //if(GetOpenFileName(&openFileName))
       if( GetSaveFileName( &openFileName ) )
       {
-        cagdRegisterCallback( CAGD_SAVEFILE, NULL, ( PVOID )openFileName.lpstrFile );
+        cagdRegisterCallback( CAGD_SAVEFILE, save_curve, ( PVOID )openFileName.lpstrFile );
         callback( CAGD_SAVEFILE, ( int )openFileName.lpstrFile, 0 );
       }
 

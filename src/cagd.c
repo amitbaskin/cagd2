@@ -108,7 +108,7 @@ void cagdSetView(WORD newView)
     return;
   view = newView;
   resize(viewPort[2], viewPort[3]);
-  menuSetView(view);
+  menuSetView();
   return;
 }
 
@@ -125,7 +125,7 @@ void cagdSetDepthCue(BOOL enable)
     glEnable(GL_FOG);
   else
     glDisable(GL_FOG);
-  menuSetDepthCue(enable);
+  menuSetDepthCue();
 }
 
 void saveModelView()

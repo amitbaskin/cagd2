@@ -68,7 +68,7 @@ static UINT findUnused()
     if(list[id].type == CAGD_SEGMENT_UNUSED)
       break;
   if(nSegments <= id){
-    list = realloc(list, sizeof(SEGMENT) * (nSegments += 20));
+    list = (SEGMENT *) realloc(list, sizeof(SEGMENT) * (nSegments += 20));
     for(id = nSegments - 20; id < nSegments; id++){
       SEGMENT *segment = &list[id];	
       segment->type = CAGD_SEGMENT_UNUSED;
