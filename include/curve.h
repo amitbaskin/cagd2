@@ -29,6 +29,12 @@ typedef struct
   GLubyte      color[3];
   int          poly_id;
   int          curve_id;
+
+
+  CAGD_POINT evaluate( double param );
+
+  double get_end_param();
+
 } curve;
 
 void load_curve( int dummy1, int dummy2, void *p_data );
@@ -45,7 +51,7 @@ void show_curve( curve *curve_data, bool redraw_ctrl_polyline );
 
 void show_ctrl_pts_polyline( curve *curve_data );
 
-void show_bezier_curve( curve *curve_data );
+void show_curve_helper( curve *curve_data );
 void show_bspline_curve( curve *curve_data );
 
 void redraw_all_curves();

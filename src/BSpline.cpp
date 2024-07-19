@@ -1,58 +1,85 @@
-// BSpline.cpp
 #include "BSpline.h"
-#include <algorithm> // For std::lower_bound
-#include <stdexcept>
+#include <algorithm>
+#include <iostream>
 
-BSpline::BSpline( const point_vec &controlPoints, const double_vec &knots, int order )
-  : controlPoints( controlPoints ), knots( knots ), order( order )
-{}
-
-double BSpline::basisFunction( int i, int k, double t ) const
-{
-  if( k == 0 )
-  {
-    return ( t >= knots[ i ] && t < knots[ i + 1 ] ) ? 1.0 : 0.0;
-  }
-  else
-  {
-    double denom1 = knots[ i + k ] - knots[ i ];
-    double denom2 = knots[ i + k + 1 ] - knots[ i + 1 ];
-    double coeff1 = denom1 != 0.0 ? ( t - knots[ i ] ) / denom1 : 0.0;
-    double coeff2 = denom2 != 0.0 ? ( knots[ i + k + 1 ] - t ) / denom2 : 0.0;
-    return ( coeff1 * basisFunction( i, k - 1, t ) ) + ( coeff2 * basisFunction( i + 1, k - 1, t ) );
-  }
-}
-
+// Utility method to find the knot span index
 int BSpline::findKnotSpan( double t ) const
-{
-// Binary search to find the knot span index
-  auto it = std::lower_bound( knots.begin(), knots.end(), t );
-  return std::distance( knots.begin(), it ) - 1;
-}
-
-CAGD_POINT BSpline::evaluate( double t ) const
 {
   int n = controlPoints.size() - 1;
   int p = order - 1;
-  int span = findKnotSpan( t );
 
-  CAGD_POINT result = { 0.0, 0.0, 0.0 }; // Assuming CAGD_POINT is a 3D point (x, y, z)
-
-  for( int i = 0; i <= p; ++i )
+  // Special case when t is at the end of the knot vector
+  if( t >= knots[ n + 1 ] )
   {
-    double coeff = basisFunction( span - p + i, p, t );
-    result.x += coeff * controlPoints[ span - p + i ].x;
-    result.y += coeff * controlPoints[ span - p + i ].y;
+    return n;
   }
 
-  return result;
+  // Binary search to find the knot span
+  int low = p;
+  int high = n + 1;
+  int mid = ( low + high ) / 2;
+
+  while( t < knots[ mid ] || t >= knots[ mid + 1 ] )
+  {
+    if( t < knots[ mid ] )
+    {
+      high = mid;
+    }
+    else
+    {
+      low = mid;
+    }
+    mid = ( low + high ) / 2;
+  }
+
+  return mid;
 }
 
-void BSpline::updateControlPoint( size_t index, const CAGD_POINT &newPoint )
+// Utility method to evaluate basis functions
+void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
 {
-  if( index >= controlPoints.size() )
+  int p = order - 1;
+  double_vec left( p + 1 );
+  double_vec right( p + 1 );
+
+  N[ 0 ] = 1.0;
+  for( int j = 1; j <= p; ++j )
   {
-    throw std::out_of_range( "Index is out of range for control points" );
+    left[ j ] = t - knots[ span + 1 - j ];
+    right[ j ] = knots[ span + j ] - t;
+    double saved = 0.0;
+    for( int r = 0; r < j; ++r )
+    {
+      double temp = N[ r ] / ( right[ r + 1 ] + left[ j - r ] );
+      N[ r ] = saved + right[ r + 1 ] * temp;
+      saved = left[ j - r ] * temp;
+    }
+    N[ j ] = saved;
   }
-  controlPoints[ index ] = newPoint;
+}
+
+// Method to evaluate the B-spline at parameter t
+CAGD_POINT BSpline::evaluate( double t ) const
+{
+  int p = order - 1;
+  int n = controlPoints.size() - 1;
+
+  if( t < knots[ p ] || t > knots[ n + 1 ] )
+  {
+    throw std::out_of_range( "Parameter t is out of range." );
+  }
+
+  int span = findKnotSpan( t );
+  double *N = new double[ order ];
+  evaluateBasisFunctions( span, t, N );
+
+  CAGD_POINT C = { 0.0, 0.0, 0.0 };
+  for( int j = 0; j <= p; ++j )
+  {
+    C.x += N[ j ] * controlPoints[ span - p + j ].x;
+    C.y += N[ j ] * controlPoints[ span - p + j ].y;
+  }
+
+  delete[] N;
+  return C;
 }

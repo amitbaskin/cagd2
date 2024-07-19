@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   cagdBegin( "CAGD", 800, 800 );
   init_menus();
 
-  PlaySound( TEXT( "Deux_Arabesques.wav" ), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP );
+  //PlaySound( TEXT( "Deux_Arabesques.wav" ), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP );
 
   cagdShowHelp();
   cagdMainLoop();

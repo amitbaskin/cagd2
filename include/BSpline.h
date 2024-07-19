@@ -1,43 +1,32 @@
-// BSpline.h
 #ifndef BSPLINE_H
 #define BSPLINE_H
 
 #include <vector>
-#include <unordered_map>
-#include <stdexcept>
-#include <cagd.h>
+#include "cagd.h" // Ensure this is included properly
 
 typedef std::vector<CAGD_POINT> point_vec;
 typedef std::vector<double> double_vec;
 
 class BSpline
 {
-  public:
-      // Constructor
-  BSpline( const point_vec &controlPoints, const double_vec &knots, int order );
+public:
+  BSpline::BSpline( const point_vec &controlPoints, const double_vec &knots, int order )
+    : order( order ), controlPoints( controlPoints ), knots( knots )
+  {}
 
-  // Evaluate the B-spline at a given parameter value
+// Method to evaluate the B-spline at parameter t
   CAGD_POINT evaluate( double t ) const;
 
-  private:
-      // Control points for the B-spline
+private:
+  int order;
   point_vec controlPoints;
-
-  // Knot vector for the B-spline
   double_vec knots;
 
-  // Order of the B-spline
-  int order;
-
-  // Utility function to compute the basis function value
-  double basisFunction( int i, int k, double t ) const;
-
-  // Utility function to find the knot span index
+  // Utility method to find the knot span index
   int findKnotSpan( double t ) const;
 
-  // Update a control point
-  void updateControlPoint( size_t index, const CAGD_POINT &newPoint );
-
+  // Utility method to evaluate basis functions
+  void evaluateBasisFunctions( int span, double t, double *N ) const;
 };
 
 #endif // BSPLINE_H
