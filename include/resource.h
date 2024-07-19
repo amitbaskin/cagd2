@@ -3,8 +3,12 @@
 // Used by demo.rc
 //
 #define IDD_SETTINGS                    101
+#define IDD_COLOR                       102
 #define IDC_SAMPLES                     1013
 #define IDC_DEF_DEGREE                  1014
+#define IDC_GREEN                       1015
+#define IDC_RED                         1016
+#define IDC_BLUE                        1017
 
 
 // Next default values for new objects

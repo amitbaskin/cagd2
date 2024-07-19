@@ -3,9 +3,13 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "color.h"
+
+extern int num_samples;
+extern bool show_control_polyline;
+extern unsigned int curve_color[3];
 
 std::vector<curve *> cur_curves;
-
 
 /******************************************************************************
 * print_err
@@ -128,6 +132,13 @@ curve *parse_file( const std::string &filePath )
   curve *curveData = new curve;
   curveData->type = CURVE_TYPE_NONE;
   curveData->order = 0;
+  curveData->bs_crv = nullptr;
+  curveData->bz_crv = nullptr;
+  curveData->color[0] = curve_color[0];
+  curveData->color[1] = curve_color[1];
+  curveData->color[2] = curve_color[2];
+  curveData->poly_id = K_NOT_USED;
+  curveData->curve_id = K_NOT_USED;
 
   // Read order
   skip_blank_lines_and_comments( file );
@@ -268,6 +279,42 @@ void free_curve_data( curve *curveData )
 }
 
 /******************************************************************************
+* clean_all_curves
+******************************************************************************/
+void clean_all_curves()
+{
+  clean_cur_curves_vec();
+
+  cagdFreeAllSegments();
+  cagdRedraw();
+}
+
+/******************************************************************************
+* clean_cur_curves_vec
+******************************************************************************/
+void clean_cur_curves_vec()
+{
+  auto iter = cur_curves.begin();
+  while( iter != cur_curves.end() )
+  {
+    if( *iter != nullptr )
+    {
+      if( ( *iter )->bz_crv != nullptr )
+        delete ( *iter )->bz_crv;
+
+      if( ( *iter )->bs_crv != nullptr )
+        delete ( *iter )->bs_crv;
+
+      free_curve_data( *iter );
+
+      iter = cur_curves.erase( iter );
+    }
+    else
+      iter++;
+  }
+}
+
+/******************************************************************************
 * load_curve
 ******************************************************************************/
 void load_curve( int dummy1, int dummy2, void *p_data )
@@ -277,7 +324,22 @@ void load_curve( int dummy1, int dummy2, void *p_data )
   curve *curve_data = parse_file( file_str );
 
   if( curve_data != nullptr )
+  {
+    if( curve_data->type == CURVE_TYPE_BEZIER )
+    {
+      curve_data->bz_crv = new BezierCurve( curve_data->ctrl_pts );
+    }
+    else if( curve_data->type == CURVE_TYPE_BSPLINE )
+    {
+      curve_data->bs_crv = new BSpline( curve_data->ctrl_pts,
+                                        curve_data->knots, 
+                                        curve_data->order );
+    }
+
     cur_curves.push_back( curve_data );
+
+    show_curve( curve_data, true );
+  }
 
   //TODO: display_curve
 }
@@ -288,4 +350,135 @@ void load_curve( int dummy1, int dummy2, void *p_data )
 void save_curve( int dummy1, int dummy2, void *p_data )
 {
   // TODO
+}
+
+/******************************************************************************
+* get_jump_sample_val
+******************************************************************************/
+static double get_jump_sample_val( double start, double end, int num_pnts )
+{
+  return ( end - start ) / ( ( double )num_pnts - 1 );
+}
+
+/******************************************************************************
+* show_curve
+******************************************************************************/
+void show_curve( curve *curve_data, bool redraw_ctrl_polyline )
+{
+  if( show_control_polyline && redraw_ctrl_polyline )
+  {
+    show_ctrl_pts_polyline( curve_data );
+  }
+  
+  if( curve_data->type == CURVE_TYPE_BEZIER )
+  {
+    show_bezier_curve( curve_data );
+  }
+  else if( curve_data->type == CURVE_TYPE_BSPLINE )
+  {
+    show_bspline_curve( curve_data );
+  }
+  else
+  {
+    print_err( "Error while trying to draw curve: wrong curve type" );
+  }
+
+  cagdRedraw();
+}
+
+/******************************************************************************
+* show_ctrl_pts_polyline
+******************************************************************************/
+void show_ctrl_pts_polyline( curve *curve_data )
+{
+  int num_pts = curve_data->ctrl_pts.size();
+
+  if( num_pts > 1 )
+  {
+    CAGD_POINT *pnts = ( CAGD_POINT * )malloc( sizeof( CAGD_POINT ) *
+                                               num_pts );
+
+    if( pnts != nullptr )
+    {
+      set_norm_color();
+
+      for( int i = 0; i < num_pts; i++ )
+      {
+        if( curve_data->ctrl_pts[i].z == 0 )
+        {
+          print_err( "control point can't have weight 0" );
+          return;
+        }
+
+        pnts[i] = { curve_data->ctrl_pts[i].x / curve_data->ctrl_pts[i].z,
+                    curve_data->ctrl_pts[i].y / curve_data->ctrl_pts[i].z,
+                    0 };
+
+        cagdAddPoint( &pnts[i] );
+      }
+    }
+
+    set_bi_color();
+    if( curve_data->poly_id == K_NOT_USED )
+      curve_data->poly_id = cagdAddPolyline( pnts, num_pts );
+    else
+      cagdReusePolyline( curve_data->poly_id, pnts, num_pts );
+
+    free( pnts );
+  }
+}
+
+/******************************************************************************
+* show_bezier_curve
+******************************************************************************/
+void show_bezier_curve( curve *curve_data )
+{
+  CAGD_POINT *pnts = ( CAGD_POINT * )malloc( sizeof( CAGD_POINT ) *
+                                             num_samples );
+  if( pnts != NULL )
+  {
+    double jump = get_jump_sample_val( 0,
+                                       1,
+                                       num_samples );
+
+    for( int i = 0; i < num_samples; i++ )
+    {
+      double param = 0 + jump * i;
+
+      if( param > 1 )
+        param = 1;
+
+      pnts[i] = curve_data->bz_crv->evaluate( param );
+    }
+
+    cagdSetColor( curve_data->color[0], curve_data->color[1], curve_data->color[2] );
+
+    if( curve_data->curve_id == K_NOT_USED )
+      curve_data->curve_id = cagdAddPolyline( pnts, num_samples );
+    else
+      cagdReusePolyline( curve_data->curve_id, pnts, num_samples );
+
+    set_default_color();
+  }
+
+  free( pnts );
+}
+
+/******************************************************************************
+* show_bspline_curve
+******************************************************************************/
+void show_bspline_curve( curve *curve_data )
+{
+
+}
+
+/******************************************************************************
+* redraw_all_curves
+******************************************************************************/
+void redraw_all_curves()
+{
+  for( auto p_crv : cur_curves )
+  {
+    show_curve( p_crv, false );
+  }
 }

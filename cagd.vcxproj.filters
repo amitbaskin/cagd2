@@ -39,10 +39,10 @@
     <ClCompile Include="src\callback.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BezierCurve.cpp">
+    <ClCompile Include="src\BezierCurve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BSpline.cpp">
+    <ClCompile Include="src\BSpline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,10 +71,10 @@
     <ClInclude Include="include\curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BezierCurve.h">
+    <ClInclude Include="include\BezierCurve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BSpline.h">
+    <ClInclude Include="include\BSpline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

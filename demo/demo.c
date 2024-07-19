@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "resource.h"
 #include "menus.h"
+#include <mmsystem.h>
+
+#pragma comment(lib, "winmm.lib")
 
 #if defined(_WIN32)
     #if _MSC_VER >= 1900
@@ -45,6 +48,8 @@ int main(int argc, char *argv[])
 {
   cagdBegin( "CAGD", 800, 800 );
   init_menus();
+
+  PlaySound( TEXT( "see-you-later-203103.wav" ), NULL, SND_FILENAME | SND_ASYNC );
 
   cagdShowHelp();
   cagdMainLoop();

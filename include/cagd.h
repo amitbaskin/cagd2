@@ -54,7 +54,9 @@ enum { /* id's of standard controls */
   CAGD_RESET,
   CAGD_HELP,
   CAGD_USER,
-  CAGD_SETTINGS/* use this one to create your own control */
+  CAGD_SETTINGS,
+  CAGD_CLEAN_ALL,
+  CAGD_CURVE_COLOR/* use this one to create your own control */
 };
 
 #ifdef __cplusplus

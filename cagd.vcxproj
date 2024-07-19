@@ -100,9 +100,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BezierCurve.cpp" />
-    <ClCompile Include="BSpline.cpp" />
     <ClCompile Include="lab1\expr2tree.c" />
+    <ClCompile Include="src\BezierCurve.cpp" />
+    <ClCompile Include="src\BSpline.cpp" />
     <ClCompile Include="src\cagd.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
@@ -128,8 +128,8 @@
     <ClCompile Include="src\vectors.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BezierCurve.h" />
-    <ClInclude Include="BSpline.h" />
+    <ClInclude Include="include\BezierCurve.h" />
+    <ClInclude Include="include\BSpline.h" />
     <ClInclude Include="include\cagd.h" />
     <ClInclude Include="include\color.h" />
     <ClInclude Include="include\curve.h" />

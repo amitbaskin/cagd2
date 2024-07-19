@@ -15,7 +15,7 @@ void set_default_color()
 ******************************************************************************/
 void set_tan_color()
 {
-  cagdSetColor( 255, 0, 0 );
+  cagdSetColor( 255, 0, 0 ); // red
 }
 
 
@@ -24,7 +24,7 @@ void set_tan_color()
 ******************************************************************************/
 void set_norm_color()
 {
-  cagdSetColor( 0, 255, 0 );
+  cagdSetColor( 0, 255, 0 ); // green
 }
 
 
@@ -33,7 +33,7 @@ void set_norm_color()
 ******************************************************************************/
 void set_bi_color()
 {
-  cagdSetColor( 0, 0, 255 );
+  cagdSetColor( 0, 0, 255 ); // blue
 }
 
 

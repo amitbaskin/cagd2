@@ -3,14 +3,17 @@
 #include "menus.h"
 #include "resource.h"
 #include "color.h"
+#include "curve.h"
 
-char samples_buffer[BUFSIZ];
-char default_deg_buffer[BUFSIZ];
+char buffer1[BUFSIZ];
+char buffer2[BUFSIZ];
+char buffer3[BUFSIZ];
 UINT myText2;
 
 extern void myMessage( PSTR title, PSTR message, UINT type );
 extern int num_samples;
 extern unsigned int default_degree;
+extern unsigned int curve_color[3];
 
 /******************************************************************************
 * init_menus
@@ -21,12 +24,14 @@ void init_menus()
   HMENU curve_menu = CreatePopupMenu(); // curve
 
   // Curve
-  AppendMenu( curve_menu, MF_STRING, CAGD_SETTINGS, "new menu" );
+  AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default Color" );
   //AppendMenu( op_menu, MF_STRING, CAGD_SHOW_EVOLUTE_MENU, "Show Evolute Curve" );
   //AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
 
   // Options
   AppendMenu( op_menu, MF_STRING, CAGD_SETTINGS, "Settings" );
+  AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
+  AppendMenu( op_menu, MF_STRING, CAGD_CLEAN_ALL, "Clean all" );
 
 
   // adding to cagd
@@ -41,7 +46,7 @@ void init_menus()
 }
 
 /******************************************************************************
-* myDialogProc SETTINGS DIALOG
+* SettingsDialogProc SETTINGS DIALOG
 ******************************************************************************/
 LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
 {
@@ -57,8 +62,8 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
     switch( LOWORD( wParam ) )
     {
     case IDOK:
-      GetDlgItemText( hDialog, IDC_SAMPLES, samples_buffer, sizeof( samples_buffer ) );
-      GetDlgItemText( hDialog, IDC_DEF_DEGREE, default_deg_buffer, sizeof( default_deg_buffer ) );
+      GetDlgItemText( hDialog, IDC_SAMPLES, buffer1, sizeof( buffer1 ) );
+      GetDlgItemText( hDialog, IDC_DEF_DEGREE, buffer2, sizeof( buffer2 ) );
       EndDialog( hDialog, TRUE );
       return TRUE;
     case IDCANCEL:
@@ -68,6 +73,45 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
       return FALSE;
     }
   break;
+
+  default:
+    return FALSE;
+    break;
+  }
+
+  return FALSE;
+}
+
+/******************************************************************************
+* CurveColorDialogProc Curve color DIALOG
+******************************************************************************/
+LRESULT CALLBACK CurveColorDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
+{
+  switch( message )
+  {
+  case WM_INITDIALOG:
+    SetDlgItemInt( hDialog, IDC_RED, curve_color[0], FALSE );
+    SetDlgItemInt( hDialog, IDC_GREEN, curve_color[1], FALSE );
+    SetDlgItemInt( hDialog, IDC_BLUE, curve_color[2], FALSE );
+    break;
+
+
+  case WM_COMMAND:
+    switch( LOWORD( wParam ) )
+    {
+    case IDOK:
+      GetDlgItemText( hDialog, IDC_RED, buffer1, sizeof( buffer1 ) );
+      GetDlgItemText( hDialog, IDC_GREEN, buffer2, sizeof( buffer2 ) );
+      GetDlgItemText( hDialog, IDC_BLUE, buffer3, sizeof( buffer3 ) );
+      EndDialog( hDialog, TRUE );
+      return TRUE;
+    case IDCANCEL:
+      EndDialog( hDialog, FALSE );
+      return TRUE;
+    default:
+      return FALSE;
+    }
+    break;
 
   default:
     return FALSE;
@@ -89,8 +133,39 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
   case CAGD_SETTINGS:
     handle_settings_menu();
     break;
-  }
 
+  case CAGD_CLEAN_ALL:
+    handle_clean_all_menu();
+    break;
+
+  case CAGD_CURVE_COLOR:
+    handle_curve_color_menu();
+    break;
+  }
+}
+
+/******************************************************************************
+* handle_curve_color_menu
+******************************************************************************/
+void handle_curve_color_menu()
+{
+  if( DialogBox( cagdGetModule(),
+      MAKEINTRESOURCE( IDD_COLOR ),
+      cagdGetWindow(),
+      ( DLGPROC )CurveColorDialogProc ) )
+  {
+    GLubyte new_colors[3];
+    if( sscanf( buffer1, "%hhu", &new_colors[0] ) == 1 &&
+        sscanf( buffer2, "%hhu", &new_colors[1] ) == 1 &&
+        sscanf( buffer3, "%hhu", &new_colors[2] ) == 1 )
+    {
+      curve_color[0] = new_colors[0];
+      curve_color[1] = new_colors[1];
+      curve_color[2] = new_colors[2];
+    }
+    else
+      print_err( "Invalid RGB values" );
+  }
 }
 
 /******************************************************************************
@@ -103,8 +178,27 @@ void handle_settings_menu()
       cagdGetWindow(),
       ( DLGPROC )SettingsDialogProc ) )
   {
+    int new_samples;
+    unsigned int def_deg;
+    if( sscanf( buffer1, "%d", &new_samples ) == 1 &&
+        sscanf( buffer2, "%du", &def_deg ) == 1 )
+    {
+      num_samples = new_samples;
+      default_degree = def_deg;
 
+      redraw_all_curves();
+    }
+    else
+      print_err( "Invalid input" );
   }
+}
+
+/******************************************************************************
+* handle_clean_all_menu
+******************************************************************************/
+void handle_clean_all_menu()
+{
+  clean_all_curves();
 }
 
 /******************************************************************************

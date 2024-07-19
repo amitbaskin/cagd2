@@ -2,10 +2,13 @@
 #ifndef BSPLINE_H
 #define BSPLINE_H
 
-#include "curve.h"
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+#include <cagd.h>
+
+typedef std::vector<CAGD_POINT> point_vec;
+typedef std::vector<double> double_vec;
 
 class BSpline
 {
