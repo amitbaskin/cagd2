@@ -13,26 +13,31 @@ typedef std::vector<double> double_vec;
 class BSpline
 {
   public:
-  BSpline( const point_vec &controlPoints, const double_vec &knots, UINT order );
+      // Constructor
+  BSpline( const point_vec &controlPoints, const double_vec &knots, int order );
 
-  // Evaluate the B-spline at a given parameter t
+  // Evaluate the B-spline at a given parameter value
   CAGD_POINT evaluate( double t ) const;
 
   private:
+      // Control points for the B-spline
   point_vec controlPoints;
+
+  // Knot vector for the B-spline
   double_vec knots;
-  UINT order;
-  UINT degree;
 
-  mutable std::unordered_map<double, CAGD_POINT> cache; // Cache for evaluated points
+  // Order of the B-spline
+  int order;
 
-  // Helper functions for B-spline evaluation
-  double basisFunction( size_t i, UINT k, double t ) const;
-  CAGD_POINT computePoint( double t ) const;
+  // Utility function to compute the basis function value
+  double basisFunction( int i, int k, double t ) const;
 
-  // Helper functions for point operations
-  CAGD_POINT pointMultiply( const CAGD_POINT &p, double scalar ) const;
-  CAGD_POINT pointAdd( const CAGD_POINT &p1, const CAGD_POINT &p2 ) const;
+  // Utility function to find the knot span index
+  int findKnotSpan( double t ) const;
+
+  // Update a control point
+  void updateControlPoint( size_t index, const CAGD_POINT &newPoint );
+
 };
 
 #endif // BSPLINE_H
