@@ -43,7 +43,6 @@ CAGD_POINT BSpline::evaluate( double t ) const
     double coeff = basisFunction( span - p + i, p, t );
     result.x += coeff * controlPoints[ span - p + i ].x;
     result.y += coeff * controlPoints[ span - p + i ].y;
-    result.z += coeff * controlPoints[ span - p + i ].z;
   }
 
   return result;

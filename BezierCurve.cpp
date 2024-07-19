@@ -55,7 +55,6 @@ CAGD_POINT BezierCurve::evaluate( GLdouble t ) const
     GLdouble blend = binomialCoefficient( n, i ) * std::pow( 1 - t, n - i ) * std::pow( t, i );
     point.x += blend * control_points[ i ].x;
     point.y += blend * control_points[ i ].y;
-    point.z += blend * control_points[ i ].z;
   }
 
   return point;
