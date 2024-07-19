@@ -4,10 +4,13 @@
 #include "resource.h"
 #include "color.h"
 
-char myBuffer2[BUFSIZ];
+char samples_buffer[BUFSIZ];
+char default_deg_buffer[BUFSIZ];
 UINT myText2;
 
 extern void myMessage( PSTR title, PSTR message, UINT type );
+extern int num_samples;
+extern unsigned int default_degree;
 
 /******************************************************************************
 * init_menus
@@ -18,12 +21,12 @@ void init_menus()
   HMENU curve_menu = CreatePopupMenu(); // curve
 
   // Curve
-  AppendMenu( curve_menu, MF_STRING, CAGD_RESET, "new menu" );
+  AppendMenu( curve_menu, MF_STRING, CAGD_SETTINGS, "new menu" );
   //AppendMenu( op_menu, MF_STRING, CAGD_SHOW_EVOLUTE_MENU, "Show Evolute Curve" );
   //AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
 
   // Options
-  AppendMenu( op_menu, MF_STRING, CAGD_RESET, "new menu" );
+  AppendMenu( op_menu, MF_STRING, CAGD_SETTINGS, "Settings" );
 
 
   // adding to cagd
@@ -38,24 +41,40 @@ void init_menus()
 }
 
 /******************************************************************************
-* myDialogProc REFINEMENT DIALOG
+* myDialogProc SETTINGS DIALOG
 ******************************************************************************/
-LRESULT CALLBACK myDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
 {
-  if( message != WM_COMMAND )
-    return FALSE;
-  switch( LOWORD( wParam ) )
+  switch( message )
   {
-  case IDOK:
-    GetDlgItemText( hDialog, IDC_EDIT, myBuffer2, sizeof( myBuffer2 ) );
-    EndDialog( hDialog, TRUE );
-    return TRUE;
-  case IDCANCEL:
-    EndDialog( hDialog, FALSE );
-    return TRUE;
+  case WM_INITDIALOG:
+    SetDlgItemInt( hDialog, IDC_SAMPLES, num_samples, FALSE );
+    SetDlgItemInt( hDialog, IDC_DEF_DEGREE, default_degree, FALSE );
+    break;
+
+
+  case WM_COMMAND:
+    switch( LOWORD( wParam ) )
+    {
+    case IDOK:
+      GetDlgItemText( hDialog, IDC_SAMPLES, samples_buffer, sizeof( samples_buffer ) );
+      GetDlgItemText( hDialog, IDC_DEF_DEGREE, default_deg_buffer, sizeof( default_deg_buffer ) );
+      EndDialog( hDialog, TRUE );
+      return TRUE;
+    case IDCANCEL:
+      EndDialog( hDialog, FALSE );
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  break;
+
   default:
     return FALSE;
+    break;
   }
+
+  return FALSE;
 }
 
 /******************************************************************************
@@ -67,9 +86,25 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
 
   switch( id )
   {
-  
+  case CAGD_SETTINGS:
+    handle_settings_menu();
+    break;
   }
 
+}
+
+/******************************************************************************
+* handle_settings_menu
+******************************************************************************/
+void handle_settings_menu()
+{
+  if( DialogBox( cagdGetModule(),
+      MAKEINTRESOURCE( IDD_SETTINGS ),
+      cagdGetWindow(),
+      ( DLGPROC )SettingsDialogProc ) )
+  {
+
+  }
 }
 
 /******************************************************************************

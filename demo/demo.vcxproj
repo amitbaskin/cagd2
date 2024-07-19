@@ -113,6 +113,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -137,7 +138,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="demo.rc" />
-    <ResourceCompile Include="anim_speed.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\cagd.vcxproj">

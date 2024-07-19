@@ -53,7 +53,8 @@ enum { /* id's of standard controls */
   CAGD_FUZZMORE,
   CAGD_RESET,
   CAGD_HELP,
-  CAGD_USER /* use this one to create your own control */
+  CAGD_USER,
+  CAGD_SETTINGS/* use this one to create your own control */
 };
 
 #ifdef __cplusplus

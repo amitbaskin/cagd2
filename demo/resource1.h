@@ -2,10 +2,9 @@
 // Microsoft Visual C++ generated include file.
 // Used by anim_speed.rc
 //
-#define IDD_COLOR                       101
-#define IDC_ANIM_SPEED                  102
-#define IDC_EDIT                        1005
-#define IDC_ANIM_SPEED_EDIT             1006
+#define IDD_SETTINGS                    101
+#define IDC_SAMPLES                     1013
+#define IDC_DEF_DEGREE                  1014
 
 // Next default values for new objects
 // 

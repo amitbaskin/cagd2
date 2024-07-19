@@ -57,7 +57,7 @@ BOOL cagdRegisterCallback(UINT message, CAGD_CALLBACK function, PVOID data)
     list[message].data = data;
     if(message == CAGD_TIMER)
       if(function)
-	SetTimer(auxGetHWND(), 0, ( UINT )frenet_anim_speed, NULL);
+	SetTimer(auxGetHWND(), 0, ( UINT )10, NULL);
       else
 	KillTimer(auxGetHWND(), 0);
     return TRUE;
