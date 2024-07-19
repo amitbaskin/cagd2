@@ -340,8 +340,6 @@ void load_curve( int dummy1, int dummy2, void *p_data )
 
     show_curve( curve_data, true );
   }
-
-  //TODO: display_curve
 }
 
 /******************************************************************************
