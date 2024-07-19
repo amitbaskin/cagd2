@@ -1,6 +1,7 @@
 // BSpline.cpp
 #include "BSpline.h"
 #include <algorithm> // For std::lower_bound
+#include <stdexcept>
 
 BSpline::BSpline( const point_vec &controlPoints, const double_vec &knots, int order )
   : controlPoints( controlPoints ), knots( knots ), order( order )
@@ -46,4 +47,13 @@ CAGD_POINT BSpline::evaluate( double t ) const
   }
 
   return result;
+}
+
+void BSpline::updateControlPoint( size_t index, const CAGD_POINT &newPoint )
+{
+  if( index >= controlPoints.size() )
+  {
+    throw std::out_of_range( "Index is out of range for control points" );
+  }
+  controlPoints[ index ] = newPoint;
 }

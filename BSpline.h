@@ -29,6 +29,10 @@ class BSpline
 
   // Utility function to find the knot span index
   int findKnotSpan( double t ) const;
+
+  // Update a control point
+  void updateControlPoint( size_t index, const CAGD_POINT &newPoint );
+
 };
 
 #endif // BSPLINE_H
