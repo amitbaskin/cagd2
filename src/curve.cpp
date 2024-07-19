@@ -179,7 +179,7 @@ curve *parse_file( const std::string &filePath )
       {
         curveData->knots.push_back( knot );
         if( curveData->knots.size() == numKnots )
-        { 
+        {
           break;
         }
       }
