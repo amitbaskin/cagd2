@@ -2,35 +2,33 @@
 #define BEZIER_CURVE_H
 
 #include <vector>
-#include <unordered_map>
-#include "cagd.h" // Include for CAGD_POINT
+#include "cagd.h" // For CAGD_POINT
+
+// Define CAGD_POINT if not already defined in cagd.h
+// typedef struct {
+//   GLdouble x, y, z;
+// } CAGD_POINT;
 
 typedef std::vector<CAGD_POINT> point_vec;
 
 class BezierCurve
 {
-  public:
-      // Constructor with a vector of control points
-  BezierCurve( const point_vec &controlPoints );
-
-  // Method to evaluate the curve at a given parameter value t (0 <= t <= 1)
-  CAGD_POINT evaluate( double t ) const;
-
-  // Method to update a single control point and recalculate if necessary
-  void updateControlPoint( int index, const CAGD_POINT &newPoint );
-
   private:
-  point_vec controlPoints;
-  mutable std::unordered_map<int, double> basisMatrixCache;
+  point_vec control_points;
+  std::vector<std::vector<GLdouble>> base_matrix_cache;
 
-  // Method to compute binomial coefficients
-  double binomialCoefficient( int n, int k ) const;
+  // Computes the Bernstein base matrix for the Bezier curve
+  void computeBaseMatrix();
 
-  // Method to compute the Bernstein polynomial
-  double bernsteinPolynomial( int i, int n, double t ) const;
+  // Helper function to compute binomial coefficient C(n, k)
+  int binomialCoefficient( int n, int k ) const;
 
-  // Method to compute and cache the basis matrix
-  void computeBasisMatrix() const;
+  public:
+      // Constructor
+  BezierCurve( const point_vec &points );
+
+  // Evaluates the Bezier curve at parameter t
+  CAGD_POINT evaluate( GLdouble t ) const;
 };
 
 #endif // BEZIER_CURVE_H

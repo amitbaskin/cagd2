@@ -1,77 +1,61 @@
 #include "BezierCurve.h"
 #include <cmath> // For std::pow
-#include <stdexcept> // For std::out_of_range
 
-BezierCurve::BezierCurve( const point_vec &controlPoints )
-  : controlPoints( controlPoints )
+// Constructor
+BezierCurve::BezierCurve( const point_vec &points ) : control_points( points )
 {
-  computeBasisMatrix(); // Compute the basis matrix initially
+// Compute the base matrix when initializing
+  computeBaseMatrix();
 }
 
-CAGD_POINT BezierCurve::evaluate( double t ) const
+// Helper function to compute binomial coefficient C(n, k)
+int BezierCurve::binomialCoefficient( int n, int k ) const
 {
-  int n = controlPoints.size() - 1;
+  if( k > n - k )
+    k = n - k;
+
+  int c = 1;
+  for( int i = 0; i < k; ++i )
+  {
+    c = c * ( n - i ) / ( i + 1 );
+  }
+  return c;
+}
+
+// Computes the Bernstein base matrix for the Bezier curve
+void BezierCurve::computeBaseMatrix()
+{
+  int n = control_points.size() - 1; // Degree of the Bezier curve
+  base_matrix_cache.resize( n + 1 );
+
+  for( int i = 0; i <= n; ++i )
+  {
+    base_matrix_cache[ i ].resize( n + 1 );
+  }
+
+  // Populate the base matrix cache
+  for( int i = 0; i <= n; ++i )
+  {
+    for( int j = 0; j <= i; ++j )
+    {
+      base_matrix_cache[ i ][ j ] = binomialCoefficient( n, i ) * std::pow( 1.0, n - i ) * std::pow( 0.0, i );
+    }
+  }
+}
+
+// Evaluates the Bezier curve at parameter t
+CAGD_POINT BezierCurve::evaluate( GLdouble t ) const
+{
+  int n = control_points.size() - 1;
   CAGD_POINT point = { 0.0, 0.0, 0.0 };
 
   for( int i = 0; i <= n; ++i )
   {
-    double B = bernsteinPolynomial( i, n, t );
-    point.x += B * controlPoints[ i ].x;
-    point.y += B * controlPoints[ i ].y;
-    point.z += B * controlPoints[ i ].z;
+    GLdouble blend = binomialCoefficient( n, i ) * std::pow( 1 - t, n - i ) * std::pow( t, i );
+    point.x += blend * control_points[ i ].x;
+    point.y += blend * control_points[ i ].y;
+    point.z += blend * control_points[ i ].z;
   }
 
   return point;
-}
-
-void BezierCurve::updateControlPoint( int index, const CAGD_POINT &newPoint )
-{
-  if( index >= 0 && index < static_cast< int >( controlPoints.size() ) )
-  {
-    controlPoints[ index ] = newPoint;
-    computeBasisMatrix(); // Recompute the basis matrix if control points change
-  }
-  else
-  {
-    throw std::out_of_range( "Control point index out of range." );
-  }
-}
-
-double BezierCurve::binomialCoefficient( int n, int k ) const
-{
-  if( k > n ) return 0;
-  double result = 1;
-  for( int i = 0; i < k; ++i )
-  {
-    result *= ( n - i );
-    result /= ( i + 1 );
-  }
-  return result;
-}
-
-double BezierCurve::bernsteinPolynomial( int i, int n, double t ) const
-{
-  int key = i * 100000 + n; // Create a simple key (adjust multiplier as needed)
-  auto it = basisMatrixCache.find( key );
-  if( it != basisMatrixCache.end() )
-  {
-    return it->second;
-  }
-
-  double result = binomialCoefficient( n, i ) * std::pow( t, i ) * std::pow( 1 - t, n - i );
-  basisMatrixCache[ key ] = result;
-  return result;
-}
-
-void BezierCurve::computeBasisMatrix() const
-{
-  basisMatrixCache.clear();
-  int n = controlPoints.size() - 1;
-  for( int i = 0; i <= n; ++i )
-  {
-    for( double t = 0.0; t <= 1.0; t += 0.01 )
-    { // Example resolution for t
-      bernsteinPolynomial( i, n, t );
-    }
-  }
 }
