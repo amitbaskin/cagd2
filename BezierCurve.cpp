@@ -1,5 +1,6 @@
-#include "BezierCurve.h"
+﻿#include "BezierCurve.h"
 #include <cmath> // For std::pow
+#include <stdexcept>
 
 // Constructor
 BezierCurve::BezierCurve( const point_vec &points ) : control_points( points )
@@ -58,4 +59,18 @@ CAGD_POINT BezierCurve::evaluate( GLdouble t ) const
   }
 
   return point;
+}
+
+// Updates a control point and (optionally) recaches the base matrix
+void BezierCurve::updateControlPoint( size_t index, const CAGD_POINT &new_point )
+{
+  if( index >= control_points.size() )
+  {
+    throw std::out_of_range( "Index out of range." );
+  }
+
+  control_points[ index ] = new_point;
+  // Optionally, you can recalculate the base matrix if needed
+  // For Bézier curves, the base matrix is generally not recalculated, but you might need to reinitialize other properties.
+  computeBaseMatrix(); // If you need to recalculate, though it's usually not required for Bézier curves
 }

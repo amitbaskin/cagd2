@@ -29,6 +29,9 @@ class BezierCurve
 
   // Evaluates the Bezier curve at parameter t
   CAGD_POINT evaluate( GLdouble t ) const;
+
+  // Updates a control point and (optionally) recaches the base matrix
+  void updateControlPoint( size_t index, const CAGD_POINT &new_point );
 };
 
 #endif // BEZIER_CURVE_H
