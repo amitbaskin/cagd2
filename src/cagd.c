@@ -20,7 +20,21 @@ static GLint nHits;
 static GLint fuzziness = 4;
 static GLdouble sensitive = 1;
 
-void cagdPick( int x, int y )
+void cagdGetMoveVec( int dX, int dY, double &x, double &y )
+{
+  CAGD_POINT origin, where[2];
+  WORD theView = view;
+  cagdSetView( CAGD_ORTHO );
+  cagdToObject( 0, 0, where );
+  origin = where[0];
+  cagdToObject( dX, dY, where );
+  cagdSetView( theView );
+
+  x = where[0].x - origin.x;
+  y = where[0].y - origin.y;
+}
+
+void cagdPick(int x, int y)
 {
   glMatrixMode( GL_PROJECTION );
   glPushMatrix();

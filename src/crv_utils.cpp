@@ -13,6 +13,7 @@
 std::vector< Curve * > cur_curves;
 std::map< int, Curve * > seg_to_crv;
 std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
+int active_pt_id = K_NOT_USED;
 
 
 void print_error( const std::string &message );
@@ -42,6 +43,21 @@ Curve *create_curve( int order, const std::string &line, std::ifstream &file );
 bool add_control_points( std::ifstream &file, Curve *curve );
 size_t parse_file( const std::string &filePath );
 
+/******************************************************************************
+* get_active_pt_id
+******************************************************************************/
+int get_active_pt_id()
+{
+  return active_pt_id;
+}
+
+/******************************************************************************
+* set_active_pt_id
+******************************************************************************/
+void set_active_pt_id( int id )
+{
+  active_pt_id = id;
+}
 
 /******************************************************************************
 * redraw_all_curves
@@ -84,7 +100,7 @@ std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
 /******************************************************************************
 * update_ctrl_pnt
 ******************************************************************************/
-void update_ctrl_pnt( int pnt_id, int new_x, int new_y )
+void update_ctrl_pnt( int pnt_id, double new_x, double new_y )
 {
   std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
 
@@ -93,8 +109,12 @@ void update_ctrl_pnt( int pnt_id, int new_x, int new_y )
 
   if( p_curve != nullptr )
   {
+    double old_pos_x = p_curve->ctrl_pnts_[ctrl_idx].x;
+    double old_pos_y = p_curve->ctrl_pnts_[ctrl_idx].y;
+
     p_curve->ctrl_pnts_[ ctrl_idx ].x = new_x;
     p_curve->ctrl_pnts_[ ctrl_idx ].y = new_y;
+
     p_curve->show_ctrl_poly();
     p_curve->show_crv( ctrl_idx );
     cagdRedraw();
@@ -119,6 +139,27 @@ void load_curves( int dummy1, int dummy2, void *p_data )
     }
 
     cagdRedraw();
+  }
+}
+
+/******************************************************************************
+* calculate_ctrl_pnt_updated_pos
+******************************************************************************/
+void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
+                                     double &new_x, double &new_y )
+{
+  std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
+
+  auto p_curve = std::get< 0 >( crv_ctrl_idx );
+  auto ctrl_idx = std::get< 1 >( crv_ctrl_idx );
+
+  if( p_curve != nullptr )
+  {
+    double move_vec[2];
+    cagdGetMoveVec( dx, dy, move_vec[0], move_vec[1] );
+
+    new_x = p_curve->ctrl_pnts_[ctrl_idx].x + move_vec[0];
+    new_y = p_curve->ctrl_pnts_[ctrl_idx].y + move_vec[1];
   }
 }
 

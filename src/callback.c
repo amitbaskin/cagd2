@@ -160,8 +160,10 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     if( !( state & ( MK_CONTROL | MK_SHIFT ) ) )
     {
       state |= MK_LBUTTON;
-      SetCapture( hWnd );
-      callback( CAGD_LBUTTONDOWN, LOINT( lParam ), HIINT( lParam ) );
+      SetCapture(hWnd);
+      callback(CAGD_LBUTTONDOWN, LOINT(lParam), HIINT(lParam));
+      x = ( short )LOWORD( lParam );
+      y = ( short )HIWORD( lParam );
       return 0;
     }
     if( state & ( MK_MBUTTON | MK_RBUTTON ) )
@@ -243,22 +245,33 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
   case WM_MOUSEMOVE:
 
-    if( state & MK_CONTROL )
+    if(state & MK_CONTROL) 
     {
-      if( state & MK_LBUTTON )
-        rotateXY( LOINT( lParam ) - x, HIINT( lParam ) - y );
-      else if( state & MK_RBUTTON )
-        rotateZ( LOINT( lParam ) - x, HIINT( lParam ) - y );
-    }
-    else if( state & MK_SHIFT )
+      if(state & MK_LBUTTON)
+	      rotateXY(LOINT(lParam) - x, HIINT(lParam) - y);
+      else if(state & MK_RBUTTON)
+	      rotateZ(LOINT(lParam) - x, HIINT(lParam) - y);
+    } 
+    else if(state & MK_SHIFT) 
     {
-      if( state & MK_LBUTTON )
-        translateXY( LOINT( lParam ) - x, HIINT( lParam ) - y );
-      else if( state & MK_RBUTTON )
-        translateZ( LOINT( lParam ) - x, HIINT( lParam ) - y );
+      if(state & MK_LBUTTON)
+	      translateXY(LOINT(lParam) - x, HIINT(lParam) - y);
+      else if(state & MK_RBUTTON)
+	      translateZ(LOINT(lParam) - x, HIINT(lParam) - y);
+    } 
+    else if( state & MK_LBUTTON && get_active_pt_id() != K_NOT_USED )
+    {
+      double new_pos[2];
+      calculate_ctrl_pnt_updated_pos( get_active_pt_id(), 
+                                      LOINT( lParam ) - x, 
+                                      HIINT( lParam ) - y, 
+                                      new_pos[0], 
+                                      new_pos[1] );
+
+      update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );
     }
     else
-      callback( CAGD_MOUSEMOVE, LOINT( lParam ), HIINT( lParam ) );
+      callback(CAGD_MOUSEMOVE, LOINT(lParam), HIINT(lParam));
     return 0;
 
   case WM_TIMER:
