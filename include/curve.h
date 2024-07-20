@@ -7,18 +7,16 @@
 #define IS_DEBUG 1
 #define K_NOT_USED -1
 
-
 enum class CurveType
 {
-  CURVE_TYPE_NONE    = 0,
-  CURVE_TYPE_BEZIER  = 1,
+  CURVE_TYPE_NONE = 0,
+  CURVE_TYPE_BEZIER = 1,
   CURVE_TYPE_BSPLINE = 2
 };
 
 typedef std::vector< CAGD_POINT > point_vec;
 typedef std::vector< double > double_vec;
 typedef std::vector< int > int_vec;
-
 
 class Curve
 {

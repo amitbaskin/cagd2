@@ -19,8 +19,11 @@ void Bezier::print() const
 /******************************************************************************
 * Bezier::show_crv
 ******************************************************************************/
-void Bezier::show_crv( int ) const
+void Bezier::show_crv( int chg_ctrl_idx ) const
 {
+  if( chg_ctrl_idx != K_NOT_USED )
+    MP_cache_.clear();
+
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
 
   unsigned int def_num_steps = get_default_num_steps();
@@ -119,6 +122,7 @@ CAGD_POINT Bezier::evaluate( GLdouble t ) const
   // Construct vector T
   std::vector<GLdouble> T( n + 1 );
   GLdouble t_pow = 1.0;
+
   for( int i = 0; i <= n; ++i )
   {
     T[ i ] = t_pow;
@@ -127,9 +131,7 @@ CAGD_POINT Bezier::evaluate( GLdouble t ) const
 
   // Ensure MP is cached
   if( MP_cache_.empty() )
-  {
     computeMP();
-  }
 
   // Compute the final result using T * MP
   CAGD_POINT point = { 0.0, 0.0, 0.0 };

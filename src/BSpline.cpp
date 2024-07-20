@@ -8,7 +8,6 @@
 #include "BSpline.h"
 #include "crv_utils.h"
 
-
 /******************************************************************************
 * BSpline::show_crv
 ******************************************************************************/
@@ -36,7 +35,7 @@ void BSpline::show_crv( int chg_ctrl_idx ) const
 void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
 {
   double normalized_num_samps = get_default_num_steps() /
-                                u_vec_[ u_vec_.size() - 1 ];
+    u_vec_[ u_vec_.size() - 1 ];
 
   double seg_ids_num = seg_ids_.size();
 

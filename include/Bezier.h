@@ -7,7 +7,9 @@
 class Bezier : public Curve
 {
 public:
-  Bezier(){}
+  Bezier()
+  {
+  }
 
   virtual CAGD_POINT evaluate( GLdouble t ) const;
   virtual void show_crv( int chg_ctrl_idx = K_NOT_USED ) const;
@@ -22,5 +24,5 @@ public:
   void calculateMatrixM( std::vector<std::vector<GLdouble>> &M ) const;
 
 private:
-  mutable std::vector<CAGD_POINT> MP_cache_;
+  mutable std::vector< CAGD_POINT > MP_cache_;
 };

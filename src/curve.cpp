@@ -3,7 +3,6 @@
 #include "options.h"
 #include "color.h"
 
-
 /******************************************************************************
 * Curve::Curve
 ******************************************************************************/
@@ -68,7 +67,7 @@ void Curve::show_ctrl_poly()
       {
         if( ctrl_pnts_[ i ].z == 0 )
         {
-          print_err( "control point can't have weight 0" );
+          print_error( "control point can't have weight 0" );
           return;
         }
 

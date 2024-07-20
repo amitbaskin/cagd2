@@ -7,7 +7,6 @@
 #define HUGE_DOUBLE    1e9
 #define DEFAULT_DOUBLE -HUGE_DOUBLE
 
-
 int scale_not_zero( double scale );
 
 int get_scale_inv_or_zero( double scale, double *rp_res );
@@ -30,15 +29,15 @@ double multiply_vecs( const CAGD_POINT *p_v1, const CAGD_POINT *p_v2 );
 
 void cross_vecs( const CAGD_POINT *p_v1,
                  const CAGD_POINT *p_v2,
-                 CAGD_POINT       *rp_out );
+                 CAGD_POINT *rp_out );
 
 void diff_vecs( const CAGD_POINT *p_v1,
                 const CAGD_POINT *p_v2,
-                CAGD_POINT       *rp_out );
+                CAGD_POINT *rp_out );
 
 void add_vecs( const CAGD_POINT *p_v1,
                const CAGD_POINT *p_v2,
-               CAGD_POINT       *rp_out );
+               CAGD_POINT *rp_out );
 
 void rotate_vec( double      angle,
                  CAGD_POINT *p_in,

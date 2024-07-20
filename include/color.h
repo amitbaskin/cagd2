@@ -2,7 +2,6 @@
 
 #include "cagd.h"
 
-
 void set_default_color();
 
 void set_tan_color();

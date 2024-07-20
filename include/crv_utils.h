@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <map>
 
 class Curve;
@@ -7,9 +8,8 @@ class Curve;
 void load_curves( int dummy1, int dummy2, void *p_data );
 
 void clean_all_curves();
-void clean_cur_curves_vec();
 
-void print_err( char *str );
+void print_error( const std::string &message );
 
 void redraw_all_curves();
 

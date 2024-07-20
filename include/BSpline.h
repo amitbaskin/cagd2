@@ -7,13 +7,16 @@
 class BSpline : public Curve
 {
 public:
-  BSpline::BSpline(){}
+  BSpline::BSpline()
+  {
+  }
 
   BSpline::BSpline( const point_vec &ctrl_pnts_,
                     const double_vec &knots_,
                     int order_ )
     : knots_( knots_ )
-  {}
+  {
+  }
 
   virtual CAGD_POINT evaluate( double t ) const;
   virtual void show_crv( int chg_ctrl_idx = K_NOT_USED ) const;

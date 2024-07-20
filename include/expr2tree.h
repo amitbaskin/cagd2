@@ -36,10 +36,11 @@ extern int e2t_parsing_error;
 /*****************************************************************************
 * The basic expression tree node definition:                                 *
 *****************************************************************************/
-typedef struct e2t_expr_node {
-     struct e2t_expr_node *right, *left;
-     int node_kind;
-     double data;
+typedef struct e2t_expr_node
+{
+  struct e2t_expr_node *right, *left;
+  int node_kind;
+  double data;
 } e2t_expr_node;
 
 /*****************************************************************************
@@ -69,17 +70,17 @@ typedef struct e2t_expr_node {
 extern "C" {
 #endif
 
-e2t_expr_node *e2t_expr2tree(const char s[]);
-void e2t_printtree(const e2t_expr_node *root, char *str);
-e2t_expr_node *e2t_copytree(const e2t_expr_node *root);
-double     e2t_evaltree(const e2t_expr_node *root);
-e2t_expr_node *e2t_derivtree(const e2t_expr_node *root, int param);
-int        e2t_cmptree(const e2t_expr_node *root1, const e2t_expr_node *root2);
-int        e2t_paramintree(const e2t_expr_node *root, int param);
-void       e2t_freetree(e2t_expr_node *root);
-int        e2t_parserror();
-int        e2t_deriverror();
-void       e2t_setparamvalue(double Value, int Number);
+  e2t_expr_node *e2t_expr2tree( const char s[] );
+  void e2t_printtree( const e2t_expr_node *root, char *str );
+  e2t_expr_node *e2t_copytree( const e2t_expr_node *root );
+  double     e2t_evaltree( const e2t_expr_node *root );
+  e2t_expr_node *e2t_derivtree( const e2t_expr_node *root, int param );
+  int        e2t_cmptree( const e2t_expr_node *root1, const e2t_expr_node *root2 );
+  int        e2t_paramintree( const e2t_expr_node *root, int param );
+  void       e2t_freetree( e2t_expr_node *root );
+  int        e2t_parserror();
+  int        e2t_deriverror();
+  void       e2t_setparamvalue( double Value, int Number );
 
 #ifdef __cplusplus
 }
