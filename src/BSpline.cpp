@@ -35,11 +35,8 @@ void BSpline::show_crv( int chg_ctrl_idx ) const
 ******************************************************************************/
 void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
 {
-  std::vector sliced_u_vec( u_vec_.begin() + u_vec_idxs[ 0 ],
-                            u_vec_.begin() + u_vec_idxs.back() + 1 );
-
   double normalized_num_samps = get_default_num_steps() /
-                                sliced_u_vec[ sliced_u_vec.size() - 1 ];
+                                u_vec_[ u_vec_.size() - 1 ];
 
   double seg_ids_num = seg_ids_.size();
 
@@ -47,8 +44,7 @@ void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
 
   for( size_t i = 0; i < u_vec_idxs.size() - 1; ++i )
   {
-    double delta = sliced_u_vec[ u_vec_idxs[ i + 1 ] ] -
-                   sliced_u_vec[ u_vec_idxs[ i ] ];
+    double delta = u_vec_[ u_vec_idxs[ i + 1 ] ] - u_vec_[ u_vec_idxs[ i ] ];
 
     int num_samps = ( int )( delta * normalized_num_samps );
     double jump = 1.0 / num_samps;
@@ -59,11 +55,11 @@ void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
     {
       for( int samp_idx = 0; samp_idx < num_samps; ++samp_idx )
       {
-        double param = sliced_u_vec[ u_vec_idxs[ i ] ] + jump * samp_idx;
+        double param = u_vec_[ u_vec_idxs[ i ] ] + jump * samp_idx;
 
-        if( double_cmp( param, sliced_u_vec[ u_vec_idxs[ i + 1 ] ] ) > 0 )
+        if( double_cmp( param, u_vec_[ u_vec_idxs[ i + 1 ] ] ) > 0 )
         {
-          param = sliced_u_vec[ u_vec_idxs[ i + 1 ] ];
+          param = u_vec_[ u_vec_idxs[ i + 1 ] ];
           pnts[ samp_idx ] = evaluate( param );
           break;
         }
