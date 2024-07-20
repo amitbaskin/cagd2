@@ -37,6 +37,7 @@ public:
   int order_;
   point_vec ctrl_pnts_;
   mutable int_vec seg_ids_;
+  mutable int_vec pnt_ids_;
   GLubyte color_[ 3 ];
   int     poly_seg_id_;
 };

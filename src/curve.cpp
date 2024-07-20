@@ -54,7 +54,7 @@ void Curve::print() const
 ******************************************************************************/
 void Curve::show_ctrl_poly()
 {
-  int num_pts = ctrl_pnts_.size();
+  size_t num_pts = ctrl_pnts_.size();
 
   if( num_pts > 1 )
   {
@@ -64,7 +64,7 @@ void Curve::show_ctrl_poly()
     {
       set_norm_color();
 
-      for( int i = 0; i < num_pts; i++ )
+      for( size_t i = 0; i < num_pts; i++ )
       {
         if( ctrl_pnts_[ i ].z == 0 )
         {
@@ -73,10 +73,17 @@ void Curve::show_ctrl_poly()
         }
 
         pnts[ i ] = { ctrl_pnts_[ i ].x/* / curve_data->ctrl_pts[i].z*/,
-                    ctrl_pnts_[ i ].y/* / curve_data->ctrl_pts[i].z*/,
-                    0 };
+                      ctrl_pnts_[ i ].y/* / curve_data->ctrl_pts[i].z*/,
+                      0.0 };
 
-        map_pnt_to_crv_ctrl( cagdAddPoint( &pnts[ i ] ), this, i );
+        if( pnt_ids_.size() < num_pts )
+        {
+          int pnt_id = cagdAddPoint( &pnts[ i ] );
+          pnt_ids_.push_back( pnt_id );
+          map_pnt_to_crv_ctrl( pnt_id, this, i );
+        }
+        else
+          cagdReusePoint( pnt_ids_[ i ], &pnts[ i ] );
       }
     }
 
