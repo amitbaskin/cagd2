@@ -116,6 +116,7 @@
     <ClCompile Include="src\color.c" />
     <ClCompile Include="src\Curve.cpp" />
     <ClCompile Include="src\menus.c" />
+    <ClCompile Include="src\options.cpp" />
     <ClCompile Include="src\segment.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
