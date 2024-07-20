@@ -40,7 +40,7 @@ public:
   int     poly_seg_id_;
 };
 
-void load_curve( int dummy1, int dummy2, void *p_data );
+void load_curves( int dummy1, int dummy2, void *p_data );
 
 void clean_all_curves();
 void clean_cur_curves_vec();

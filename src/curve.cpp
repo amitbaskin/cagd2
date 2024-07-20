@@ -34,7 +34,7 @@ Curve::Curve( int order_, point_vec ctrl_pnts_ ) :
 
 void Curve::print() const
 {
-  printf( "order_: %u\n", order_ );
+  printf( "Order: %u\n", order_ );
   printf( "Control Points:\n" );
 
   for( const CAGD_POINT &pt : ctrl_pnts_ )
@@ -319,9 +319,9 @@ void clean_cur_curves_vec()
 }
 
 /******************************************************************************
-* load_curve
+* load_curves
 ******************************************************************************/
-void load_curve( int dummy1, int dummy2, void *p_data )
+void load_curves( int dummy1, int dummy2, void *p_data )
 {
   char *file_path = ( char * )p_data;
   std::string file_str = file_path;
@@ -334,6 +334,8 @@ void load_curve( int dummy1, int dummy2, void *p_data )
       cur_curves[ i ]->show_ctrl_poly();
       cur_curves[ i ]->show_crv();
     }
+
+    cagdRedraw();
   }
 }
 
@@ -386,4 +388,6 @@ void redraw_all_curves()
 {
   for( auto p_crv : cur_curves )
     p_crv->show_crv();
+
+  cagdRedraw();
 }

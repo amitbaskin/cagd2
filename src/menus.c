@@ -22,7 +22,7 @@ void init_menus()
   HMENU curve_menu = CreatePopupMenu(); // Curve
 
   // Curve
-  AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default color_" );
+  AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default Color" );
   //AppendMenu( op_menu, MF_STRING, CAGD_SHOW_EVOLUTE_MENU, "Show Evolute Curve" );
   //AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
 
