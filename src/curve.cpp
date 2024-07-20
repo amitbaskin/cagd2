@@ -101,12 +101,12 @@ void skip_blank_lines_and_comments( std::ifstream &file )
     ltrim( line );
     if( line.empty() || line[0] == '#' )
     {
-      lastPos = file.tellg(); // Record the position before reading the next line
-      continue; // Skip blank lines and comments
+      lastPos = file.tellg();
+      continue;
     }
-    // If a valid line is found, rewind to the position before the last read line
+
     file.seekg( lastPos );
-    break; // Exit the loop once a valid line is found
+    break;
   }
 }
 
@@ -142,7 +142,7 @@ size_t parse_file( const std::string &filePath )
 
   while( file )
   {
-    int order_ = 0;
+    int order = 0;
 
     Curve *p_curve;
 
@@ -161,7 +161,7 @@ size_t parse_file( const std::string &filePath )
       continue;
 
     std::istringstream issOrder( line );
-    if( !( issOrder >> order_ ) )
+    if( !( issOrder >> order ) )
     {
       print_err( "Error reading order" );
       continue;
@@ -169,11 +169,17 @@ size_t parse_file( const std::string &filePath )
 
     skip_blank_lines_and_comments( file );
 
-    if( line.find( "knots_" ) != std::string::npos )
+    if( !std::getline( file, line ) )
+    {
+      print_err( "Error reading file" );
+      break;
+    }
+
+    if( line.find( "knots" ) != std::string::npos )
     {
       p_curve = new BSpline();
       BSpline *p_bspline = ( BSpline * )p_curve;
-      p_bspline->order_ = order_;
+      p_bspline->order_ = order;
 
       size_t pos = line.find( "[" );
       size_t posEnd = line.find( "]" );
@@ -196,8 +202,11 @@ size_t parse_file( const std::string &filePath )
         {
           p_bspline->knots_.push_back( knot );
 
-          if( double_cmp( prev_knot, knot ) > 0 )
+          if( double_cmp( knot, prev_knot ) > 0 )
+          {
+            prev_knot = knot;
             p_bspline->u_vec_.push_back( knot );
+          }
 
           if( p_bspline->knots_.size() == numKnots )
           {
@@ -222,6 +231,12 @@ size_t parse_file( const std::string &filePath )
           {
             p_bspline->knots_.push_back( knot );
 
+            if( double_cmp( knot, prev_knot ) > 0 )
+            {
+              prev_knot = knot;
+              p_bspline->u_vec_.push_back( knot );
+            }
+
             if( p_bspline->knots_.size() == numKnots )
             {
               break;
@@ -236,14 +251,23 @@ size_t parse_file( const std::string &filePath )
         continue;
       }
     }
-    else if( order_ > 0 )
+    else if( order > 0 )
     {
       p_curve = new Bezier();
       Bezier *p_bezier = ( Bezier * )p_curve;
-      p_bezier->order_ = order_;
+      p_bezier->order_ = order;
+
+      std::istringstream issctrl_pnts( line );
+      p_curve->add_ctrl_pnt( issctrl_pnts );
+
+      if( !p_curve->is_miss_ctrl_pnts() )
+        break;
     }
     else
+    {
+      print_err( "Error in file format - no knots and no order" );
       break;
+    }
 
     while( std::getline( file, line ) )
     {
@@ -254,8 +278,8 @@ size_t parse_file( const std::string &filePath )
         continue;
       }
 
-      std::istringstream issctrl_pnts_( line );
-      p_curve->add_ctrl_pnt( issctrl_pnts_ );
+      std::istringstream issctrl_pnts( line );
+      p_curve->add_ctrl_pnt( issctrl_pnts );
 
       if( !p_curve->is_miss_ctrl_pnts() )
         break;

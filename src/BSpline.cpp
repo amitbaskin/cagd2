@@ -4,6 +4,7 @@
 #include <iostream>
 #include <options.h>
 #include <color.h>
+#include <vectors.h>
 
 void BSpline::show_crv() const
 {
@@ -14,29 +15,40 @@ void BSpline::show_crv() const
 
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
 
-  for( size_t i = 0; i < u_vec_.size() - 1; ++i )
+  for( size_t u_idx = 0; u_idx < u_vec_.size() - 1; ++u_idx )
   {
-    double delta  = u_vec_[ i + 1 ] - u_vec_[ i ];
+    double delta  = u_vec_[ u_idx + 1 ] - u_vec_[ u_idx ];
     int num_samps = ( int )( delta * normalized_num_samps );
-    double jump   = 1.0 / normalized_num_samps;
+    double jump   = 1.0 / num_samps;
 
     auto pnts = new CAGD_POINT[ num_samps ];
 
     if( pnts != NULL )
     {
-      for( int i = 0; i < num_samps; ++i )
-        pnts[ i ] = evaluate( jump * i );
+      for( int samp_idx = 0; samp_idx < num_samps; ++samp_idx )
+      {
+        double param = u_vec_[ u_idx ] + jump * samp_idx;
 
-      if( i < seg_ids_num )
-        cagdReusePolyline( seg_ids_[ i ], pnts, num_samps );
+        if( double_cmp( param, u_vec_[ u_idx + 1 ] ) > 0 )
+        {
+          param = u_vec_[ u_idx + 1 ];
+          pnts[ samp_idx ] = evaluate( param );
+          break;
+        }
+        else
+          pnts[ samp_idx ] = evaluate( param );
+      }
+
+      if( u_idx < seg_ids_num )
+        cagdReusePolyline( seg_ids_[ u_idx ], pnts, num_samps );
       else
         seg_ids_.push_back( cagdAddPolyline( pnts, num_samps ) );
-
-      set_default_color();
     }
 
     delete[] pnts;
   }
+
+  set_default_color();
 }
 
 void BSpline::print() const
@@ -115,27 +127,29 @@ void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
 }
 
 // Method to evaluate the B-spline at parameter t
-CAGD_POINT BSpline::evaluate( double t ) const
+CAGD_POINT BSpline::evaluate( double param ) const
 {
-  int p = order_ - 1;
-  int n = ctrl_pnts_.size() - 1;
+  int pp = order_ - 1;
+  int nn = ctrl_pnts_.size() - 1;
 
-  if( t < knots_[ p ] || t > knots_[ n + 1 ] )
+  if( param < knots_[ pp ] || param > knots_[ nn + 1 ] )
   {
     throw std::out_of_range( "Parameter t is out of range." );
   }
 
-  int span = findKnotSpan( t );
-  double *N = new double[ order_ ];
-  evaluateBasisFunctions( span, t, N );
+  int span = findKnotSpan( param );
+  double *NN = new double[ order_ + 1 ];
+  evaluateBasisFunctions( span, param, NN );
 
-  CAGD_POINT C = { 0.0, 0.0, 0.0 };
-  for( int j = 0; j <= p; ++j )
+  CAGD_POINT CC = { 0.0, 0.0, 0.0 };
+
+  for( int j = 0; j <= pp; ++j )
   {
-    C.x += N[ j ] * ctrl_pnts_[ span - p + j ].x;
-    C.y += N[ j ] * ctrl_pnts_[ span - p + j ].y;
+    CC.x += NN[ j ] * ctrl_pnts_[ span - pp + j ].x;
+    CC.y += NN[ j ] * ctrl_pnts_[ span - pp + j ].y;
   }
 
-  delete[] N;
-  return C;
+  delete[] NN;
+
+  return CC;
 }
