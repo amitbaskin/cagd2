@@ -16,8 +16,10 @@ public:
   {}
 
   virtual CAGD_POINT evaluate( double t ) const;
-  virtual void show_crv() const;
+  virtual void show_crv( int chg_ctrl_idx = K_NOT_USED ) const;
   virtual void print() const;
+
+  void show_crv_helper( std::vector< int > u_vec ) const;
 
   virtual bool is_miss_ctrl_pnts() const
   {
@@ -27,6 +29,8 @@ public:
   int findKnotSpan( double t ) const;
 
   void evaluateBasisFunctions( int span, double t, double *N ) const;
+
+  std::vector< int > findAffectedSegments( int controlPointIndex ) const;
 
   double_vec knots_;
   double_vec u_vec_;
