@@ -5,7 +5,7 @@
 #include "cagd.h"
 #include "internal.h"
 #include "options.h"
-#include "curve.h"
+#include "Curve.h"
 
 #define LOINT(x) ((int)(short)LOWORD(x))
 #define HIINT(x) ((int)(short)HIWORD(x))

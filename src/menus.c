@@ -3,7 +3,7 @@
 #include "menus.h"
 #include "resource.h"
 #include "color.h"
-#include "curve.h"
+#include "Curve.h"
 
 char buffer1[BUFSIZ];
 char buffer2[BUFSIZ];
@@ -21,7 +21,7 @@ extern unsigned int curve_color[3];
 void init_menus()
 {
   HMENU op_menu = CreatePopupMenu(); // options
-  HMENU curve_menu = CreatePopupMenu(); // curve
+  HMENU curve_menu = CreatePopupMenu(); // Curve
 
   // Curve
   AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default Color" );

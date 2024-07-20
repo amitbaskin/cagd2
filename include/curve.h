@@ -8,18 +8,31 @@
 #define IS_DEBUG 1
 #define K_NOT_USED -1
 
-enum curve_type
+enum class curve_type
 {
-  CURVE_TYPE_NONE = 0,
-  CURVE_TYPE_BEZIER,
-  CURVE_TYPE_BSPLINE
+  CURVE_TYPE_NONE    = 0,
+  CURVE_TYPE_BEZIER  = 1,
+  CURVE_TYPE_BSPLINE = 2
 };
 
 typedef std::vector<CAGD_POINT> point_vec;
 typedef std::vector<double> double_vec;
 
-typedef struct
+class Curve
 {
+public:
+  ~Curve()
+  {
+    if (bz_crv != nullptr)
+      delete bz_crv;
+
+    if (bs_crv != nullptr)
+      delete bs_crv;
+  }
+
+  CAGD_POINT evaluate(double param);
+  double get_end_param();
+
   curve_type   type;
   BezierCurve *bz_crv;
   BSpline     *bs_crv;
@@ -29,13 +42,7 @@ typedef struct
   GLubyte      color[3];
   int          poly_id;
   int          curve_id;
-
-
-  CAGD_POINT evaluate( double param );
-
-  double get_end_param();
-
-} curve;
+};
 
 void load_curve( int dummy1, int dummy2, void *p_data );
 void save_curve( int dummy1, int dummy2, void *p_data );
@@ -43,16 +50,15 @@ void save_curve( int dummy1, int dummy2, void *p_data );
 void clean_all_curves();
 void clean_cur_curves_vec();
 
-void free_curve_data( curve *curveData );
 void print_err( char *str );
-void print_debug_curve_data( curve *curve_data );
+void print_debug_curve_data( Curve *curve_data );
 
-void show_curve( curve *curve_data, bool redraw_ctrl_polyline );
+void show_curve( Curve *curve_data, bool redraw_ctrl_polyline );
 
-void show_ctrl_pts_polyline( curve *curve_data );
+void show_ctrl_pts_polyline( Curve *curve_data );
 
-void show_curve_helper( curve *curve_data );
-void show_bspline_curve( curve *curve_data );
+void show_curve_helper( Curve *curve_data );
+void show_bspline_curve( Curve *curve_data );
 
 void redraw_all_curves();
 

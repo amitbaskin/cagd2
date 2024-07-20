@@ -62,7 +62,7 @@ BezierCurve::BezierCurve( const std::vector<CAGD_POINT> &points )
   computeMP(); // Compute MP on initialization
 }
 
-// Evaluate the Bézier curve at parameter t
+// Evaluate the Bézier Curve at parameter t
 CAGD_POINT BezierCurve::evaluate( GLdouble t ) const
 {
   int n = control_points.size() - 1;

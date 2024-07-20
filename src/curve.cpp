@@ -1,4 +1,4 @@
-#include "curve.h"
+#include "Curve.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,7 +9,7 @@ extern int num_samples;
 extern bool show_control_polyline;
 extern unsigned int curve_color[3];
 
-std::vector<curve *> cur_curves;
+std::vector<Curve *> cur_curves;
 
 /******************************************************************************
 * print_err
@@ -25,15 +25,15 @@ void print_err( char *str )
 /******************************************************************************
 * print_debug_curve_data
 ******************************************************************************/
-void print_debug_curve_data( curve *curveData )
+void print_debug_curve_data( Curve *curveData )
 {
   char *curve_type = "none";
   switch( curveData->type )
   {
-  case CURVE_TYPE_BEZIER:
+  case curve_type::CURVE_TYPE_BEZIER:
     curve_type = "bezier";
     break;
-  case CURVE_TYPE_BSPLINE:
+  case curve_type::CURVE_TYPE_BSPLINE:
     curve_type = "bspline";
     break;
   default:
@@ -131,8 +131,8 @@ void parse_file( const std::string &filePath )
 
   while( file )
   {
-    curve *curveData = new curve;
-    curveData->type = CURVE_TYPE_NONE;
+    Curve *curveData = new Curve();
+    curveData->type = curve_type::CURVE_TYPE_NONE;
     curveData->order = 0;
     curveData->bs_crv = nullptr; // Assuming bs_crv and bz_crv are not needed for this example
     curveData->bz_crv = nullptr;
@@ -178,7 +178,7 @@ void parse_file( const std::string &filePath )
 
     if( line.find( "knots" ) != std::string::npos )
     {
-      curveData->type = CURVE_TYPE_BSPLINE;
+      curveData->type = curve_type::CURVE_TYPE_BSPLINE;
 
       // Extract the number of knots from the line
       size_t pos = line.find( "[" );
@@ -235,12 +235,38 @@ void parse_file( const std::string &filePath )
     }
     else if( curveData->order > 0 )
     {
-      curveData->type = CURVE_TYPE_BEZIER;
+      curveData->type = curve_type::CURVE_TYPE_BEZIER;
     }
     else
     {
       delete curveData;
       break;
+    }
+
+    ltrim( line );
+    if( line.empty() || line[ 0 ] == '#' )
+    {
+      continue; // Skip blank lines and comments
+    }
+
+    std::istringstream issControlPoints( line );
+    CAGD_POINT point;
+    while( issControlPoints >> point.x >> point.y >> point.z )
+    {
+      point.x /= point.z;
+      point.y /= point.z;
+      curveData->ctrl_pts.push_back( point );
+    }
+
+    if( curveData->type == curve_type::CURVE_TYPE_BEZIER )
+    {
+      if( curveData->ctrl_pts.size() == curveData->order )
+        break;
+    }
+    else
+    {
+      if( curveData->ctrl_pts.size() == curveData->knots.size() - curveData->order )
+        break;
     }
 
     // Read control points if not already parsed
@@ -261,7 +287,7 @@ void parse_file( const std::string &filePath )
         curveData->ctrl_pts.push_back( point );
       }
 
-      if( curveData->type == CURVE_TYPE_BEZIER )
+      if( curveData->type == curve_type::CURVE_TYPE_BEZIER )
       {
         if( curveData->ctrl_pts.size() == curveData->order )
           break;
@@ -285,17 +311,6 @@ void parse_file( const std::string &filePath )
 }
 
 /******************************************************************************
-* free_curve_data
-******************************************************************************/
-void free_curve_data( curve *curveData )
-{
-  if( curveData )
-  {
-    delete curveData;
-  }
-}
-
-/******************************************************************************
 * clean_all_curves
 ******************************************************************************/
 void clean_all_curves()
@@ -311,18 +326,8 @@ void clean_all_curves()
 ******************************************************************************/
 void clean_cur_curves_vec()
 {
-  for( auto iter = cur_curves.begin(); iter != cur_curves.end(); ++iter )
-  {
-    if( ( *iter )->bz_crv != nullptr )
-      delete ( *iter )->bz_crv;
-
-    if( ( *iter )->bs_crv != nullptr )
-      delete ( *iter )->bs_crv;
-
-    free_curve_data( *iter );
-
-    iter = cur_curves.erase( iter );
-  }
+  for( auto crv : cur_curves )
+    delete crv;
 }
 
 /******************************************************************************
@@ -340,11 +345,11 @@ void load_curve( int dummy1, int dummy2, void *p_data )
 
     if( curve_data != nullptr )
     {
-      if( curve_data->type == CURVE_TYPE_BEZIER )
+      if( curve_data->type == curve_type::CURVE_TYPE_BEZIER )
       {
         curve_data->bz_crv = new BezierCurve( curve_data->ctrl_pts );
       }
-      else if( curve_data->type == CURVE_TYPE_BSPLINE )
+      else if( curve_data->type == curve_type::CURVE_TYPE_BSPLINE )
       {
         curve_data->bs_crv = new BSpline( curve_data->ctrl_pts,
                                           curve_data->knots,
@@ -375,7 +380,7 @@ static double get_jump_sample_val( double start, double end, int num_pnts )
 /******************************************************************************
 * show_curve
 ******************************************************************************/
-void show_curve( curve *curve_data, bool redraw_ctrl_polyline )
+void show_curve( Curve *curve_data, bool redraw_ctrl_polyline )
 {
   if( show_control_polyline && redraw_ctrl_polyline )
   {
@@ -390,7 +395,7 @@ void show_curve( curve *curve_data, bool redraw_ctrl_polyline )
 /******************************************************************************
 * show_ctrl_pts_polyline
 ******************************************************************************/
-void show_ctrl_pts_polyline( curve *curve_data )
+void show_ctrl_pts_polyline( Curve *curve_data )
 {
   int num_pts = curve_data->ctrl_pts.size();
 
@@ -428,7 +433,7 @@ void show_ctrl_pts_polyline( curve *curve_data )
     free( pnts );
   }
 }
-CAGD_POINT curve::evaluate( double param )
+CAGD_POINT Curve::evaluate( double param )
 {
   if( type == curve_type::CURVE_TYPE_BEZIER )
     return bz_crv->evaluate( param );
@@ -436,7 +441,7 @@ CAGD_POINT curve::evaluate( double param )
     return bs_crv->evaluate( param );
 }
 
-double curve::get_end_param()
+double Curve::get_end_param()
 {
   if( type == curve_type::CURVE_TYPE_BEZIER )
     return 1.0;
@@ -447,7 +452,7 @@ double curve::get_end_param()
 /******************************************************************************
 * show_curve_helper
 ******************************************************************************/
-void show_curve_helper( curve *curve_data )
+void show_curve_helper( Curve *curve_data )
 {
   CAGD_POINT *pnts = ( CAGD_POINT * )malloc( sizeof( CAGD_POINT ) *
                                              num_samples );
@@ -483,7 +488,7 @@ void show_curve_helper( curve *curve_data )
 /******************************************************************************
 * show_bspline_curve
 ******************************************************************************/
-void show_bspline_curve( curve *curve_data )
+void show_bspline_curve( Curve *curve_data )
 {
 
 }
