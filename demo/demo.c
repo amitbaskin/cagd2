@@ -33,9 +33,9 @@ HMENU myPopup;
 UINT myText;
 char myBuffer[BUFSIZ];
 
-void myMessage(PSTR title, PSTR message, UINT type)
+void myMessage(PSTR title, PSTR message, UINT crv_type)
 {
-  MessageBox(cagdGetWindow(), message, title, MB_OK | MB_APPLMODAL | type);
+  MessageBox(cagdGetWindow(), message, title, MB_OK | MB_APPLMODAL | crv_type);
 }
 
 void myTimer(int x, int y, PVOID userData)

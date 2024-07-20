@@ -6,7 +6,7 @@
 #include "internal.h"
 
 typedef struct {
-  UINT        type;
+  UINT        crv_type;
   BOOL        visible;
   UINT        length;
   PSTR        text;
@@ -20,7 +20,7 @@ static SEGMENT *list = NULL;
 
 static BOOL valid(UINT id)
 {
-  return (id < nSegments) && (list[id].type != CAGD_SEGMENT_UNUSED);
+  return (id < nSegments) && (list[id].crv_type != CAGD_SEGMENT_UNUSED);
 }
 
 void cagdSetColor(BYTE red, BYTE green, BYTE blue)
@@ -65,13 +65,13 @@ static UINT findUnused()
 {
   UINT id;
   for(id = 1; id < nSegments; id++)
-    if(list[id].type == CAGD_SEGMENT_UNUSED)
+    if(list[id].crv_type == CAGD_SEGMENT_UNUSED)
       break;
   if(nSegments <= id){
     list = (SEGMENT *) realloc(list, sizeof(SEGMENT) * (nSegments += 20));
     for(id = nSegments - 20; id < nSegments; id++){
       SEGMENT *segment = &list[id];	
-      segment->type = CAGD_SEGMENT_UNUSED;
+      segment->crv_type = CAGD_SEGMENT_UNUSED;
       segment->visible = FALSE;
       segment->length = 0;
       segment->text = NULL;
@@ -86,7 +86,7 @@ UINT cagdAddPoint(const CAGD_POINT *where)
 {
   UINT id = findUnused();
   SEGMENT *segment = &list[id];
-  segment->type = CAGD_SEGMENT_POINT;
+  segment->crv_type = CAGD_SEGMENT_POINT;
   segment->visible = TRUE;
   memcpy(segment->color, color, sizeof(GLubyte) * 3);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT));
@@ -99,7 +99,7 @@ BOOL cagdReusePoint(UINT id, const CAGD_POINT *where)
 {
   if(!valid(id))
     return FALSE;
-  if(list[id].type != CAGD_SEGMENT_POINT)
+  if(list[id].crv_type != CAGD_SEGMENT_POINT)
     return FALSE;
   *list[id].where = *where;
   return TRUE;
@@ -111,7 +111,7 @@ UINT cagdAddText(const CAGD_POINT *where, PCSTR text)
   SEGMENT *segment = &list[id];
   if(!text)
     return 0;
-  segment->type = CAGD_SEGMENT_TEXT;
+  segment->crv_type = CAGD_SEGMENT_TEXT;
   segment->visible = TRUE;
   memcpy(segment->color, color, sizeof(GLubyte) * 3);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT));
@@ -131,7 +131,7 @@ BOOL cagdReuseText(UINT id, const CAGD_POINT *where, PCSTR text)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  if(segment->type != CAGD_SEGMENT_TEXT)
+  if(segment->crv_type != CAGD_SEGMENT_TEXT)
     return FALSE;
   *segment->where = *where;
   free(segment->text);
@@ -146,7 +146,7 @@ BOOL cagdGetText(UINT id, PSTR text)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  if(segment->type != CAGD_SEGMENT_TEXT)
+  if(segment->crv_type != CAGD_SEGMENT_TEXT)
     return FALSE;
   strcpy(text, segment->text);
   return TRUE;
@@ -158,7 +158,7 @@ UINT cagdAddPolyline(const CAGD_POINT *where, UINT length)
   SEGMENT *segment = &list[id];
   if(length < 2)
     return 0;
-  segment->type = CAGD_SEGMENT_POLYLINE;
+  segment->crv_type = CAGD_SEGMENT_POLYLINE;
   segment->visible = TRUE;
   memcpy(segment->color, color, sizeof(GLubyte) * 3);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT) * length);
@@ -175,7 +175,7 @@ BOOL cagdReusePolyline(UINT id, const CAGD_POINT *where, UINT length)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  if(segment->type != CAGD_SEGMENT_POLYLINE)
+  if(segment->crv_type != CAGD_SEGMENT_POLYLINE)
     return FALSE;
   free(segment->where);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT) * length);
@@ -190,7 +190,7 @@ BOOL cagdGetVertex(UINT id, UINT vertex, CAGD_POINT *where)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  if(segment->type != CAGD_SEGMENT_POLYLINE)
+  if(segment->crv_type != CAGD_SEGMENT_POLYLINE)
     return FALSE;
   if(segment->length <= vertex)
     return FALSE;
@@ -204,7 +204,7 @@ BOOL cagdSetVertex(UINT id, UINT vertex, const CAGD_POINT *where)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  if(segment->type != CAGD_SEGMENT_POLYLINE)
+  if(segment->crv_type != CAGD_SEGMENT_POLYLINE)
     return FALSE;
   if(segment->length <= vertex)
     return FALSE;
@@ -241,9 +241,9 @@ BOOL cagdFreeSegment(UINT id)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  if(segment->type == CAGD_SEGMENT_TEXT)
+  if(segment->crv_type == CAGD_SEGMENT_TEXT)
     free(segment->text);
-  segment->type = CAGD_SEGMENT_UNUSED;
+  segment->crv_type = CAGD_SEGMENT_UNUSED;
   free(segment->where);
   return TRUE;
 }
@@ -258,7 +258,7 @@ void cagdFreeAllSegments()
 UINT cagdGetSegmentType(UINT id)
 {
   if(id < nSegments)
-    return list[id].type;
+    return list[id].crv_type;
   return CAGD_SEGMENT_UNUSED;
 }
 
@@ -276,7 +276,7 @@ BOOL cagdGetSegmentLocation(UINT id, CAGD_POINT *where)
   if(!valid(id))
     return 0;
   segment = &list[id];
-  if(segment->type == CAGD_SEGMENT_POLYLINE)
+  if(segment->crv_type == CAGD_SEGMENT_POLYLINE)
     length = segment->length;
   memcpy(where, segment->where, sizeof(CAGD_POINT) * length);
   return TRUE;
@@ -290,7 +290,7 @@ UINT cagdGetNearestVertex(UINT id, int x, int y)
   if(!valid(id))
     return 0;
   segment = &list[id];
-  if(segment->type != CAGD_SEGMENT_POLYLINE)
+  if(segment->crv_type != CAGD_SEGMENT_POLYLINE)
     return 0;
   for(i = 0; i < segment->length; i++){
     if(!cagdToWindow(&segment->where[i], &X, &Y))
@@ -316,14 +316,14 @@ void drawSegments(GLenum mode)
   }
   for(id = 1; id < nSegments; id++){
     SEGMENT *segment = &list[id];
-    if(segment->type == CAGD_SEGMENT_UNUSED)
+    if(segment->crv_type == CAGD_SEGMENT_UNUSED)
       continue;
     if(!segment->visible)
       continue;
     if(mode == GL_SELECT)
       glLoadName(id);
     glColor3ubv(segment->color);
-    switch(segment->type){
+    switch(segment->crv_type){
     case CAGD_SEGMENT_POINT:
       glBegin(GL_POINTS);
       glVertex3dv((GLdouble *)segment->where);

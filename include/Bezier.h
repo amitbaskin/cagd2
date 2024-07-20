@@ -4,18 +4,22 @@
 #include <vector>
 #include "cagd.h"
 
-class BezierCurve
+class Bezier
 {
 public:
-  BezierCurve( const std::vector<CAGD_POINT> &points );
+  Bezier(){}
+
+  Bezier( const std::vector<CAGD_POINT> &points );
+
+  void print();
 
   CAGD_POINT evaluate( GLdouble t ) const;
   void addControlPoint( const CAGD_POINT &new_point );
   void removeControlPoint( size_t index );
   void updateControlPoint( size_t index, const CAGD_POINT &new_point );
 
-private:
-  std::vector<CAGD_POINT> control_points;
+  UINT order;
+  std::vector<CAGD_POINT> ctrl_pnts;
   mutable std::vector<CAGD_POINT> MP_cache;
 
   void computeMP() const;

@@ -1,11 +1,42 @@
+#include <stdio.h>
 #include "BSpline.h"
 #include <algorithm>
 #include <iostream>
 
+void BSpline::print()
+{
+  printf( "Curve crv_type: bspline\n" );
+  printf( "Order: %u\n", order );
+
+  printf( "Number of knots: %u\n", knots.size() );
+
+  if( !knots.empty() )
+  {
+    printf( "Knots: " );
+    for( const double &knot : knots )
+    {
+      printf( "%f ", knot );
+    }
+
+    printf( "\n" );
+  }
+
+  printf( "Control Points:\n" );
+
+  for( const CAGD_POINT &pt : ctrl_pnts )
+  {
+    printf( "(%f, %f", pt.x, pt.y );
+    printf( ", %f", pt.z );
+    printf( ")\n" );
+  }
+
+  printf( "\n\n\n" );
+}
+
 // Utility method to find the knot span index
 int BSpline::findKnotSpan( double t ) const
 {
-  int n = controlPoints.size() - 1;
+  int n = ctrl_pnts.size() - 1;
   int p = order - 1;
 
   // Special case when t is at the end of the knot vector
@@ -62,7 +93,7 @@ void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
 CAGD_POINT BSpline::evaluate( double t ) const
 {
   int p = order - 1;
-  int n = controlPoints.size() - 1;
+  int n = ctrl_pnts.size() - 1;
 
   if( t < knots[ p ] || t > knots[ n + 1 ] )
   {
@@ -76,8 +107,8 @@ CAGD_POINT BSpline::evaluate( double t ) const
   CAGD_POINT C = { 0.0, 0.0, 0.0 };
   for( int j = 0; j <= p; ++j )
   {
-    C.x += N[ j ] * controlPoints[ span - p + j ].x;
-    C.y += N[ j ] * controlPoints[ span - p + j ].y;
+    C.x += N[ j ] * ctrl_pnts[ span - p + j ].x;
+    C.y += N[ j ] * ctrl_pnts[ span - p + j ].y;
   }
 
   delete[] N;

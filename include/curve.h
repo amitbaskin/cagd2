@@ -2,13 +2,13 @@
 
 #include <vector>
 #include "cagd.h"
-#include "BezierCurve.h"
+#include "Bezier.h"
 #include "BSpline.h"
 
 #define IS_DEBUG 1
 #define K_NOT_USED -1
 
-enum class curve_type
+enum class CurveType
 {
   CURVE_TYPE_NONE    = 0,
   CURVE_TYPE_BEZIER  = 1,
@@ -32,13 +32,11 @@ public:
 
   CAGD_POINT evaluate(double param);
   double get_end_param();
+  point_vec &get_ctrl_pnts();
 
-  curve_type   type;
-  BezierCurve *bz_crv;
+  CurveType   crv_type;
+  Bezier      *bz_crv;
   BSpline     *bs_crv;
-  UINT         order;
-  point_vec    ctrl_pts;
-  double_vec   knots;
   GLubyte      color[3];
   int          poly_id;
   int          curve_id;

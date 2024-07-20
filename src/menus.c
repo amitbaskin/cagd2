@@ -10,7 +10,7 @@ char buffer2[BUFSIZ];
 char buffer3[BUFSIZ];
 UINT myText2;
 
-extern void myMessage( PSTR title, PSTR message, UINT type );
+extern void myMessage( PSTR title, PSTR message, UINT crv_type );
 extern int num_samples;
 extern unsigned int default_degree;
 extern unsigned int curve_color[3];

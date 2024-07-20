@@ -101,7 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="lab1\expr2tree.c" />
-    <ClCompile Include="src\BezierCurve.cpp" />
+    <ClCompile Include="src\Bezier.cpp" />
     <ClCompile Include="src\BSpline.cpp" />
     <ClCompile Include="src\cagd.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
@@ -128,7 +128,7 @@
     <ClCompile Include="src\vectors.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\BezierCurve.h" />
+    <ClInclude Include="include\Bezier.h" />
     <ClInclude Include="include\BSpline.h" />
     <ClInclude Include="include\cagd.h" />
     <ClInclude Include="include\color.h" />

@@ -39,7 +39,7 @@
     <ClCompile Include="src\callback.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\BezierCurve.cpp">
+    <ClCompile Include="src\Bezier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\BSpline.cpp">
@@ -71,7 +71,7 @@
     <ClInclude Include="include\Curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\BezierCurve.h">
+    <ClInclude Include="include\Bezier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\BSpline.h">
