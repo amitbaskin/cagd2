@@ -19,4 +19,4 @@ void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx );
 std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id );
 Curve *get_seg_crv( int seg_id );
 
-void update_ctrl_pnt();
+void update_ctrl_pnt( int pnt_id, int new_x, int new_y );

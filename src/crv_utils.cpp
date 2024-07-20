@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+
 #include "vectors.h"
 #include "options.h"
 #include "BSpline.h"
@@ -15,6 +16,7 @@ std::map< int, Curve * > seg_to_crv;
 std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
 
 size_t parse_file( const std::string &filePath );
+
 
 /******************************************************************************
 * redraw_all_curves
@@ -52,6 +54,26 @@ std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
     return pnt_to_crv_ctrl[ pnt_id ];
   else
     return std::make_tuple( nullptr, -1 );
+}
+
+/******************************************************************************
+* update_ctrl_pnt
+******************************************************************************/
+void update_ctrl_pnt( int pnt_id, int new_x, int new_y )
+{
+  std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
+
+  auto p_curve = std::get< 0 >( crv_ctrl_idx );
+  auto ctrl_idx = std::get< 1 >( crv_ctrl_idx );
+
+  if( p_curve != nullptr )
+  {
+    p_curve->ctrl_pnts_[ ctrl_idx ].x = new_x;
+    p_curve->ctrl_pnts_[ ctrl_idx ].y = new_y;
+    p_curve->show_ctrl_poly();
+    p_curve->show_crv();
+    cagdRedraw();
+  }
 }
 
 /******************************************************************************

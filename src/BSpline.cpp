@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include "BSpline.h"
 #include <algorithm>
 #include <iostream>
 #include <options.h>
 #include <color.h>
 #include <vectors.h>
+
+#include "BSpline.h"
 #include "crv_utils.h"
 
 

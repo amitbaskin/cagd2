@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include "Bezier.h"
 #include <cmath>
+
 #include "options.h"
 #include "color.h"
 #include "crv_utils.h"
