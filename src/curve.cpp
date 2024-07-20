@@ -236,37 +236,29 @@ void parse_file( const std::string &filePath )
     else if( curveData->order > 0 )
     {
       curveData->type = curve_type::CURVE_TYPE_BEZIER;
-    }
-    else
-    {
-      delete curveData;
-      break;
-    }
 
-    ltrim( line );
-    if( line.empty() || line[ 0 ] == '#' )
-    {
-      continue; // Skip blank lines and comments
-    }
+      ltrim( line );
+      if( line.empty() || line[ 0 ] == '#' )
+      {
+        continue; // Skip blank lines and comments
+      }
 
-    std::istringstream issControlPoints( line );
-    CAGD_POINT point;
-    while( issControlPoints >> point.x >> point.y >> point.z )
-    {
-      point.x /= point.z;
-      point.y /= point.z;
-      curveData->ctrl_pts.push_back( point );
-    }
+      std::istringstream issControlPoints( line );
+      CAGD_POINT point;
+      while( issControlPoints >> point.x >> point.y >> point.z )
+      {
+        point.x /= point.z;
+        point.y /= point.z;
+        curveData->ctrl_pts.push_back( point );
+      }
 
-    if( curveData->type == curve_type::CURVE_TYPE_BEZIER )
-    {
       if( curveData->ctrl_pts.size() == curveData->order )
         break;
     }
     else
     {
-      if( curveData->ctrl_pts.size() == curveData->knots.size() - curveData->order )
-        break;
+      delete curveData;
+      break;
     }
 
     // Read control points if not already parsed
