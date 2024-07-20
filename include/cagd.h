@@ -158,6 +158,7 @@ BOOL cagdGetDepthCue();
 void cagdSetDepthCue(BOOL enable);
 BOOL cagdToObject(int, int, CAGD_POINT [2]);
 BOOL cagdToWindow(CAGD_POINT *, int *, int *);
+void cagdGetMoveVec( int dX, int dY, double &x, double &y );
 /************************************************************************
 * General segment functions						*
 ************************************************************************/

@@ -40,7 +40,8 @@ void init_menus()
   cagdRegisterCallback( CAGD_MENU, menu_callbacks, NULL );
 
   // register callback to handle lmb on cur_curve
-  cagdRegisterCallback( CAGD_LBUTTONUP, left_mouse_click_cb, NULL );
+  cagdRegisterCallback( CAGD_LBUTTONDOWN, lmb_down_cb, NULL );
+  cagdRegisterCallback( CAGD_LBUTTONUP, lmb_up_cb, NULL );
 }
 
 /******************************************************************************
@@ -203,26 +204,25 @@ void handle_clean_all_menu()
 }
 
 /******************************************************************************
-* left_mouse_click_cb
+* lmb_down_cb
 ******************************************************************************/
-void left_mouse_click_cb( int x, int y, PVOID userData )
+void lmb_down_cb( int x, int y, PVOID userData )
 {
-  CAGD_POINT p = { 0.0,0.0,0.0 };
-  cagdHideSegment( myText2 = cagdAddText( &p, "" ) );
-
   UINT id;
-  int v;
   for( cagdPick( x, y ); id = cagdPickNext();)
-    if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POLYLINE )
+    if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POINT )
       break;
   if( id )
   {
-    if( v = cagdGetNearestVertex( id, x, y ) )
-    {
-      cagdGetVertex( id, --v, &p );
-      //double param = get_param_from_segment_number( v );
-
-    }
+    set_active_pt_id( id );
   }
   cagdRedraw();
+}
+
+/******************************************************************************
+* lmb_up_cb
+******************************************************************************/
+void lmb_up_cb( int x, int y, PVOID userData )
+{
+  set_active_pt_id( K_NOT_USED );
 }
