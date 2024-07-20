@@ -29,7 +29,11 @@ void Bezier::show_crv() const
     if( seg_ids_.size() > 0 )
       cagdReusePolyline( seg_ids_[ 0 ], pnts, def_num_steps );
     else
-      seg_ids_.push_back( cagdAddPolyline( pnts, def_num_steps ) );
+    {
+      int seg_id = cagdAddPolyline( pnts, def_num_steps );
+      seg_ids_.push_back( seg_id );
+      map_seg_to_crv( seg_id, ( Curve * )this );
+    }
 
     set_default_color();
   }

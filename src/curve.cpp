@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <map>
 #include "Curve.h"
 #include "color.h"
 #include "vectors.h"
@@ -10,7 +11,50 @@
 #include "Bezier.h"
 
 std::vector< Curve * > cur_curves;
+std::map< int, Curve * > seg_to_crv;
+std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
 
+/******************************************************************************
+* map_seg_to_crv
+******************************************************************************/
+void map_seg_to_crv( int seg_id, Curve *p_curve )
+{
+  seg_to_crv[ seg_id ] = p_curve;
+}
+
+/******************************************************************************
+* map_pnt_to_crv_ctrl
+******************************************************************************/
+void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx )
+{
+  pnt_to_crv_ctrl[ pnt_id ] = std::make_tuple( p_curve, ctrl_idx );
+}
+
+/******************************************************************************
+* get_pnt_crv_ctrl
+******************************************************************************/
+std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
+{
+  if( pnt_to_crv_ctrl.find( pnt_id ) != pnt_to_crv_ctrl.end() )
+    return pnt_to_crv_ctrl[ pnt_id ];
+  else
+    return std::make_tuple( nullptr, -1 );
+}
+
+/******************************************************************************
+* get_seg_crv
+******************************************************************************/
+Curve *get_seg_crv( int seg_id )
+{
+  if( seg_to_crv.find( seg_id ) != seg_to_crv.end() )
+    return seg_to_crv[ seg_id ];
+  else
+    return nullptr;
+}
+
+/******************************************************************************
+* Curve::Curve
+******************************************************************************/
 Curve::Curve() : order_( 0 ), poly_seg_id_( K_NOT_USED )
 {
   const unsigned char *curve_color = get_curve_color();
@@ -20,6 +64,9 @@ Curve::Curve() : order_( 0 ), poly_seg_id_( K_NOT_USED )
   color_[ 2 ] = curve_color[ 2 ];
 }
 
+/******************************************************************************
+* Curve::Curve
+******************************************************************************/
 Curve::Curve( int order_, point_vec ctrl_pnts_ ) :
   poly_seg_id_( K_NOT_USED ),
   order_( order_ ),
@@ -32,6 +79,9 @@ Curve::Curve( int order_, point_vec ctrl_pnts_ ) :
   color_[ 2 ] = curve_color[ 2 ];
 }
 
+/******************************************************************************
+* Curve::print
+******************************************************************************/
 void Curve::print() const
 {
   printf( "Order: %u\n", order_ );
@@ -59,11 +109,12 @@ void print_err( char *str )
 }
 
 /******************************************************************************
-* rtrim  trim from start (in place)
+* ltrim
 ******************************************************************************/
-static inline void ltrim( std::string &s )
+static inline void ltrim( std::string &ss )
 {
-  s.erase( s.begin(), std::find_if( s.begin(), s.end(), []( unsigned char ch )
+  ss.erase( ss.begin(), std::find_if( ss.begin(), ss.end(),
+                                      []( unsigned char ch )
   {
     return !std::isspace( ch );
   } ) );
@@ -72,21 +123,21 @@ static inline void ltrim( std::string &s )
 /******************************************************************************
 * rtrim  trim from end (in place)
 ******************************************************************************/
-static inline void rtrim( std::string &s )
+static inline void rtrim( std::string &ss )
 {
-  s.erase( std::find_if( s.rbegin(), s.rend(), []( unsigned char ch )
+  ss.erase( std::find_if( ss.rbegin(), ss.rend(), []( unsigned char ch )
   {
     return !std::isspace( ch );
-  } ).base(), s.end() );
+  } ).base(), ss.end() );
 }
 
 /******************************************************************************
 * trim
 ******************************************************************************/
-static inline void trim( std::string &s )
+static inline void trim( std::string &ss )
 {
-  ltrim( s );
-  rtrim( s );
+  ltrim( ss );
+  rtrim( ss );
 }
 
 /******************************************************************************
@@ -366,7 +417,7 @@ void Curve::show_ctrl_poly()
                     ctrl_pnts_[i].y/* / curve_data->ctrl_pts[i].z*/,
                     0 };
 
-        cagdAddPoint( &pnts[i] );
+        map_pnt_to_crv_ctrl( cagdAddPoint( &pnts[ i ] ), this, i );
       }
     }
 

@@ -42,7 +42,11 @@ void BSpline::show_crv() const
       if( u_idx < seg_ids_num )
         cagdReusePolyline( seg_ids_[ u_idx ], pnts, num_samps );
       else
-        seg_ids_.push_back( cagdAddPolyline( pnts, num_samps ) );
+      {
+        int seg_id = cagdAddPolyline( pnts, num_samps );
+        seg_ids_.push_back( seg_id );
+        map_seg_to_crv( seg_id, ( Curve * )this );
+      }
     }
 
     delete[] pnts;
