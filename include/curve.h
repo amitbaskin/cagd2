@@ -26,7 +26,7 @@ public:
   Curve();
   Curve( int order_, point_vec ctrl_pnts_ );
 
-  virtual void show_crv() const = 0;
+  virtual void show_crv( int chg_ctrl_idx = K_NOT_USED ) const = 0;
   virtual bool is_miss_ctrl_pnts() const = 0;
   virtual CAGD_POINT evaluate( double param ) const = 0;
 
@@ -37,6 +37,7 @@ public:
   int order_;
   point_vec ctrl_pnts_;
   mutable int_vec seg_ids_;
+  mutable int_vec pnt_ids_;
   GLubyte color_[ 3 ];
   int     poly_seg_id_;
 };

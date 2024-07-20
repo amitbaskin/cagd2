@@ -12,7 +12,28 @@
 /******************************************************************************
 * BSpline::show_crv
 ******************************************************************************/
-void BSpline::show_crv() const
+void BSpline::show_crv( int chg_ctrl_idx ) const
+{
+  if( chg_ctrl_idx != K_NOT_USED )
+  {
+    std::vector< int > u_vec_idxs = findAffectedSegments( chg_ctrl_idx );
+    show_crv_helper( u_vec_idxs );
+  }
+  else
+  {
+    std::vector< int > u_vec_idxs;
+
+    for( size_t i = 0; i < u_vec_.size(); ++i )
+      u_vec_idxs.push_back( i );
+
+    show_crv_helper( u_vec_idxs );
+  }
+}
+
+/******************************************************************************
+* BSpline::show_crv_helper
+******************************************************************************/
+void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
 {
   double normalized_num_samps = get_default_num_steps() /
                                 u_vec_[ u_vec_.size() - 1 ];
@@ -21,11 +42,12 @@ void BSpline::show_crv() const
 
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
 
-  for( size_t u_idx = 0; u_idx < u_vec_.size() - 1; ++u_idx )
+  for( size_t i = 0; i < u_vec_idxs.size() - 1; ++i )
   {
-    double delta  = u_vec_[ u_idx + 1 ] - u_vec_[ u_idx ];
+    double delta = u_vec_[ u_vec_idxs[ i + 1 ] ] - u_vec_[ u_vec_idxs[ i ] ];
+
     int num_samps = ( int )( delta * normalized_num_samps );
-    double jump   = 1.0 / num_samps;
+    double jump = 1.0 / num_samps;
 
     auto pnts = new CAGD_POINT[ num_samps ];
 
@@ -33,11 +55,11 @@ void BSpline::show_crv() const
     {
       for( int samp_idx = 0; samp_idx < num_samps; ++samp_idx )
       {
-        double param = u_vec_[ u_idx ] + jump * samp_idx;
+        double param = u_vec_[ u_vec_idxs[ i ] ] + jump * samp_idx;
 
-        if( double_cmp( param, u_vec_[ u_idx + 1 ] ) > 0 )
+        if( double_cmp( param, u_vec_[ u_vec_idxs[ i + 1 ] ] ) > 0 )
         {
-          param = u_vec_[ u_idx + 1 ];
+          param = u_vec_[ u_vec_idxs[ i + 1 ] ];
           pnts[ samp_idx ] = evaluate( param );
           break;
         }
@@ -45,8 +67,8 @@ void BSpline::show_crv() const
           pnts[ samp_idx ] = evaluate( param );
       }
 
-      if( u_idx < seg_ids_num )
-        cagdReusePolyline( seg_ids_[ u_idx ], pnts, num_samps );
+      if( u_vec_idxs[ i ] < seg_ids_num )
+        cagdReusePolyline( seg_ids_[ u_vec_idxs[ i ] ], pnts, num_samps );
       else
       {
         int seg_id = cagdAddPolyline( pnts, num_samps );
@@ -57,8 +79,6 @@ void BSpline::show_crv() const
 
     delete[] pnts;
   }
-
-  set_default_color();
 }
 
 /******************************************************************************
@@ -171,4 +191,35 @@ CAGD_POINT BSpline::evaluate( double param ) const
   delete[] NN;
 
   return CC;
+}
+
+/******************************************************************************
+* BSpline::findAffectedSegments
+******************************************************************************/
+std::vector<int> BSpline::findAffectedSegments( int controlPointIndex ) const
+{
+  std::vector<int> affectedSegments;
+  int degree = order_ - 1;
+
+  // Ensure the control point index is within valid range
+  if( ( size_t )controlPointIndex < 0 ||
+      ( size_t )controlPointIndex >= ctrl_pnts_.size() )
+  {
+    throw std::out_of_range( "Control point index is out of range." );
+  }
+
+  // Knot span influenced by the control point P_i
+  double T_i = knots_[ controlPointIndex ];
+  double T_i_k_plus_1 = knots_[ controlPointIndex + degree + 1 ];
+
+  // Iterate over the unique knot values in u_vec_
+  for( size_t i = 0; i < u_vec_.size() - 1; ++i )
+  {
+    if( u_vec_[ i ] >= T_i && u_vec_[ i ] < T_i_k_plus_1 )
+    {
+      affectedSegments.push_back( i );
+    }
+  }
+
+  return affectedSegments;
 }

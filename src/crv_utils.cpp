@@ -91,7 +91,7 @@ void update_ctrl_pnt( int pnt_id, double new_x, double new_y )
     p_curve->ctrl_pnts_[ ctrl_idx ].y = new_y;
 
     p_curve->show_ctrl_poly();
-    p_curve->show_crv();
+    p_curve->show_crv( ctrl_idx );
     cagdRedraw();
   }
 }
