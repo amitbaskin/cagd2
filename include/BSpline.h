@@ -1,24 +1,26 @@
-#ifndef BSPLINE_H
-#define BSPLINE_H
+#pragma once
 
 #include <vector>
-#include "cagd.h" // Ensure this is included properly
+#include "cagd.h"
+#include "Curve.h"
 
-typedef std::vector<CAGD_POINT> point_vec;
-typedef std::vector<double> double_vec;
-
-class BSpline
+class BSpline : public Curve
 {
 public:
-  BSpline::BSpline()
+  BSpline::BSpline(){}
+
+  BSpline::BSpline( const point_vec &ctrl_pnts_, const double_vec &knots_, int order_ )
+    : knots_( knots_ )
   {}
 
-  BSpline::BSpline( const point_vec &ctrl_pnts, const double_vec &knots, int order )
-    : order( order ), ctrl_pnts( ctrl_pnts ), knots( knots )
-  {}
+  virtual CAGD_POINT evaluate( double t ) const;
+  virtual void show_crv() const;
+  virtual void print() const;
 
-// Method to evaluate the B-spline at parameter t
-  CAGD_POINT evaluate( double t ) const;
+  virtual bool is_miss_ctrl_pnts() const
+  {
+    return ctrl_pnts_.size() < knots_.size() - order_;
+  }
 
   // Utility method to find the knot span index
   int findKnotSpan( double t ) const;
@@ -26,11 +28,6 @@ public:
   // Utility method to evaluate basis functions
   void evaluateBasisFunctions( int span, double t, double *N ) const;
 
-  void print();
-
-  int order;
-  point_vec ctrl_pnts;
-  double_vec knots;
+  double_vec knots_;
+  double_vec u_vec_;
 };
-
-#endif // BSPLINE_H

@@ -10,11 +10,11 @@ typedef struct {
   BOOL        visible;
   UINT        length;
   PSTR        text;
-  GLubyte     color[3];
+  GLubyte     color_[3];
   CAGD_POINT *where;
 } SEGMENT;
 
-static GLubyte color[] = { 255, 255, 255 };
+static GLubyte color_[] = { 255, 255, 255 };
 static UINT nSegments = 0;
 static SEGMENT *list = NULL;
 
@@ -25,16 +25,16 @@ static BOOL valid(UINT id)
 
 void cagdSetColor(BYTE red, BYTE green, BYTE blue)
 {
-  color[0] = red;
-  color[1] = green;
-  color[2] = blue;
+  color_[0] = red;
+  color_[1] = green;
+  color_[2] = blue;
 }
 
 void cagdGetColor(BYTE *red, BYTE *green, BYTE *blue)
 {
-  *red   = color[0];
-  *green = color[1];
-  *blue  = color[2];
+  *red   = color_[0];
+  *green = color_[1];
+  *blue  = color_[2];
 }
 
 BOOL cagdSetSegmentColor(UINT id, BYTE red, BYTE green, BYTE blue)
@@ -43,9 +43,9 @@ BOOL cagdSetSegmentColor(UINT id, BYTE red, BYTE green, BYTE blue)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  segment->color[0] = red;
-  segment->color[1] = green;
-  segment->color[2] = blue;
+  segment->color_[0] = red;
+  segment->color_[1] = green;
+  segment->color_[2] = blue;
   return TRUE;
 }
 
@@ -55,9 +55,9 @@ BOOL cagdGetSegmentColor(UINT id, BYTE *red, BYTE *green, BYTE *blue)
   if(!valid(id))
     return FALSE;
   segment = &list[id];
-  *red   = segment->color[0];
-  *green = segment->color[1];
-  *blue  = segment->color[2];
+  *red   = segment->color_[0];
+  *green = segment->color_[1];
+  *blue  = segment->color_[2];
   return TRUE;
 }
 
@@ -88,7 +88,7 @@ UINT cagdAddPoint(const CAGD_POINT *where)
   SEGMENT *segment = &list[id];
   segment->crv_type = CAGD_SEGMENT_POINT;
   segment->visible = TRUE;
-  memcpy(segment->color, color, sizeof(GLubyte) * 3);
+  memcpy(segment->color_, color_, sizeof(GLubyte) * 3);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT));
   *segment->where = *where;
   segment->length = 1;
@@ -113,7 +113,7 @@ UINT cagdAddText(const CAGD_POINT *where, PCSTR text)
     return 0;
   segment->crv_type = CAGD_SEGMENT_TEXT;
   segment->visible = TRUE;
-  memcpy(segment->color, color, sizeof(GLubyte) * 3);
+  memcpy(segment->color_, color_, sizeof(GLubyte) * 3);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT));
   *segment->where = *where;
   if (!text)
@@ -160,7 +160,7 @@ UINT cagdAddPolyline(const CAGD_POINT *where, UINT length)
     return 0;
   segment->crv_type = CAGD_SEGMENT_POLYLINE;
   segment->visible = TRUE;
-  memcpy(segment->color, color, sizeof(GLubyte) * 3);
+  memcpy(segment->color_, color_, sizeof(GLubyte) * 3);
   segment->where = (CAGD_POINT *)malloc(sizeof(CAGD_POINT) * length);
   memcpy(segment->where, where, sizeof(CAGD_POINT) * length);
   segment->length = length;
@@ -322,7 +322,7 @@ void drawSegments(GLenum mode)
       continue;
     if(mode == GL_SELECT)
       glLoadName(id);
-    glColor3ubv(segment->color);
+    glColor3ubv(segment->color_);
     switch(segment->crv_type){
     case CAGD_SEGMENT_POINT:
       glBegin(GL_POINTS);

@@ -52,7 +52,7 @@
 #define  FALSE     0
 
 #define  MAX_PARSER_STRACK   100
-   
+
 #define ABS         10 /* Functions */
 #define ARCCOS      11
 #define ARCSIN      12
@@ -81,7 +81,7 @@
 
 #define TOKENERROR  -1
 #define TOKENSTART  100
-#define TOKENEND    101 
+#define TOKENEND    101
 
 int    e2t_parsing_error;                   /* Globals used by the parser */
 static int glbl_token, glbl_last_token;
@@ -125,7 +125,7 @@ static void e2t_free(e2t_expr_node *Ptr)
 static void make_upper(char s[])
 {
     int i;
-   
+
     i=0;
     while (s[i] != 0) {
          if (islower(s[i])) s[i] = toupper(s[i]);
@@ -153,26 +153,31 @@ static void make_upper(char s[])
 *****************************************************************************/
 e2t_expr_node *e2t_expr2tree(const char s[])
 {
-    e2t_expr_node *root;
+    e2t_expr_node *root = NULL;
     int i;
     char
         *s2 = (char *) malloc(strlen(s) + 1);
 
-    strcpy(s2, s);
+    if( s2 != NULL )
+    {
+      strcpy( s2, s );
 
-    make_upper(s2);
-    glbl_token = 0;           /* Used to save unget token (one level stack) */
-    glbl_last_token = 0;        /* Used to hold last token read from stream */
-    e2t_parsing_error = 0;                          /* No errors so far ... */
-    i = 0;
-    root = operator_precedence(s2, &i);    
+      make_upper( s2 );
+      glbl_token = 0;           /* Used to save unget token (one level stack) */
+      glbl_last_token = 0;        /* Used to hold last token read from stream */
+      e2t_parsing_error = 0;                          /* No errors so far ... */
+      i = 0;
+      root = operator_precedence( s2, &i );
 
-    free(s2);
- 
-    if (e2t_parsing_error)
-        return (e2t_expr_node *) NULL;				 /* Error ! */
-    else
+      free( s2 );
+
+      if( e2t_parsing_error )
+        return ( e2t_expr_node * )NULL;				 /* Error ! */
+      else
         return root;
+    }
+    else
+      return root;
 }
 
 /*****************************************************************************
@@ -196,7 +201,7 @@ static e2t_expr_node *operator_precedence(const char s[], int *i)
     /* Push the start symbol on stack (node pointer points on tos): */
     stack[stack_pointer] = e2t_malloc(sizeof(e2t_expr_node));
     stack[stack_pointer] -> node_kind = TOKENSTART;
-    stack[stack_pointer] -> right = 
+    stack[stack_pointer] -> right =
     stack[stack_pointer] -> left = (e2t_expr_node *) NULL;
     token = get_token(s, i, &data);/* Get one look ahead token to start with */
     do {
@@ -330,7 +335,7 @@ static e2t_expr_node *operator_precedence(const char s[], int *i)
 	    }
             stack[stack_pointer] -> node_kind = token;
             stack[stack_pointer] -> data = data;   /* We might need that... */
-	    stack[stack_pointer] -> right = 
+	    stack[stack_pointer] -> right =
 	    stack[stack_pointer] -> left = (e2t_expr_node *) NULL;
             token = get_token(s, i, &data);/* And get new token from stream */
 	}
@@ -424,9 +429,9 @@ static void un_get_token(int token)
 *****************************************************************************/
 static int get_token(const char s[], int *i, double *data)
 {
-    int j;
+    size_t j;
     char number[LINELEN], c;
-	
+
     if (glbl_token) { /* get first the un_get_token */
         j = glbl_token;
         glbl_token = 0;
@@ -435,17 +440,17 @@ static int get_token(const char s[], int *i, double *data)
     }
 
     while ((s[*i]==' ')||(s[*i]==TAB)) (*i)++;
-    if (*i>= strlen(s)) return TOKENEND;   /* No more tokens around here... */
+    if ((unsigned int)*i>= strlen(s)) return TOKENEND;   /* No more tokens around here... */
 
     /* Check is next token is one char - if so its a parameter */
     if ((islower(s[*i]) || isupper(s[*i])) &&
        !(islower(s[(*i)+1]) || isupper(s[(*i)+1]))) {
         if (islower(c = s[(*i)++])) c = toupper(c); /* make paramter upcase */
-        *data = c - 'A'; /* A = 0, B = 1, ... */
+        *data = (double)c - 'A'; /* A = 0, B = 1, ... */
         glbl_last_token = PARAMETER;
         return PARAMETER;
     }
-        
+
     if (isdigit(s[*i])||(s[*i]=='.')) {
         j=0;
         while (isdigit(s[*i])||(s[*i]=='.')) number[j++]=s[(*i)++];
@@ -685,7 +690,7 @@ static void localprinttree(const e2t_expr_node *root, int level, char *str)
 
     case NUMBER :  (void) sprintf(&str[strlen(str)], "%lg", root->data);
                    break;
-    case PARAMETER : (void) sprintf(&str[strlen(str)], "%c", 
+    case PARAMETER : (void) sprintf(&str[strlen(str)], "%c",
                                                (int) (root->data + 'A'));
                    break;
     }
@@ -847,8 +852,8 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> right = e2t_copytree(root->right);
                   node_mul -> left = derivtree1(root->right, prm);
                   return node_mul;
-    case LOG :    node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
+    case LOG :    node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = DIV;
                   node1 -> right = e2t_copytree(root->right);
                   node1 -> left = derivtree1(root->right, prm);
@@ -864,8 +869,8 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> left = node1;
                   node_mul -> right = derivtree1(root->right, prm);
                   return node_mul;
-    case SQR :    node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
+    case SQR :    node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = NUMBER;
                   node1 -> right = node1 -> left = NULL;
                   node1 -> data = 2.0;
@@ -875,10 +880,10 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> left = node1;
                   node_mul -> right = node2;
                   return node_mul;
-    case SQRT :   node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node3 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node4 = e2t_malloc(sizeof(e2t_expr_node));   
+    case SQRT :   node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
+                  node3 = e2t_malloc(sizeof(e2t_expr_node));
+                  node4 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = NUMBER;
                   node1 -> right = node1 -> left = NULL;
                   node1 -> data = -0.5;
@@ -894,8 +899,8 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> left = node4;
                   node_mul -> right = derivtree1(root->right, prm);
                   return node_mul;
-    case VELOCITY :    node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
+    case VELOCITY :    node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = COS;
                   node1 -> left = NULL;
                   node1 -> right = e2t_copytree(root->right);
@@ -906,10 +911,10 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> right = node2;
                   node_mul -> left = derivtree1(root->right, prm);
                   return node_mul;
-    case DIV :    node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node3 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node4 = e2t_malloc(sizeof(e2t_expr_node));   
+    case DIV :    node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
+                  node3 = e2t_malloc(sizeof(e2t_expr_node));
+                  node4 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = MULT;
                   node1 -> left  = e2t_copytree(root->left);
                   node1 -> right = derivtree1(root->right, prm);
@@ -930,8 +935,8 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> left = derivtree1(root->left, prm);
                   node_mul -> right = derivtree1(root->right, prm);
                   return node_mul;
-    case MULT :   node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
+    case MULT :   node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = MULT;
                   node1 -> left  = e2t_copytree(root->left);
                   node1 -> right = derivtree1(root->right, prm);
@@ -950,10 +955,10 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                       glbl_deriv_error = E2T_NONE_CONST_EXP_ERROR;
                       return NULL;
                   }
-                  node1 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node2 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node3 = e2t_malloc(sizeof(e2t_expr_node));   
-                  node4 = e2t_malloc(sizeof(e2t_expr_node));   
+                  node1 = e2t_malloc(sizeof(e2t_expr_node));
+                  node2 = e2t_malloc(sizeof(e2t_expr_node));
+                  node3 = e2t_malloc(sizeof(e2t_expr_node));
+                  node4 = e2t_malloc(sizeof(e2t_expr_node));
                   node1 -> node_kind = NUMBER;
                   node1 -> left  = node1 -> right = NULL;
                   node1 -> data = root -> right -> data - 1;
@@ -969,7 +974,7 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
                   node_mul -> left = node4;
                   node_mul -> right = derivtree1(root->left, prm);
                   return node_mul;
-                  
+
     case UNARMINUS :
                   node_mul -> node_kind = UNARMINUS;/* Not nice, but work ! */
                   node_mul -> right = derivtree1(root->right, prm);
@@ -983,7 +988,7 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
     case PARAMETER :
                   node_mul -> node_kind = NUMBER; /* Not nice, but work ! */
                   node_mul -> left = node_mul -> right = NULL;
-                  if ((int) (root->data) == prm) 
+                  if ((int) (root->data) == prm)
                        node_mul -> data = 1.0;
                   else node_mul -> data = 0.0;
                   return node_mul;
@@ -995,18 +1000,18 @@ static e2t_expr_node *derivtree1(const e2t_expr_node *root, int prm)
 *  Routine to generate a tree to the expression:                             *
 *      SIGN1(1 SIGN2 SQR (EXPR)) ^ EXPONENT                                  *
 *****************************************************************************/
-static e2t_expr_node *gen1u2tree(int sign1, 
-				 int sign2, 
-				 double exponent, 
+static e2t_expr_node *gen1u2tree(int sign1,
+				 int sign2,
+				 double exponent,
 				 e2t_expr_node *expr)
 {
     e2t_expr_node *node1, *node2, *node3, *node4, *node5, *node6;
-    
-    node1 = e2t_malloc(sizeof(e2t_expr_node));   
-    node2 = e2t_malloc(sizeof(e2t_expr_node));   
-    node3 = e2t_malloc(sizeof(e2t_expr_node));   
-    node4 = e2t_malloc(sizeof(e2t_expr_node));   
-    node5 = e2t_malloc(sizeof(e2t_expr_node));   
+
+    node1 = e2t_malloc(sizeof(e2t_expr_node));
+    node2 = e2t_malloc(sizeof(e2t_expr_node));
+    node3 = e2t_malloc(sizeof(e2t_expr_node));
+    node4 = e2t_malloc(sizeof(e2t_expr_node));
+    node5 = e2t_malloc(sizeof(e2t_expr_node));
     node1 -> node_kind = NUMBER;
     node1 -> left  = node1 -> right = NULL;
     node1 -> data = 1.0;
@@ -1024,7 +1029,7 @@ static e2t_expr_node *gen1u2tree(int sign1,
     node5 -> left = node3;
     if (sign1 == PLUS) return node5;
     else { /* Must be MINUS */
-        node6 = e2t_malloc(sizeof(e2t_expr_node));   
+        node6 = e2t_malloc(sizeof(e2t_expr_node));
         node6 -> node_kind = UNARMINUS;
         node6 -> left = NULL;
         node6 -> right = node5;

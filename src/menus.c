@@ -4,6 +4,7 @@
 #include "resource.h"
 #include "color.h"
 #include "Curve.h"
+#include "options.h"
 
 char buffer1[BUFSIZ];
 char buffer2[BUFSIZ];
@@ -11,9 +12,6 @@ char buffer3[BUFSIZ];
 UINT myText2;
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
-extern int num_samples;
-extern unsigned int default_degree;
-extern unsigned int curve_color[3];
 
 /******************************************************************************
 * init_menus
@@ -24,7 +22,7 @@ void init_menus()
   HMENU curve_menu = CreatePopupMenu(); // Curve
 
   // Curve
-  AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default Color" );
+  AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default color_" );
   //AppendMenu( op_menu, MF_STRING, CAGD_SHOW_EVOLUTE_MENU, "Show Evolute Curve" );
   //AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
 
@@ -53,8 +51,8 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
   switch( message )
   {
   case WM_INITDIALOG:
-    SetDlgItemInt( hDialog, IDC_SAMPLES, num_samples, FALSE );
-    SetDlgItemInt( hDialog, IDC_DEF_DEGREE, default_degree, FALSE );
+    SetDlgItemInt( hDialog, IDC_SAMPLES, get_default_num_steps(), FALSE );
+    SetDlgItemInt( hDialog, IDC_DEF_DEGREE, get_def_degree(), FALSE );
     break;
 
 
@@ -83,10 +81,12 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
 }
 
 /******************************************************************************
-* CurveColorDialogProc Curve color DIALOG
+* CurveColorDialogProc Curve color_ DIALOG
 ******************************************************************************/
 LRESULT CALLBACK CurveColorDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
 {
+  const unsigned char *curve_color = get_curve_color();
+
   switch( message )
   {
   case WM_INITDIALOG:
@@ -149,6 +149,8 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
 ******************************************************************************/
 void handle_curve_color_menu()
 {
+  const unsigned char *curve_color = get_curve_color();
+
   if( DialogBox( cagdGetModule(),
       MAKEINTRESOURCE( IDD_COLOR ),
       cagdGetWindow(),
@@ -159,9 +161,7 @@ void handle_curve_color_menu()
         sscanf( buffer2, "%hhu", &new_colors[1] ) == 1 &&
         sscanf( buffer3, "%hhu", &new_colors[2] ) == 1 )
     {
-      curve_color[0] = new_colors[0];
-      curve_color[1] = new_colors[1];
-      curve_color[2] = new_colors[2];
+      set_curve_color( new_colors );
     }
     else
       print_err( "Invalid RGB values" );
@@ -178,13 +178,14 @@ void handle_settings_menu()
       cagdGetWindow(),
       ( DLGPROC )SettingsDialogProc ) )
   {
-    int new_samples;
-    unsigned int def_deg;
+    unsigned int new_samples = 0;
+    unsigned int def_deg = 0;
+
     if( sscanf( buffer1, "%d", &new_samples ) == 1 &&
         sscanf( buffer2, "%du", &def_deg ) == 1 )
     {
-      num_samples = new_samples;
-      default_degree = def_deg;
+      set_default_num_steps( new_samples );
+      set_def_degree( def_deg );
 
       redraw_all_curves();
     }
