@@ -27,10 +27,10 @@ void BSpline::show_crv() const
       for( int i = 0; i < num_samps; ++i )
         pnts[ i ] = evaluate( jump * i );
 
-      if( i < seg_ids_num && seg_ids_[ i ] == K_NOT_USED )
-        seg_ids_[ i ] = cagdAddPolyline( pnts, num_samps );
-      else
+      if( i < seg_ids_num )
         cagdReusePolyline( seg_ids_[ i ], pnts, num_samps );
+      else
+        seg_ids_.push_back( cagdAddPolyline( pnts, num_samps ) );
 
       set_default_color();
     }

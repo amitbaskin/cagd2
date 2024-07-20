@@ -26,10 +26,10 @@ void Bezier::show_crv() const
     for( unsigned int i = 0; i < def_num_steps; ++i )
       pnts[ i ] = evaluate( jump * i );
 
-    if( seg_ids_[ 0 ] == K_NOT_USED )
-      seg_ids_[ 0 ] = cagdAddPolyline( pnts, def_num_steps );
-    else
+    if( seg_ids_.size() > 0 )
       cagdReusePolyline( seg_ids_[ 0 ], pnts, def_num_steps );
+    else
+      seg_ids_.push_back( cagdAddPolyline( pnts, def_num_steps ) );
 
     set_default_color();
   }
@@ -41,7 +41,9 @@ void Bezier::show_crv() const
 GLdouble binomialCoefficient( int n, int k )
 {
   if( k > n || k < 0 ) return 0;
-  GLdouble result = 1;
+
+  int result = 1;
+
   for( int i = 0; i < k; ++i )
   {
     result *= ( n - i );

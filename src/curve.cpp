@@ -11,7 +11,7 @@
 
 std::vector< Curve * > cur_curves;
 
-Curve::Curve() : order_( 0 ), poly_seg_id_( -K_NOT_USED )
+Curve::Curve() : order_( 0 ), poly_seg_id_( K_NOT_USED )
 {
   const unsigned char *curve_color = get_curve_color();
 
@@ -21,7 +21,7 @@ Curve::Curve() : order_( 0 ), poly_seg_id_( -K_NOT_USED )
 }
 
 Curve::Curve( int order_, point_vec ctrl_pnts_ ) :
-  poly_seg_id_( -K_NOT_USED ),
+  poly_seg_id_( K_NOT_USED ),
   order_( order_ ),
   ctrl_pnts_( ctrl_pnts_ )
 {
@@ -128,14 +128,16 @@ void Curve::add_ctrl_pnt( std::istringstream &line )
 /******************************************************************************
 * parse_file
 ******************************************************************************/
-void parse_file( const std::string &filePath )
+size_t parse_file( const std::string &filePath )
 {
+  size_t first_new_idx = cur_curves.size();
+
   std::ifstream file( filePath, std::ios::binary );
 
   if( !file.is_open() )
   {
     print_err( "Error opening file" );
-    return;
+    return first_new_idx;
   }
 
   while( file )
@@ -155,11 +157,13 @@ void parse_file( const std::string &filePath )
 
     ltrim( line );
 
+    if( line.empty() )
+      continue;
+
     std::istringstream issOrder( line );
     if( !( issOrder >> order_ ) )
     {
-      print_err( "Error reading order_" );
-      delete p_curve;
+      print_err( "Error reading order" );
       continue;
     }
 
@@ -205,6 +209,7 @@ void parse_file( const std::string &filePath )
                std::getline( file, line ) )
         {
           ltrim( line );
+
           if( line.empty() || line[ 0 ] == '#' )
           {
             continue;
@@ -236,39 +241,23 @@ void parse_file( const std::string &filePath )
       p_curve = new Bezier();
       Bezier *p_bezier = ( Bezier * )p_curve;
       p_bezier->order_ = order_;
-
-      ltrim( line );
-      if( line.empty() || line[ 0 ] == '#' )
-      {
-        continue;
-      }
-
-      std::istringstream issctrl_pnts_( line );
-
-      p_curve->add_ctrl_pnt( issctrl_pnts_ );
-
-      if( p_curve->ctrl_pnts_.size() == p_curve->order_ )
-        break;
     }
     else
-    {
-      delete p_curve;
       break;
-    }
 
     while( std::getline( file, line ) )
     {
       ltrim( line );
+
       if( line.empty() || line[ 0 ] == '#' )
       {
         continue;
       }
 
       std::istringstream issctrl_pnts_( line );
-
       p_curve->add_ctrl_pnt( issctrl_pnts_ );
 
-      if( p_curve->is_miss_ctrl_pnts() )
+      if( !p_curve->is_miss_ctrl_pnts() )
         break;
     }
 
@@ -279,6 +268,8 @@ void parse_file( const std::string &filePath )
   }
 
   file.close();
+
+  return first_new_idx;
 }
 
 /******************************************************************************
@@ -310,12 +301,15 @@ void load_curve( int dummy1, int dummy2, void *p_data )
 {
   char *file_path = ( char * )p_data;
   std::string file_str = file_path;
-  parse_file( file_str );
+  size_t first_new_idx = parse_file( file_str );
 
-  for( size_t i = 0; i < cur_curves.size(); ++i )
+  if( first_new_idx < cur_curves.size() )
   {
-    cur_curves[ i ]->show_ctrl_poly();
-    cur_curves[ i ]->show_crv();
+    for( size_t i = first_new_idx; i < cur_curves.size(); ++i )
+    {
+      cur_curves[ i ]->show_ctrl_poly();
+      cur_curves[ i ]->show_crv();
+    }
   }
 }
 
