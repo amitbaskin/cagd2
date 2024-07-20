@@ -114,6 +114,7 @@
     </ClCompile>
     <ClCompile Include="src\callback.c" />
     <ClCompile Include="src\color.c" />
+    <ClCompile Include="src\crv_utils.cpp" />
     <ClCompile Include="src\Curve.cpp" />
     <ClCompile Include="src\menus.c" />
     <ClCompile Include="src\options.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="include\BSpline.h" />
     <ClInclude Include="include\cagd.h" />
     <ClInclude Include="include\color.h" />
+    <ClInclude Include="include\crv_utils.h" />
     <ClInclude Include="include\Curve.h" />
     <ClInclude Include="include\expr2tree.h" />
     <ClInclude Include="include\menus.h" />

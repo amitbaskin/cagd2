@@ -5,7 +5,12 @@
 #include <options.h>
 #include <color.h>
 #include <vectors.h>
+#include "crv_utils.h"
 
+
+/******************************************************************************
+* BSpline::show_crv
+******************************************************************************/
 void BSpline::show_crv() const
 {
   double normalized_num_samps = get_default_num_steps() /
@@ -55,6 +60,9 @@ void BSpline::show_crv() const
   set_default_color();
 }
 
+/******************************************************************************
+* BSpline::print
+******************************************************************************/
 void BSpline::print() const
 {
   printf( "Curve crv_type: bspline\n" );
@@ -74,7 +82,9 @@ void BSpline::print() const
   Curve::print();
 }
 
-// Utility method to find the knot span index
+/******************************************************************************
+* BSpline::findKnotSpan
+******************************************************************************/
 int BSpline::findKnotSpan( double t ) const
 {
   int n = ctrl_pnts_.size() - 1;
@@ -107,7 +117,9 @@ int BSpline::findKnotSpan( double t ) const
   return mid;
 }
 
-// Utility method to evaluate basis functions
+/******************************************************************************
+* BSpline::evaluateBasisFunctions
+******************************************************************************/
 void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
 {
   int p = order_ - 1;
@@ -130,7 +142,9 @@ void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
   }
 }
 
-// Method to evaluate the B-spline at parameter t
+/******************************************************************************
+* BSpline::evaluate
+******************************************************************************/
 CAGD_POINT BSpline::evaluate( double param ) const
 {
   int pp = order_ - 1;

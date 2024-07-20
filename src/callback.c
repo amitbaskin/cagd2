@@ -4,7 +4,7 @@
 *************************************************************************/
 #include "cagd.h"
 #include "internal.h"
-#include "Curve.h"
+#include "crv_utils.h"
 
 #define LOINT(x) ((int)(short)LOWORD(x))
 #define HIINT(x) ((int)(short)HIWORD(x))

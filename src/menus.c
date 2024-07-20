@@ -3,7 +3,7 @@
 #include "menus.h"
 #include "resource.h"
 #include "color.h"
-#include "Curve.h"
+#include "crv_utils.h"
 #include "options.h"
 
 char buffer1[BUFSIZ];

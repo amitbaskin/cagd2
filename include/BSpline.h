@@ -9,7 +9,9 @@ class BSpline : public Curve
 public:
   BSpline::BSpline(){}
 
-  BSpline::BSpline( const point_vec &ctrl_pnts_, const double_vec &knots_, int order_ )
+  BSpline::BSpline( const point_vec &ctrl_pnts_,
+                    const double_vec &knots_,
+                    int order_ )
     : knots_( knots_ )
   {}
 
@@ -22,10 +24,8 @@ public:
     return ctrl_pnts_.size() < knots_.size() - order_;
   }
 
-  // Utility method to find the knot span index
   int findKnotSpan( double t ) const;
 
-  // Utility method to evaluate basis functions
   void evaluateBasisFunctions( int span, double t, double *N ) const;
 
   double_vec knots_;

@@ -40,18 +40,3 @@ public:
   GLubyte color_[ 3 ];
   int     poly_seg_id_;
 };
-
-void load_curves( int dummy1, int dummy2, void *p_data );
-
-void clean_all_curves();
-void clean_cur_curves_vec();
-
-void print_err( char *str );
-
-void redraw_all_curves();
-
-void map_seg_to_crv( int seg_id, Curve *p_curve );
-void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx );
-
-std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id );
-Curve *get_seg_crv( int seg_id );

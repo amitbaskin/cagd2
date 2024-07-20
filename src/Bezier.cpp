@@ -4,13 +4,20 @@
 #include <cmath>
 #include "options.h"
 #include "color.h"
+#include "crv_utils.h"
 
+/******************************************************************************
+* Bezier::print
+******************************************************************************/
 void Bezier::print() const
 {
   printf( "Curve crv_type: Bezier\n" );
   Curve::print();
 }
 
+/******************************************************************************
+* Bezier::show_crv
+******************************************************************************/
 void Bezier::show_crv() const
 {
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
@@ -41,7 +48,9 @@ void Bezier::show_crv() const
   delete[] pnts;
 }
 
-// Helper function to calculate binomial coefficients
+/******************************************************************************
+* Bezier::binomialCoefficient
+******************************************************************************/
 GLdouble binomialCoefficient( int n, int k )
 {
   if( k > n || k < 0 ) return 0;
@@ -56,22 +65,27 @@ GLdouble binomialCoefficient( int n, int k )
   return result;
 }
 
+/******************************************************************************
+* Bezier::calculateMatrixM
+******************************************************************************/
 void Bezier::calculateMatrixM( std::vector<std::vector<GLdouble>> &M ) const
 {
   int n = ctrl_pnts_.size() - 1;
   M.resize( n + 1, std::vector<GLdouble>( n + 1, 0.0 ) );
 
-  // Populate matrix M with correct coefficients
   for( int i = 0; i <= n; ++i )
   {
     for( int j = 0; j <= i; ++j )
     {
-      M[ i ][ j ] = binomialCoefficient( n, i ) * binomialCoefficient( i, j ) * std::pow( -1, i - j );
+      M[ i ][ j ] = binomialCoefficient( n, i ) *
+        binomialCoefficient( i, j ) * std::pow( -1, i - j );
     }
   }
 }
 
-// Compute the matrix-vector product M * P and cache the result
+/******************************************************************************
+* Bezier::computeMP
+******************************************************************************/
 void Bezier::computeMP() const
 {
   int n = ctrl_pnts_.size() - 1;
@@ -94,6 +108,9 @@ void Bezier::computeMP() const
   }
 }
 
+/******************************************************************************
+* Bezier::evaluate
+******************************************************************************/
 CAGD_POINT Bezier::evaluate( GLdouble t ) const
 {
   int n = ctrl_pnts_.size() - 1;
@@ -123,33 +140,4 @@ CAGD_POINT Bezier::evaluate( GLdouble t ) const
   }
 
   return point;
-}
-
-// Add a control point and recache the MP
-void Bezier::addControlPoint( const CAGD_POINT &new_point )
-{
-  ctrl_pnts_.push_back( new_point );
-  computeMP();
-}
-
-// Remove a control point and recache the MP
-void Bezier::removeControlPoint( size_t index )
-{
-  if( index >= ctrl_pnts_.size() )
-  {
-    throw std::out_of_range( "Index out of range." );
-  }
-  ctrl_pnts_.erase( ctrl_pnts_.begin() + index );
-  computeMP();
-}
-
-// Update a control point and recache the MP
-void Bezier::updateControlPoint( size_t index, const CAGD_POINT &new_point )
-{
-  if( index >= ctrl_pnts_.size() )
-  {
-    throw std::out_of_range( "Index out of range." );
-  }
-  ctrl_pnts_[ index ] = new_point;
-  computeMP();
 }
