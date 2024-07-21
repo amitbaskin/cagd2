@@ -354,6 +354,7 @@ void parse_knots_from_line( const std::string &line, BSpline *bspline )
   while( iss >> knot )
   {
     bspline->knots_.push_back( knot );
+
     if( double_cmp( knot, prev_knot ) > 0 )
     {
       prev_knot = knot;

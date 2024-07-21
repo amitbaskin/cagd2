@@ -38,6 +38,8 @@ public:
     return ctrl_pnts_.size() < knots_.size() - order_;
   }
 
+  void update_u_vec();
+
   void makeUniformKnotVector();
   void makeOpenKnotVector();
 
