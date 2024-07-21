@@ -9,26 +9,27 @@
 #define LOINT(x) ((int)(short)LOWORD(x))
 #define HIINT(x) ((int)(short)HIWORD(x))
 
-typedef struct {
+typedef struct
+{
   CAGD_CALLBACK callback;
   PVOID data;
 } CALLBACK_ENTRY;
 
 static PSTR helpText = NULL;
 static PSTR defaultHelpText =
-  "<Ctrl> + Left mouse button -- rotate around X/Y axes;\n"
-  "<Ctrl> + Right mouse button -- rotate around Z axe;\n"
-  "<Shift> + Left mouse button -- translate along X/Y axes;\n"
-  "<Shift> + Right mouse button -- translate along Z axe;\n"
-  "<+> -- increase scale;\n"
-  "<-> -- decrease scale;";
+"<Ctrl> + Left mouse button -- rotate around X/Y axes;\n"
+"<Ctrl> + Right mouse button -- rotate around Z axe;\n"
+"<Shift> + Left mouse button -- translate along X/Y axes;\n"
+"<Shift> + Right mouse button -- translate along Z axe;\n"
+"<+> -- increase scale;\n"
+"<-> -- decrease scale;";
 
-static CALLBACK_ENTRY list[CAGD_LAST] = { { NULL, NULL } };
+static CALLBACK_ENTRY list[ CAGD_LAST ] = { { NULL, NULL } };
 static WORD state = 0;
 
-static char fileName[0xffff];
+static char fileName[ 0xffff ];
 static OPENFILENAME openFileName = {
-  sizeof(OPENFILENAME),
+  sizeof( OPENFILENAME ),
   NULL,
   NULL,
   "All files (*.*)\0*.*\0\0",
@@ -36,7 +37,7 @@ static OPENFILENAME openFileName = {
   0,
   0,
   fileName,
-  sizeof(fileName),
+  sizeof( fileName ),
   NULL,
   0,
   NULL,
@@ -49,26 +50,27 @@ static OPENFILENAME openFileName = {
   NULL
 };
 
-BOOL cagdRegisterCallback(UINT message, CAGD_CALLBACK function, PVOID data)
+BOOL cagdRegisterCallback( UINT message, CAGD_CALLBACK function, PVOID data )
 {
-  if(message < CAGD_LAST){
-    list[message].callback = function;
-    list[message].data = data;
-    if(message == CAGD_TIMER)
-      if(function)
-	SetTimer(auxGetHWND(), 0, ( UINT )10, NULL);
+  if( message < CAGD_LAST )
+  {
+    list[ message ].callback = function;
+    list[ message ].data = data;
+    if( message == CAGD_TIMER )
+      if( function )
+        SetTimer( auxGetHWND(), 0, ( UINT )10, NULL );
       else
-	KillTimer(auxGetHWND(), 0);
+        KillTimer( auxGetHWND(), 0 );
     return TRUE;
   }
   return FALSE;
 }
 
-static void callback(UINT message, int x, int y)
+static void callback( UINT message, int x, int y )
 {
-  if(!list[message].callback)
+  if( !list[ message ].callback )
     return;
-  list[message].callback(x, y, list[message].data);
+  list[ message ].callback( x, y, list[ message ].data );
 }
 
 static int old_x = K_NOT_USED;
@@ -76,17 +78,18 @@ static int old_y = K_NOT_USED;
 
 /* BUGFIX: mplav@csd 17/12/96: CALLBACK modificator for proper linkage. */
 /* Error appeared on WinNT 4.0: menu was not properly redrawn. */
-static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
   static int x, y;
   int id;
   WORD key;
-  HMENU hMenu = GetMenu(hWnd);
+  HMENU hMenu = GetMenu( hWnd );
 
-  switch(message){
-
+  switch( message )
+  {
   case WM_COMMAND:
-    switch(id = LOWORD(wParam)){
+    switch( id = LOWORD( wParam ) )
+    {
     case CAGD_LOAD:
       openFileName.hwndOwner = auxGetHWND();
       openFileName.lpstrTitle = "Load File";
@@ -111,19 +114,19 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
       return 0;
     case CAGD_EXIT:
-      PostQuitMessage(0);
-      KillTimer(hWnd, 0);
+      PostQuitMessage( 0 );
+      KillTimer( hWnd, 0 );
       return 0;
     case CAGD_ORTHO:
-      cagdSetView(CAGD_ORTHO);
+      cagdSetView( CAGD_ORTHO );
       cagdRedraw();
       return 0;
     case CAGD_PERSP:
-      cagdSetView(CAGD_PERSP);
+      cagdSetView( CAGD_PERSP );
       cagdRedraw();
       return 0;
     case CAGD_CUE:
-      cagdSetDepthCue(!cagdGetDepthCue());
+      cagdSetDepthCue( !cagdGetDepthCue() );
       cagdRedraw();
       return 0;
     case CAGD_SENSLESS:
@@ -146,9 +149,10 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
       cagdShowHelp();
       return 0;
     default:
-      if(CAGD_USER <= id){
-	callback(CAGD_MENU, id, 0);
-	return 0;
+      if( CAGD_USER <= id )
+      {
+        callback( CAGD_MENU, id, 0 );
+        return 0;
       }
       break;
     }
@@ -156,71 +160,74 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
   case WM_LBUTTONDOWN:
 
-    if(!(state & (MK_CONTROL | MK_SHIFT))){
+    if( !( state & ( MK_CONTROL | MK_SHIFT ) ) )
+    {
       state |= MK_LBUTTON;
-      SetCapture(hWnd);
-      callback(CAGD_LBUTTONDOWN, LOINT(lParam), HIINT(lParam));
+      SetCapture( hWnd );
+      callback( CAGD_LBUTTONDOWN, LOINT( lParam ), HIINT( lParam ) );
       x = ( short )LOWORD( lParam );
       y = ( short )HIWORD( lParam );
       return 0;
     }
-    if(state & (MK_MBUTTON | MK_RBUTTON))
+    if( state & ( MK_MBUTTON | MK_RBUTTON ) )
       return 0;
     state |= MK_LBUTTON;
-    x = (short)LOWORD(lParam);
-    y = (short)HIWORD(lParam);
-    SetCapture(hWnd);
+    x = ( short )LOWORD( lParam );
+    y = ( short )HIWORD( lParam );
+    SetCapture( hWnd );
     return 0;
 
   case WM_LBUTTONUP:
 
-    if(!(state & MK_LBUTTON))
+    if( !( state & MK_LBUTTON ) )
       return 0;
     state &= ~MK_LBUTTON;
-    if(state & (MK_CONTROL | MK_SHIFT))
+    if( state & ( MK_CONTROL | MK_SHIFT ) )
       saveModelView();
     else
-      callback(CAGD_LBUTTONUP, LOINT(lParam), HIINT(lParam));
+      callback( CAGD_LBUTTONUP, LOINT( lParam ), HIINT( lParam ) );
     ReleaseCapture();
     return 0;
 
   case WM_RBUTTONDOWN:
 
-    if(!(state & (MK_CONTROL | MK_SHIFT))){
+    if( !( state & ( MK_CONTROL | MK_SHIFT ) ) )
+    {
       state |= MK_RBUTTON;
-      SetCapture(hWnd);
-      callback(CAGD_RBUTTONDOWN, LOINT(lParam), HIINT(lParam));
+      SetCapture( hWnd );
+      callback( CAGD_RBUTTONDOWN, LOINT( lParam ), HIINT( lParam ) );
       return 0;
     }
-    if(state & (MK_LBUTTON | MK_MBUTTON))
+    if( state & ( MK_LBUTTON | MK_MBUTTON ) )
       return 0;
     state |= MK_RBUTTON;
-    x = (short)LOWORD(lParam);
-    y = (short)HIWORD(lParam);
-    SetCapture(hWnd);
+    x = ( short )LOWORD( lParam );
+    y = ( short )HIWORD( lParam );
+    SetCapture( hWnd );
     return 0;
 
   case WM_RBUTTONUP:
 
-    if(!(state & MK_RBUTTON))
+    if( !( state & MK_RBUTTON ) )
       return 0;
     state &= ~MK_RBUTTON;
-    if(state & (MK_CONTROL | MK_SHIFT))
+    if( state & ( MK_CONTROL | MK_SHIFT ) )
       saveModelView();
     else
-      callback(CAGD_RBUTTONUP, LOINT(lParam), HIINT(lParam));
+      callback( CAGD_RBUTTONUP, LOINT( lParam ), HIINT( lParam ) );
     ReleaseCapture();
     return 0;
 
   case WM_MBUTTONDOWN:
 
-    if(!(state & (MK_CONTROL | MK_SHIFT))){
+    if( !( state & ( MK_CONTROL | MK_SHIFT ) ) )
+    {
       state |= MK_MBUTTON;
-      SetCapture(hWnd);
-      callback(CAGD_MBUTTONDOWN, LOINT(lParam), HIINT(lParam));
+      SetCapture( hWnd );
+      callback( CAGD_MBUTTONDOWN, LOINT( lParam ), HIINT( lParam ) );
       return 0;
     }
-    if(state & (MK_LBUTTON | MK_RBUTTON))
+    if( state & ( MK_LBUTTON | MK_RBUTTON ) )
       return 0;
     state |= MK_MBUTTON;
     return 0;
@@ -229,32 +236,32 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
     //Bugfix Octavian + Avishai Dec 01 2002
     //if(!(state & MK_RBUTTON))
-      if(!(state & MK_MBUTTON))
+    if( !( state & MK_MBUTTON ) )
       return 0;
     state &= ~MK_MBUTTON;
-    if(!(state & (MK_CONTROL | MK_SHIFT)))
-    //Bugfix Octavian + Avishai Dec 01 2002
-    //callback(CAGD_RBUTTONUP, LOINT(lParam), HIINT(lParam));
-    callback(CAGD_MBUTTONUP, LOINT(lParam), HIINT(lParam));
+    if( !( state & ( MK_CONTROL | MK_SHIFT ) ) )
+      //Bugfix Octavian + Avishai Dec 01 2002
+      //callback(CAGD_RBUTTONUP, LOINT(lParam), HIINT(lParam));
+      callback( CAGD_MBUTTONUP, LOINT( lParam ), HIINT( lParam ) );
     ReleaseCapture();
     return 0;
 
   case WM_MOUSEMOVE:
 
-    if(state & MK_CONTROL) 
+    if( state & MK_CONTROL )
     {
-      if(state & MK_LBUTTON)
-	      rotateXY(LOINT(lParam) - x, HIINT(lParam) - y);
-      else if(state & MK_RBUTTON)
-	      rotateZ(LOINT(lParam) - x, HIINT(lParam) - y);
-    } 
-    else if(state & MK_SHIFT) 
+      if( state & MK_LBUTTON )
+        rotateXY( LOINT( lParam ) - x, HIINT( lParam ) - y );
+      else if( state & MK_RBUTTON )
+        rotateZ( LOINT( lParam ) - x, HIINT( lParam ) - y );
+    }
+    else if( state & MK_SHIFT )
     {
-      if(state & MK_LBUTTON)
-	      translateXY(LOINT(lParam) - x, HIINT(lParam) - y);
-      else if(state & MK_RBUTTON)
-	      translateZ(LOINT(lParam) - x, HIINT(lParam) - y);
-    } 
+      if( state & MK_LBUTTON )
+        translateXY( LOINT( lParam ) - x, HIINT( lParam ) - y );
+      else if( state & MK_RBUTTON )
+        translateZ( LOINT( lParam ) - x, HIINT( lParam ) - y );
+    }
     else if( state & MK_LBUTTON && get_active_pt_id() != K_NOT_USED )
     {
       double new_pos[2];
@@ -277,105 +284,109 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
       update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );
     }
     else
-      callback(CAGD_MOUSEMOVE, LOINT(lParam), HIINT(lParam));
+      callback( CAGD_MOUSEMOVE, LOINT( lParam ), HIINT( lParam ) );
     return 0;
 
   case WM_TIMER:
-    if(state)
+    if( state )
       return 0;
-    callback(CAGD_TIMER, 0, 0);
+    callback( CAGD_TIMER, 0, 0 );
     return 0;
 
   case WM_KEYDOWN:
-    switch(wParam){
+    switch( wParam )
+    {
     case VK_CONTROL:
     case VK_SHIFT:
-      if(state)
-	return 0;
-      state |= (wParam == VK_CONTROL)? MK_CONTROL: MK_SHIFT;
+      if( state )
+        return 0;
+      state |= ( wParam == VK_CONTROL ) ? MK_CONTROL : MK_SHIFT;
       return 0;
     }
     break;
 
   case WM_KEYUP:
-    switch(wParam){
+    switch( wParam )
+    {
     case VK_CONTROL:
     case VK_SHIFT:
-      key = (wParam == VK_CONTROL)? MK_CONTROL: MK_SHIFT;
-      if(!(state & key))
-	return 0;
+      key = ( wParam == VK_CONTROL ) ? MK_CONTROL : MK_SHIFT;
+      if( !( state & key ) )
+        return 0;
       state &= ~key;
-      if(state & MK_LBUTTON){
-	saveModelView();
-	state &= ~MK_LBUTTON;
-	ReleaseCapture();
-      } else if(state & MK_RBUTTON){
-	saveModelView();
-	state &= ~MK_RBUTTON;
-	ReleaseCapture();
+      if( state & MK_LBUTTON )
+      {
+        saveModelView();
+        state &= ~MK_LBUTTON;
+        ReleaseCapture();
+      }
+      else if( state & MK_RBUTTON )
+      {
+        saveModelView();
+        state &= ~MK_RBUTTON;
+        ReleaseCapture();
       }
       return 0;
     case VK_SUBTRACT:
     case 0xBD: /* '-' */
-      scale(0.9);
+      scale( 0.9 );
       return 0;
     case VK_ADD:
     case 0xBB: /* '+' w/o shift */
-      scale(1.1);
+      scale( 1.1 );
       return 0;
     }
     break;
-
   }
 
   /* BUGFIX: 22/10/2001, Tatiana&Vitaly Surazhsky {tess|vitus}@cs.technion.ac.il  */
   /* BUG: crash on some system, FIX: use CallWindowProc instead of direct function call  */
-  return CallWindowProc((WNDPROC)GetWindowLong(hWnd, GWL_USERDATA),
-    hWnd, message, wParam, lParam);
+  return CallWindowProc( ( WNDPROC )GetWindowLong( hWnd, GWL_USERDATA ),
+                         hWnd, message, wParam, lParam );
 }
 
-BOOL cagdAppendMenu(HMENU hMenu, PCSTR name)
+BOOL cagdAppendMenu( HMENU hMenu, PCSTR name )
 {
   HWND hWnd = auxGetHWND();
-  if(InsertMenu(GetMenu(hWnd), CAGD_HELP, MF_BYCOMMAND | MF_POPUP, (UINT)hMenu, name))
-    return DrawMenuBar(hWnd);
+  if( InsertMenu( GetMenu( hWnd ), CAGD_HELP, MF_BYCOMMAND | MF_POPUP, ( UINT )hMenu, name ) )
+    return DrawMenuBar( hWnd );
   return FALSE;
 }
 
-BOOL cagdRemoveMenu(HMENU hMenu)
+BOOL cagdRemoveMenu( HMENU hMenu )
 {
   HWND hWnd = auxGetHWND();
-  if(RemoveMenu(GetMenu(hWnd), (UINT)hMenu, MF_BYCOMMAND))
-    return DrawMenuBar(hWnd);
+  if( RemoveMenu( GetMenu( hWnd ), ( UINT )hMenu, MF_BYCOMMAND ) )
+    return DrawMenuBar( hWnd );
   return FALSE;
 }
 
 void menuSetView()
 {
-  HMENU hMenu = GetMenu(auxGetHWND());
-  CheckMenuItem(hMenu, CAGD_ORTHO, MF_UNCHECKED);
-  CheckMenuItem(hMenu, CAGD_PERSP, MF_UNCHECKED);
-  CheckMenuItem(hMenu, cagdGetView(), MF_CHECKED);
+  HMENU hMenu = GetMenu( auxGetHWND() );
+  CheckMenuItem( hMenu, CAGD_ORTHO, MF_UNCHECKED );
+  CheckMenuItem( hMenu, CAGD_PERSP, MF_UNCHECKED );
+  CheckMenuItem( hMenu, cagdGetView(), MF_CHECKED );
 }
 
 void menuSetDepthCue()
 {
-  HMENU hMenu = GetMenu(auxGetHWND());
-  CheckMenuItem(hMenu, CAGD_CUE, cagdGetDepthCue()? MF_CHECKED: MF_UNCHECKED);
+  HMENU hMenu = GetMenu( auxGetHWND() );
+  CheckMenuItem( hMenu, CAGD_CUE, cagdGetDepthCue() ? MF_CHECKED : MF_UNCHECKED );
 }
 
-void cagdSetHelpText(PCSTR newHelpText)
+void cagdSetHelpText( PCSTR newHelpText )
 {
-  if(helpText)
-    free(helpText);
-  helpText = _strdup(newHelpText? newHelpText: defaultHelpText);
+  if( helpText )
+    free( helpText );
+  helpText = _strdup( newHelpText ? newHelpText : defaultHelpText );
 }
 
 BOOL cagdShowHelp()
 {
-  if(!helpText)
+  if( !helpText )
     return FALSE;
-  MessageBox(NULL, helpText, "CAGD Help", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
+  MessageBox( NULL, helpText, "CAGD Help", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION );
   return TRUE;
 }
 
@@ -384,53 +395,53 @@ void createMenu()
   HWND hWnd = auxGetHWND();
   HMENU hMenu = CreateMenu();
   HMENU hSubMenu = CreatePopupMenu();
-  AppendMenu(hSubMenu, MF_STRING, CAGD_LOAD, "Load...");
-  AppendMenu(hSubMenu, MF_STRING, CAGD_SAVE, "Save...");
-  AppendMenu(hSubMenu, MF_SEPARATOR, 0, 0);
-  AppendMenu(hSubMenu, MF_STRING, CAGD_EXIT, "Exit");
-  AppendMenu(hMenu, MF_POPUP, (UINT)hSubMenu, "File");
+  AppendMenu( hSubMenu, MF_STRING, CAGD_LOAD, "Load..." );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_SAVE, "Save..." );
+  AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_EXIT, "Exit" );
+  AppendMenu( hMenu, MF_POPUP, ( UINT )hSubMenu, "File" );
   hSubMenu = CreatePopupMenu();
-  AppendMenu(hSubMenu, MF_STRING, CAGD_ORTHO, "Orthographic");
-  AppendMenu(hSubMenu, MF_STRING, CAGD_PERSP, "Perspective");
-  AppendMenu(hSubMenu, MF_SEPARATOR, 0, 0);
-  AppendMenu(hSubMenu, MF_STRING, CAGD_CUE, "Depth Cue");
-  AppendMenu(hSubMenu, MF_SEPARATOR, 0, 0);
-  AppendMenu(hSubMenu, MF_STRING, CAGD_SENSLESS, "Less Sensitive Mouse");
-  AppendMenu(hSubMenu, MF_STRING, CAGD_SENSMORE, "More Sensitive Mouse");
-  AppendMenu(hSubMenu, MF_SEPARATOR, 0, 0);
-  AppendMenu(hSubMenu, MF_STRING, CAGD_FUZZLESS, "Less Fuzzy Select");
-  AppendMenu(hSubMenu, MF_STRING, CAGD_FUZZMORE, "More Fuzzy Select");
-  AppendMenu(hSubMenu, MF_SEPARATOR, 0, 0);
-  AppendMenu(hSubMenu, MF_STRING, CAGD_RESET, "Reset");
-  AppendMenu(hMenu, MF_POPUP, (UINT)hSubMenu, "View");
-  AppendMenu(hMenu, MF_STRING, CAGD_HELP, "Help!");
-  SetMenu(hWnd, hMenu);
+  AppendMenu( hSubMenu, MF_STRING, CAGD_ORTHO, "Orthographic" );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_PERSP, "Perspective" );
+  AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_CUE, "Depth Cue" );
+  AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_SENSLESS, "Less Sensitive Mouse" );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_SENSMORE, "More Sensitive Mouse" );
+  AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_FUZZLESS, "Less Fuzzy Select" );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_FUZZMORE, "More Fuzzy Select" );
+  AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_RESET, "Reset" );
+  AppendMenu( hMenu, MF_POPUP, ( UINT )hSubMenu, "View" );
+  AppendMenu( hMenu, MF_STRING, CAGD_HELP, "Help!" );
+  SetMenu( hWnd, hMenu );
   menuSetView();
   menuSetDepthCue();
-  cagdSetHelpText(NULL);
-  SetWindowLong(hWnd, GWL_USERDATA, GetWindowLong(hWnd, GWL_WNDPROC));
-  SetWindowLong(hWnd, GWL_WNDPROC, (LONG)command);
+  cagdSetHelpText( NULL );
+  SetWindowLong( hWnd, GWL_USERDATA, GetWindowLong( hWnd, GWL_WNDPROC ) );
+  SetWindowLong( hWnd, GWL_WNDPROC, ( LONG )command );
 }
 
-WORD cagdPostMenu(HMENU hMenu, int x, int y)
+WORD cagdPostMenu( HMENU hMenu, int x, int y )
 {
   MSG message;
   POINT p = { x, y };
   HWND hWnd = auxGetHWND();
-  ClientToScreen(hWnd, &p);
+  ClientToScreen( hWnd, &p );
   state = 0;
   ReleaseCapture();
-  TrackPopupMenu(hMenu,
-		 TPM_LEFTALIGN | TPM_RIGHTBUTTON,
-		 p.x, p.y,
-		 0, hWnd, NULL);
-  return PeekMessage(&message, hWnd, WM_COMMAND, WM_COMMAND, PM_REMOVE)?
-    LOWORD(message.wParam): 0;
+  TrackPopupMenu( hMenu,
+                  TPM_LEFTALIGN | TPM_RIGHTBUTTON,
+                  p.x, p.y,
+                  0, hWnd, NULL );
+  return PeekMessage( &message, hWnd, WM_COMMAND, WM_COMMAND, PM_REMOVE ) ?
+    LOWORD( message.wParam ) : 0;
 }
 
 HMODULE cagdGetModule()
 {
-  return GetModuleHandle(NULL);
+  return GetModuleHandle( NULL );
 }
 
 HWND cagdGetWindow()

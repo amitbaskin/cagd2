@@ -3,7 +3,6 @@
 #include "options.h"
 #include "color.h"
 
-
 /******************************************************************************
 * Curve::Curve
 ******************************************************************************/
@@ -19,16 +18,43 @@ Curve::Curve() : order_( 0 ), poly_seg_id_( K_NOT_USED )
 /******************************************************************************
 * Curve::Curve
 ******************************************************************************/
-Curve::Curve( int order_, point_vec ctrl_pnts_ ) :
+Curve::Curve( int order, point_vec ctrl_pnts ) :
   poly_seg_id_( K_NOT_USED ),
-  order_( order_ ),
-  ctrl_pnts_( ctrl_pnts_ )
+  order_( order ),
+  ctrl_pnts_( ctrl_pnts )
 {
   const unsigned char *curve_color = get_curve_color();
 
   color_[ 0 ] = curve_color[ 0 ];
   color_[ 1 ] = curve_color[ 1 ];
   color_[ 2 ] = curve_color[ 2 ];
+}
+
+/******************************************************************************
+* Curve::rmv_ctrl_pnt
+******************************************************************************/
+void Curve::rmv_ctrl_pnt( int idx )
+{
+  erase_pnt_from_map( pnt_ids_[ idx ] );
+
+  pnt_ids_.erase( pnt_ids_.begin() + idx );
+  ctrl_pnts_.erase( ctrl_pnts_.begin() + idx );
+
+  show_ctrl_poly();
+}
+
+/******************************************************************************
+* Curve::add_ctrl_pnt
+******************************************************************************/
+void Curve::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
+{
+  int pnt_id = cagdAddPoint( &ctrl_pnt );
+  map_pnt_to_crv_ctrl( pnt_id, this, idx );
+  pnt_ids_.insert( pnt_ids_ .begin() + idx, pnt_id );
+
+  ctrl_pnts_.insert( ctrl_pnts_.begin() + idx, ctrl_pnt );
+
+  show_ctrl_poly();
 }
 
 /******************************************************************************
@@ -68,7 +94,7 @@ void Curve::show_ctrl_poly()
       {
         if( ctrl_pnts_[ i ].z == 0 )
         {
-          print_err( "control point can't have weight 0" );
+          print_error( "control point can't have weight 0" );
           return;
         }
 
@@ -99,9 +125,9 @@ void Curve::show_ctrl_poly()
 }
 
 /******************************************************************************
-* Curve::add_ctrl_pnt
+* Curve::add_ctrl_pnt_from_str
 ******************************************************************************/
-void Curve::add_ctrl_pnt( std::istringstream &line )
+void Curve::add_ctrl_pnt_from_str( std::istringstream &line )
 {
   CAGD_POINT point;
 

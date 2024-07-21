@@ -6,9 +6,9 @@
 #include "crv_utils.h"
 #include "options.h"
 
-char buffer1[BUFSIZ];
-char buffer2[BUFSIZ];
-char buffer3[BUFSIZ];
+char buffer1[ BUFSIZ ];
+char buffer2[ BUFSIZ ];
+char buffer3[ BUFSIZ ];
 UINT myText2;
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
@@ -30,7 +30,6 @@ void init_menus()
   AppendMenu( op_menu, MF_STRING, CAGD_SETTINGS, "Settings" );
   AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( op_menu, MF_STRING, CAGD_CLEAN_ALL, "Clean all" );
-
 
   // adding to cagd
   cagdAppendMenu( curve_menu, "Curve" );
@@ -56,7 +55,6 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
     SetDlgItemInt( hDialog, IDC_DEF_DEGREE, get_def_degree(), FALSE );
     break;
 
-
   case WM_COMMAND:
     switch( LOWORD( wParam ) )
     {
@@ -71,7 +69,7 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
     default:
       return FALSE;
     }
-  break;
+    break;
 
   default:
     return FALSE;
@@ -91,11 +89,10 @@ LRESULT CALLBACK CurveColorDialogProc( HWND hDialog, UINT message, WPARAM wParam
   switch( message )
   {
   case WM_INITDIALOG:
-    SetDlgItemInt( hDialog, IDC_RED, curve_color[0], FALSE );
-    SetDlgItemInt( hDialog, IDC_GREEN, curve_color[1], FALSE );
-    SetDlgItemInt( hDialog, IDC_BLUE, curve_color[2], FALSE );
+    SetDlgItemInt( hDialog, IDC_RED, curve_color[ 0 ], FALSE );
+    SetDlgItemInt( hDialog, IDC_GREEN, curve_color[ 1 ], FALSE );
+    SetDlgItemInt( hDialog, IDC_BLUE, curve_color[ 2 ], FALSE );
     break;
-
 
   case WM_COMMAND:
     switch( LOWORD( wParam ) )
@@ -153,19 +150,19 @@ void handle_curve_color_menu()
   const unsigned char *curve_color = get_curve_color();
 
   if( DialogBox( cagdGetModule(),
-      MAKEINTRESOURCE( IDD_COLOR ),
-      cagdGetWindow(),
-      ( DLGPROC )CurveColorDialogProc ) )
+                 MAKEINTRESOURCE( IDD_COLOR ),
+                 cagdGetWindow(),
+                 ( DLGPROC )CurveColorDialogProc ) )
   {
-    GLubyte new_colors[3];
-    if( sscanf( buffer1, "%hhu", &new_colors[0] ) == 1 &&
-        sscanf( buffer2, "%hhu", &new_colors[1] ) == 1 &&
-        sscanf( buffer3, "%hhu", &new_colors[2] ) == 1 )
+    GLubyte new_colors[ 3 ];
+    if( sscanf( buffer1, "%hhu", &new_colors[ 0 ] ) == 1 &&
+        sscanf( buffer2, "%hhu", &new_colors[ 1 ] ) == 1 &&
+        sscanf( buffer3, "%hhu", &new_colors[ 2 ] ) == 1 )
     {
       set_curve_color( new_colors );
     }
     else
-      print_err( "Invalid RGB values" );
+      print_error( "Invalid RGB values" );
   }
 }
 
@@ -175,9 +172,9 @@ void handle_curve_color_menu()
 void handle_settings_menu()
 {
   if( DialogBox( cagdGetModule(),
-      MAKEINTRESOURCE( IDD_SETTINGS ),
-      cagdGetWindow(),
-      ( DLGPROC )SettingsDialogProc ) )
+                 MAKEINTRESOURCE( IDD_SETTINGS ),
+                 cagdGetWindow(),
+                 ( DLGPROC )SettingsDialogProc ) )
   {
     unsigned int new_samples = 0;
     unsigned int def_deg = 0;
@@ -191,7 +188,7 @@ void handle_settings_menu()
       redraw_all_curves();
     }
     else
-      print_err( "Invalid input" );
+      print_error( "Invalid input" );
   }
 }
 
@@ -209,13 +206,16 @@ void handle_clean_all_menu()
 void lmb_down_cb( int x, int y, PVOID userData )
 {
   UINT id;
+
   for( cagdPick( x, y ); id = cagdPickNext();)
+  {
     if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POINT )
       break;
-  if( id )
-  {
-    set_active_pt_id( id );
   }
+
+  if( id )
+    set_active_pt_id( id );
+
   cagdRedraw();
 }
 

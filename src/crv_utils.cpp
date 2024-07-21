@@ -10,12 +10,36 @@
 #include "Bezier.h"
 #include "crv_utils.h"
 
-
 std::vector< Curve * > cur_curves;
 std::map< int, Curve * > seg_to_crv;
 std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
 int active_pt_id = K_NOT_USED;
 
+void print_error( const std::string &message );
+static inline void ltrim( std::string &str );
+static inline void rtrim( std::string &str );
+static inline void trim( std::string &str );
+void skip_blank_and_comment_lines( std::ifstream &file );
+void clean_all_curves();
+void clean_current_curves();
+bool parse_order_from_line( const std::string &line, int &order );
+void parse_knots_from_line( const std::string &line, BSpline *bspline );
+
+bool extract_knots_information( const std::string &line,
+                                BSpline *bspline,
+                                size_t &numKnots );
+
+bool parse_remaining_knots( std::ifstream &file,
+                            BSpline *bspline,
+                            size_t numKnots );
+
+BSpline *create_bspline( int order,
+                         const std::string &line,
+                         std::ifstream &file );
+
+Bezier *create_bezier( int order, const std::string &line );
+Curve *create_curve( int order, const std::string &line, std::ifstream &file );
+bool add_control_points( std::ifstream &file, Curve *curve );
 size_t parse_file( const std::string &filePath );
 
 /******************************************************************************
@@ -62,6 +86,14 @@ void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx )
 }
 
 /******************************************************************************
+* erase_pnt_from_map
+******************************************************************************/
+void erase_pnt_from_map( int pnt_id )
+{
+  pnt_to_crv_ctrl.erase( pnt_id );
+}
+
+/******************************************************************************
 * get_pnt_crv_ctrl
 ******************************************************************************/
 std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
@@ -84,8 +116,8 @@ void update_ctrl_pnt( int pnt_id, double new_x, double new_y )
 
   if( p_curve != nullptr )
   {
-    double old_pos_x = p_curve->ctrl_pnts_[ctrl_idx].x;
-    double old_pos_y = p_curve->ctrl_pnts_[ctrl_idx].y;
+    double old_pos_x = p_curve->ctrl_pnts_[ ctrl_idx ].x;
+    double old_pos_y = p_curve->ctrl_pnts_[ ctrl_idx ].y;
 
     p_curve->ctrl_pnts_[ ctrl_idx ].x = new_x;
     p_curve->ctrl_pnts_[ ctrl_idx ].y = new_y;
@@ -94,124 +126,6 @@ void update_ctrl_pnt( int pnt_id, double new_x, double new_y )
     p_curve->show_crv( ctrl_idx );
     cagdRedraw();
   }
-}
-
-/******************************************************************************
-* calculate_ctrl_pnt_updated_pos
-******************************************************************************/
-void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
-                                     double &new_x, double &new_y )
-{
-  std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
-
-  auto p_curve = std::get< 0 >( crv_ctrl_idx );
-  auto ctrl_idx = std::get< 1 >( crv_ctrl_idx );
-
-  if( p_curve != nullptr )
-  {
-    double move_vec[2];
-    cagdGetMoveVec( dx, dy, move_vec[0], move_vec[1] );
-
-    new_x = p_curve->ctrl_pnts_[ctrl_idx].x + move_vec[0];
-    new_y = p_curve->ctrl_pnts_[ctrl_idx].y + move_vec[1];
-  }
-}
-
-/******************************************************************************
-* get_seg_crv
-******************************************************************************/
-Curve *get_seg_crv( int seg_id )
-{
-  if( seg_to_crv.find( seg_id ) != seg_to_crv.end() )
-    return seg_to_crv[ seg_id ];
-  else
-    return nullptr;
-}
-
-/******************************************************************************
-* print_err
-******************************************************************************/
-void print_err( char *str )
-{
-  errno = EPERM;
-  perror( str );
-  cagdSetHelpText( str );
-  cagdShowHelp();
-}
-
-/******************************************************************************
-* ltrim
-******************************************************************************/
-static inline void ltrim( std::string &ss )
-{
-  ss.erase( ss.begin(), std::find_if( ss.begin(), ss.end(),
-                                      []( unsigned char ch )
-                                      {
-                                        return !std::isspace( ch );
-                                      } ) );
-}
-
-/******************************************************************************
-* rtrim  trim from end (in place)
-******************************************************************************/
-static inline void rtrim( std::string &ss )
-{
-  ss.erase( std::find_if( ss.rbegin(), ss.rend(), []( unsigned char ch )
-                          {
-                            return !std::isspace( ch );
-                          } ).base(), ss.end() );
-}
-
-/******************************************************************************
-* trim
-******************************************************************************/
-static inline void trim( std::string &ss )
-{
-  ltrim( ss );
-  rtrim( ss );
-}
-
-/******************************************************************************
-* skip_blank_lines_and_comments
-******************************************************************************/
-void skip_blank_lines_and_comments( std::ifstream &file )
-{
-  std::streampos lastPos = file.tellg();
-  std::string line;
-  while( std::getline( file, line ) )
-  {
-    ltrim( line );
-    if( line.empty() || line[ 0 ] == '#' )
-    {
-      lastPos = file.tellg();
-      continue;
-    }
-
-    file.seekg( lastPos );
-    break;
-  }
-}
-
-/******************************************************************************
-* clean_all_curves
-******************************************************************************/
-void clean_all_curves()
-{
-  clean_cur_curves_vec();
-
-  cagdFreeAllSegments();
-  cagdRedraw();
-}
-
-/******************************************************************************
-* clean_cur_curves_vec
-******************************************************************************/
-void clean_cur_curves_vec()
-{
-  for( auto crv : cur_curves )
-    delete crv;
-
-  cur_curves.clear();
 }
 
 /******************************************************************************
@@ -236,6 +150,292 @@ void load_curves( int dummy1, int dummy2, void *p_data )
 }
 
 /******************************************************************************
+* calculate_ctrl_pnt_updated_pos
+******************************************************************************/
+void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
+                                     double &new_x, double &new_y )
+{
+  std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
+
+  auto p_curve = std::get< 0 >( crv_ctrl_idx );
+  auto ctrl_idx = std::get< 1 >( crv_ctrl_idx );
+
+  if( p_curve != nullptr )
+  {
+    double move_vec[ 2 ];
+    cagdGetMoveVec( dx, dy, move_vec[ 0 ], move_vec[ 1 ] );
+
+    new_x = p_curve->ctrl_pnts_[ ctrl_idx ].x + move_vec[ 0 ];
+    new_y = p_curve->ctrl_pnts_[ ctrl_idx ].y + move_vec[ 1 ];
+  }
+}
+
+/******************************************************************************
+* get_seg_crv
+******************************************************************************/
+Curve *get_seg_crv( int seg_id )
+{
+  if( seg_to_crv.find( seg_id ) != seg_to_crv.end() )
+    return seg_to_crv[ seg_id ];
+  else
+    return nullptr;
+}
+
+/******************************************************************************
+* print_error
+******************************************************************************/
+void print_error( const std::string &message )
+{
+  errno = EPERM;
+  perror( message.c_str() );
+  cagdSetHelpText( message.c_str() );
+  cagdShowHelp();
+}
+
+/******************************************************************************
+* ltrim
+******************************************************************************/
+static inline void ltrim( std::string &str )
+{
+  str.erase( str.begin(),
+             std::find_if( str.begin(),
+                           str.end(),
+                           []( unsigned char ch )
+                           {
+                             return !std::isspace( ch );
+                           } ) );
+}
+
+/******************************************************************************
+* rtrim
+******************************************************************************/
+static inline void rtrim( std::string &str )
+{
+  str.erase( std::find_if( str.rbegin(), str.rend(), []( unsigned char ch )
+                           {
+                             return !std::isspace( ch );
+                           } ).base(), str.end() );
+}
+
+/******************************************************************************
+* trim
+******************************************************************************/
+static inline void trim( std::string &str )
+{
+  ltrim( str );
+  rtrim( str );
+}
+
+/******************************************************************************
+* skip_blank_and_comment_lines
+******************************************************************************/
+void skip_blank_and_comment_lines( std::ifstream &file )
+{
+  std::streampos lastPos = file.tellg();
+  std::string line;
+  while( std::getline( file, line ) )
+  {
+    ltrim( line );
+    if( line.empty() || line[ 0 ] == '#' )
+    {
+      lastPos = file.tellg();
+      continue;
+    }
+    file.seekg( lastPos );
+    break;
+  }
+}
+
+/******************************************************************************
+* clean_current_curves
+******************************************************************************/
+void clean_current_curves()
+{
+  for( auto curve : cur_curves )
+    delete curve;
+
+  cur_curves.clear();
+}
+
+/******************************************************************************
+* clean_all_curves
+******************************************************************************/
+void clean_all_curves()
+{
+  clean_current_curves();
+  cagdFreeAllSegments();
+  cagdRedraw();
+}
+
+/******************************************************************************
+* parse_order_from_line
+******************************************************************************/
+bool parse_order_from_line( const std::string &line, int &order )
+{
+  std::istringstream iss( line );
+  if( !( iss >> order ) )
+  {
+    print_error( "Error reading order" );
+    return false;
+  }
+  return true;
+}
+
+/******************************************************************************
+* parse_knots_from_line
+******************************************************************************/
+void parse_knots_from_line( const std::string &line, BSpline *bspline )
+{
+  std::istringstream iss( line );
+  double prev_knot = -HUGE_DOUBLE;
+  double knot = -HUGE_DOUBLE;
+
+  while( iss >> knot )
+  {
+    bspline->knots_.push_back( knot );
+    if( double_cmp( knot, prev_knot ) > 0 )
+    {
+      prev_knot = knot;
+      bspline->u_vec_.push_back( knot );
+    }
+  }
+}
+
+/******************************************************************************
+* extract_knots_information
+******************************************************************************/
+bool extract_knots_information( const std::string &line,
+                                BSpline *bspline,
+                                size_t &numKnots )
+{
+  size_t pos = line.find( "[" );
+  size_t posEnd = line.find( "]" );
+  if( pos != std::string::npos && posEnd != std::string::npos && pos < posEnd )
+  {
+    std::string numKnotsStr = line.substr( pos + 1, posEnd - pos - 1 );
+    trim( numKnotsStr );
+    numKnots = std::stoi( numKnotsStr );
+
+    std::string after_equal_sign = line.substr( posEnd + 3 );
+    ltrim( after_equal_sign );
+    parse_knots_from_line( after_equal_sign, bspline );
+    return true;
+  }
+  else
+  {
+    print_error( "Error parsing knots size" );
+    return false;
+  }
+}
+
+/******************************************************************************
+* parse_remaining_knots
+******************************************************************************/
+bool parse_remaining_knots( std::ifstream &file,
+                            BSpline *bspline,
+                            size_t numKnots )
+{
+  std::string line;
+  while( bspline->knots_.size() < numKnots && std::getline( file, line ) )
+  {
+    ltrim( line );
+    if( line.empty() || line[ 0 ] == '#' )
+    {
+      continue;
+    }
+    parse_knots_from_line( line, bspline );
+  }
+
+  if( bspline->knots_.size() != numKnots )
+  {
+    print_error( "Error parsing knots size" );
+    return false;
+  }
+  return true;
+}
+
+/******************************************************************************
+* create_bspline
+******************************************************************************/
+BSpline *create_bspline( int order,
+                         const std::string &line,
+                         std::ifstream &file )
+{
+  auto bspline = new BSpline();
+  bspline->order_ = order;
+
+  size_t numKnots;
+  if( !extract_knots_information( line, bspline, numKnots ) )
+  {
+    delete bspline;
+    return nullptr;
+  }
+
+  if( !parse_remaining_knots( file, bspline, numKnots ) )
+  {
+    delete bspline;
+    return nullptr;
+  }
+
+  return bspline;
+}
+
+/******************************************************************************
+* create_bezier
+******************************************************************************/
+Bezier *create_bezier( int order, const std::string &line )
+{
+  auto bezier = new Bezier();
+  bezier->order_ = order;
+
+  std::istringstream iss( line );
+  bezier->add_ctrl_pnt_from_str( iss );
+
+  return bezier;
+}
+
+/******************************************************************************
+* create_curve
+******************************************************************************/
+Curve *create_curve( int order, const std::string &line, std::ifstream &file )
+{
+  if( line.find( "knots" ) != std::string::npos )
+  {
+    return create_bspline( order, line, file );
+  }
+  else if( order > 0 )
+  {
+    return create_bezier( order, line );
+  }
+
+  print_error( "Error in file format - no knots and no order" );
+  return nullptr;
+}
+
+/******************************************************************************
+* add_control_points
+******************************************************************************/
+bool add_control_points( std::ifstream &file, Curve *curve )
+{
+  std::string line;
+  while( std::getline( file, line ) )
+  {
+    ltrim( line );
+    if( line.empty() || line[ 0 ] == '#' )
+    {
+      continue;
+    }
+
+    std::istringstream iss( line );
+    curve->add_ctrl_pnt_from_str( iss );
+
+    if( !curve->is_miss_ctrl_pnts() )
+      return true;
+  }
+  return false;
+}
+
+/******************************************************************************
 * parse_file
 ******************************************************************************/
 size_t parse_file( const std::string &filePath )
@@ -243,10 +443,9 @@ size_t parse_file( const std::string &filePath )
   size_t first_new_idx = cur_curves.size();
 
   std::ifstream file( filePath, std::ios::binary );
-
   if( !file.is_open() )
   {
-    print_err( "Error opening file" );
+    print_error( "Error opening file" );
     return first_new_idx;
   }
 
@@ -254,154 +453,46 @@ size_t parse_file( const std::string &filePath )
   {
     int order = 0;
 
-    Curve *p_curve;
-
-    skip_blank_lines_and_comments( file );
+    skip_blank_and_comment_lines( file );
 
     std::string line;
     if( !std::getline( file, line ) && !file.eof() )
     {
-      print_err( "Error reading file" );
+      print_error( "Error reading file" );
       break;
     }
 
     ltrim( line );
-
     if( line.empty() )
       continue;
 
-    std::istringstream issOrder( line );
-    if( !( issOrder >> order ) )
-    {
-      print_err( "Error reading order" );
+    if( !parse_order_from_line( line, order ) )
       continue;
-    }
 
-    skip_blank_lines_and_comments( file );
+    skip_blank_and_comment_lines( file );
 
     if( !std::getline( file, line ) )
     {
-      print_err( "Error reading file" );
+      print_error( "Error reading file" );
       break;
     }
 
-    if( line.find( "knots" ) != std::string::npos )
+    auto curve = create_curve( order, line, file );
+    if( !curve )
+      continue;
+
+    if( !add_control_points( file, curve ) )
     {
-      p_curve = new BSpline();
-      BSpline *p_bspline = ( BSpline * )p_curve;
-      p_bspline->order_ = order;
-
-      size_t pos = line.find( "[" );
-      size_t posEnd = line.find( "]" );
-
-      if( pos != std::string::npos && posEnd != std::string::npos && pos < posEnd )
-      {
-        std::string numKnotsStr = line.substr( pos + 1, posEnd - pos - 1 );
-        trim( numKnotsStr );
-        size_t numKnots = std::stoi( numKnotsStr );
-
-        std::string after_equal_sign = line.substr( posEnd + 3 );
-        ltrim( after_equal_sign );
-
-        std::istringstream issLine( after_equal_sign );
-
-        double prev_knot = -HUGE_DOUBLE;
-        double knot = -HUGE_DOUBLE;
-
-        while( issLine >> knot )
-        {
-          p_bspline->knots_.push_back( knot );
-
-          if( double_cmp( knot, prev_knot ) > 0 )
-          {
-            prev_knot = knot;
-            p_bspline->u_vec_.push_back( knot );
-          }
-
-          if( p_bspline->knots_.size() == numKnots )
-          {
-            break;
-          }
-        }
-
-        while( p_bspline->knots_.size() < numKnots &&
-               std::getline( file, line ) )
-        {
-          ltrim( line );
-
-          if( line.empty() || line[ 0 ] == '#' )
-          {
-            continue;
-          }
-
-          std::istringstream issLine( line );
-          double knot;
-
-          while( issLine >> knot )
-          {
-            p_bspline->knots_.push_back( knot );
-
-            if( double_cmp( knot, prev_knot ) > 0 )
-            {
-              prev_knot = knot;
-              p_bspline->u_vec_.push_back( knot );
-            }
-
-            if( p_bspline->knots_.size() == numKnots )
-            {
-              break;
-            }
-          }
-        }
-      }
-      else
-      {
-        print_err( "Error parsing knots_ size" );
-        delete p_curve;
-        continue;
-      }
-    }
-    else if( order > 0 )
-    {
-      p_curve = new Bezier();
-      Bezier *p_bezier = ( Bezier * )p_curve;
-      p_bezier->order_ = order;
-
-      std::istringstream issctrl_pnts( line );
-      p_curve->add_ctrl_pnt( issctrl_pnts );
-
-      if( !p_curve->is_miss_ctrl_pnts() )
-        break;
-    }
-    else
-    {
-      print_err( "Error in file format - no knots and no order" );
-      break;
-    }
-
-    while( std::getline( file, line ) )
-    {
-      ltrim( line );
-
-      if( line.empty() || line[ 0 ] == '#' )
-      {
-        continue;
-      }
-
-      std::istringstream issctrl_pnts( line );
-      p_curve->add_ctrl_pnt( issctrl_pnts );
-
-      if( !p_curve->is_miss_ctrl_pnts() )
-        break;
+      delete curve;
+      continue;
     }
 
     if( IS_DEBUG )
-      p_curve->print();
+      curve->print();
 
-    cur_curves.push_back( p_curve );
+    cur_curves.push_back( curve );
   }
 
   file.close();
-
   return first_new_idx;
 }
