@@ -389,7 +389,7 @@ Bezier *create_bezier( int order, const std::string &line )
   bezier->order_ = order;
 
   std::istringstream iss( line );
-  bezier->add_ctrl_pnt( iss );
+  bezier->add_ctrl_pnt_from_str( iss );
 
   return bezier;
 }
@@ -427,7 +427,7 @@ bool add_control_points( std::ifstream &file, Curve *curve )
     }
 
     std::istringstream iss( line );
-    curve->add_ctrl_pnt( iss );
+    curve->add_ctrl_pnt_from_str( iss );
 
     if( !curve->is_miss_ctrl_pnts() )
       return true;

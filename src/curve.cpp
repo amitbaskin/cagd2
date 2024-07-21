@@ -125,9 +125,9 @@ void Curve::show_ctrl_poly()
 }
 
 /******************************************************************************
-* Curve::add_ctrl_pnt
+* Curve::add_ctrl_pnt_from_str
 ******************************************************************************/
-void Curve::add_ctrl_pnt( std::istringstream &line )
+void Curve::add_ctrl_pnt_from_str( std::istringstream &line )
 {
   CAGD_POINT point;
 

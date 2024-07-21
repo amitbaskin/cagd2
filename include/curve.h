@@ -42,7 +42,7 @@ public:
   virtual void print() const;
 
   void show_ctrl_poly();
-  void add_ctrl_pnt( std::istringstream &line );
+  void add_ctrl_pnt_from_str( std::istringstream &line );
 
   int order_;
   point_vec ctrl_pnts_;
