@@ -7,6 +7,8 @@
 #include "color.h"
 #include "crv_utils.h"
 #include <vectors.h>
+#include <BSpline.h>
+
 
 /******************************************************************************
 * Bezier::print
@@ -35,6 +37,152 @@ void Bezier::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
   Curve::add_ctrl_pnt( ctrl_pnt, idx );
 
   show_crv( idx );
+}
+
+/******************************************************************************
+* Bezier::connectC0_bezier
+******************************************************************************/
+void Bezier::connectC0_bezier( const Bezier &other )
+{
+  ctrl_pnts_.back() = other.ctrl_pnts_.front();
+}
+
+/******************************************************************************
+* Bezier::connectC1_bezier
+******************************************************************************/
+void Bezier::connectC1_bezier( const Bezier &other )
+{
+  connectC0_bezier( other );
+
+  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT secondLastCtrlPntThis = ctrl_pnts_[ ctrl_pnts_.size() - 2 ];
+    CAGD_POINT firstCtrlPntOther = other.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPntOther = other.ctrl_pnts_[ 1 ];
+
+    CAGD_POINT tangentDirection =
+    {
+      secondCtrlPntOther.x - firstCtrlPntOther.x,
+      secondCtrlPntOther.y - firstCtrlPntOther.y,
+      secondCtrlPntOther.z - firstCtrlPntOther.z
+    };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    {
+      firstCtrlPntOther.x - tangentDirection.x,
+      firstCtrlPntOther.y - tangentDirection.y,
+      firstCtrlPntOther.z - tangentDirection.z
+    };
+  }
+}
+
+/******************************************************************************
+* Bezier::connectG1_bezier
+******************************************************************************/
+void Bezier::connectG1_bezier( const Bezier &other )
+{
+  connectC0_bezier( other );
+
+  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT firstCtrlPntOther = other.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPntOther = other.ctrl_pnts_[ 1 ];
+
+    CAGD_POINT lastCtrlPntThis = ctrl_pnts_.back();
+
+    double dxOther = secondCtrlPntOther.x - firstCtrlPntOther.x;
+    double dyOther = secondCtrlPntOther.y - firstCtrlPntOther.y;
+    double dzOther = secondCtrlPntOther.z - firstCtrlPntOther.z;
+
+    double lengthOther = sqrt( dxOther * dxOther +
+                               dyOther * dyOther +
+                               dzOther * dzOther );
+
+    if( lengthOther != 0 )
+    {
+      dxOther /= lengthOther;
+      dyOther /= lengthOther;
+      dzOther /= lengthOther;
+    }
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = {
+        lastCtrlPntThis.x - dxOther,
+        lastCtrlPntThis.y - dyOther,
+        lastCtrlPntThis.z - dzOther
+    };
+  }
+}
+
+/******************************************************************************
+* Bezier::connectC0_bspline
+******************************************************************************/
+void Bezier::connectC0_bspline( const BSpline &bspline )
+{
+  CAGD_POINT startPoint = bspline.evaluate( bspline.knots_.front() );
+  ctrl_pnts_.back() = startPoint;
+}
+
+/******************************************************************************
+* Bezier::connectC1_bspline
+******************************************************************************/
+void Bezier::connectC1_bspline( const BSpline &bspline )
+{
+  CAGD_POINT startPoint = bspline.evaluate( bspline.knots_.front() );
+  ctrl_pnts_.back() = startPoint;
+
+  if( ctrl_pnts_.size() > 1 && bspline.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT secondCtrlPntBSpline = bspline.ctrl_pnts_[ 1 ];
+
+    double dxBSpline = secondCtrlPntBSpline.x - startPoint.x;
+    double dyBSpline = secondCtrlPntBSpline.y - startPoint.y;
+    double dzBSpline = secondCtrlPntBSpline.z - startPoint.z;
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    {
+      startPoint.x - dxBSpline,
+      startPoint.y - dyBSpline,
+      startPoint.z - dzBSpline
+    };
+  }
+}
+
+/******************************************************************************
+* Bezier::connectG1_bspline
+******************************************************************************/
+void Bezier::connectG1_bspline( const BSpline &bspline )
+{
+  connectC0_bspline( bspline );
+
+  if( ctrl_pnts_.size() > 1 && bspline.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT startPoint = bspline.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPntBSpline = bspline.ctrl_pnts_[ 1 ];
+
+    double dxBSpline = secondCtrlPntBSpline.x - startPoint.x;
+    double dyBSpline = secondCtrlPntBSpline.y - startPoint.y;
+    double dzBSpline = secondCtrlPntBSpline.z - startPoint.z;
+
+    double lengthBSpline = sqrt( dxBSpline * dxBSpline +
+                                 dyBSpline * dyBSpline +
+                                 dzBSpline * dzBSpline );
+
+    if( lengthBSpline != 0 )
+    {
+      dxBSpline /= lengthBSpline;
+      dyBSpline /= lengthBSpline;
+      dzBSpline /= lengthBSpline;
+    }
+
+    CAGD_POINT lastCtrlPntThis = ctrl_pnts_.back();
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    {
+      lastCtrlPntThis.x - dxBSpline,
+      lastCtrlPntThis.y - dyBSpline,
+      lastCtrlPntThis.z - dzBSpline
+    };
+  }
 }
 
 /******************************************************************************

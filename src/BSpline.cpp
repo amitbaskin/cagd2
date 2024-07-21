@@ -6,7 +6,165 @@
 #include <vectors.h>
 
 #include "BSpline.h"
+#include "Bezier.h"
 #include "crv_utils.h"
+
+
+/******************************************************************************
+* BSpline::connectC0_bezier
+******************************************************************************/
+void BSpline::connectC0_bezier( const Bezier &other )
+{
+  ctrl_pnts_.back() = other.ctrl_pnts_.front();
+
+  int degree = order_ - 1;
+  int knotCount = knots_.size() - 1;
+  for( int i = 1; i <= degree; ++i )
+  {
+    knots_[ knotCount - i ] = knots_[ knotCount - degree - 1 ];
+  }
+}
+
+/******************************************************************************
+* BSpline::connectC1_bezier
+******************************************************************************/
+void BSpline::connectC1_bezier( const Bezier &other )
+{
+  connectC0_bezier( other );
+
+  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = {
+        startPointOther.x - ( secondCtrlPointOther.x - startPointOther.x ),
+        startPointOther.y - ( secondCtrlPointOther.y - startPointOther.y ),
+        startPointOther.z - ( secondCtrlPointOther.z - startPointOther.z )
+    };
+  }
+}
+
+/******************************************************************************
+* BSpline::connectG1_bezier
+******************************************************************************/
+void BSpline::connectG1_bezier( const Bezier &other )
+{
+  connectC0_bezier( other );
+
+  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+
+    double dxOther = secondCtrlPointOther.x - startPointOther.x;
+    double dyOther = secondCtrlPointOther.y - startPointOther.y;
+    double dzOther = secondCtrlPointOther.z - startPointOther.z;
+
+    double lengthOther = sqrt( dxOther * dxOther +
+                               dyOther * dyOther +
+                               dzOther * dzOther );
+
+    if( lengthOther != 0 )
+    {
+      dxOther /= lengthOther;
+      dyOther /= lengthOther;
+      dzOther /= lengthOther;
+    }
+
+    CAGD_POINT endPointThis = ctrl_pnts_.back();
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    {
+      endPointThis.x - dxOther,
+      endPointThis.y - dyOther,
+      endPointThis.z - dzOther
+    };
+  }
+}
+
+/******************************************************************************
+* BSpline::connectC0_bspline
+******************************************************************************/
+void BSpline::connectC0_bspline( const BSpline &other )
+{
+  double tEndThis = knots_.back();
+  CAGD_POINT endPointThis = evaluate( tEndThis );
+
+  double tStartOther = other.knots_.front();
+  CAGD_POINT startPointOther = other.evaluate( tStartOther );
+
+  ctrl_pnts_.back() = startPointOther;
+
+  int degree = order_ - 1;
+  int knotCount = knots_.size() - 1;
+
+  for( int i = 1; i <= degree; ++i )
+    knots_[ knotCount - i ] = knots_[ knotCount - degree - 1 ];
+}
+
+/******************************************************************************
+* BSpline::connectC1_bspline
+******************************************************************************/
+void BSpline::connectC1_bspline( const BSpline &other )
+{
+  connectC0_bspline( other );
+
+  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+
+    double dxOther = secondCtrlPointOther.x - startPointOther.x;
+    double dyOther = secondCtrlPointOther.y - startPointOther.y;
+    double dzOther = secondCtrlPointOther.z - startPointOther.z;
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    {
+      startPointOther.x - dxOther,
+      startPointOther.y - dyOther,
+      startPointOther.z - dzOther
+    };
+  }
+}
+
+/******************************************************************************
+* BSpline::connectG1_bspline
+******************************************************************************/
+void BSpline::connectG1_bspline( const BSpline &other )
+{
+  connectC0_bspline( other );
+
+  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+
+    double dxOther = secondCtrlPointOther.x - startPointOther.x;
+    double dyOther = secondCtrlPointOther.y - startPointOther.y;
+    double dzOther = secondCtrlPointOther.z - startPointOther.z;
+
+    double lengthOther = sqrt( dxOther * dxOther +
+                               dyOther * dyOther +
+                               dzOther * dzOther );
+
+    if( lengthOther != 0 )
+    {
+      dxOther /= lengthOther;
+      dyOther /= lengthOther;
+      dzOther /= lengthOther;
+    }
+
+    CAGD_POINT endPointThis = ctrl_pnts_.back();
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    {
+      endPointThis.x - dxOther,
+      endPointThis.y - dyOther,
+      endPointThis.z - dzOther
+    };
+  }
+}
 
 /******************************************************************************
 * BSpline::rmv_ctrl_pnt
@@ -27,7 +185,50 @@ void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 
   // TODO - how to update the knot vector accordingly???
 
+  if( uni_type_ == UniKnots::FLOAT )
+    generateUniformFloatingKnotVector();
+
   show_crv( idx, CtrlOp::ADD );
+}
+
+/******************************************************************************
+* BSpline::generateUniformFloatingKnotVector
+******************************************************************************/
+void BSpline::generateUniformFloatingKnotVector()
+{
+  int numControlPoints = ctrl_pnts_.size();
+  int degree = numControlPoints - 1;
+  int numKnots = degree + order_ + 1;
+
+  knots_.resize( numKnots );
+  u_vec_.clear();
+
+  for( int i = 0; i < order_; ++i )
+  {
+    knots_[ i ] = 0.0;
+
+    if( i == 0 || double_cmp( knots_[ i ], knots_[ i - 1 ] ) > 0 )
+      u_vec_.push_back( knots_[ i ] );
+  }
+
+  for( int i = order_; i < numKnots - order_; ++i )
+  {
+    knots_[ i ] = ( static_cast< double >( i ) -
+                    static_cast< double >( order_ ) + 1.0 ) /
+                  ( static_cast< double >( numKnots ) -
+                    2.0 * static_cast< double >( order_ ) + 1.0 );
+
+    if( i == 0 || double_cmp( knots_[ i ], knots_[ i - 1 ] ) > 0 )
+      u_vec_.push_back( knots_[ i ] );
+  }
+
+  for( int i = numKnots - order_; i < numKnots; ++i )
+  {
+    knots_[ i ] = 1.0;
+
+    if( i == 0 || double_cmp( knots_[ i ], knots_[ i - 1 ] ) > 0 )
+      u_vec_.push_back( knots_[ i ] );
+  }
 }
 
 /******************************************************************************
