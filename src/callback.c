@@ -71,6 +71,9 @@ static void callback(UINT message, int x, int y)
   list[message].callback(x, y, list[message].data);
 }
 
+static int old_x = K_NOT_USED;
+static int old_y = K_NOT_USED;
+
 /* BUGFIX: mplav@csd 17/12/96: CALLBACK modificator for proper linkage. */
 /* Error appeared on WinNT 4.0: menu was not properly redrawn. */
 static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -255,11 +258,21 @@ static LRESULT CALLBACK command(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
     else if( state & MK_LBUTTON && get_active_pt_id() != K_NOT_USED )
     {
       double new_pos[2];
+      if( old_x == K_NOT_USED && old_y == K_NOT_USED )
+      {
+        old_x = x;
+        old_y = y;
+      }
+
       calculate_ctrl_pnt_updated_pos( get_active_pt_id(), 
-                                      LOINT( lParam ) - x, 
-                                      HIINT( lParam ) - y, 
+                                      LOINT( lParam ) - old_x, 
+                                      HIINT( lParam ) - old_y, 
                                       new_pos[0], 
                                       new_pos[1] );
+
+      old_x = LOINT( lParam );
+      old_y = HIINT( lParam );
+      
 
       update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );
     }

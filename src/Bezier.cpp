@@ -19,7 +19,7 @@ void Bezier::print() const
 /******************************************************************************
 * Bezier::show_crv
 ******************************************************************************/
-void Bezier::show_crv( int ) const
+void Bezier::show_crv( int chg_ctrl_idx ) const
 {
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
 
