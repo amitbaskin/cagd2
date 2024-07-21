@@ -6,26 +6,12 @@
 
 class Bezier;
 
-enum class UniKnots
-{
-  NONE = 0,
-  FLOAT = 1,
-  OPEN = 2
-};
-
-enum class EndKnots
-{
-  NONE = 0,
-  FLOAT = 1,
-  OPEN = 2
-};
-
 class BSpline : public Curve
 {
 public:
   BSpline::BSpline() :
-    uni_type_( UniKnots::NONE ),
-    end_type_( EndKnots::NONE )
+    is_uni_( false ),
+    is_open_( false )
   {}
 
   BSpline::BSpline( int order,
@@ -33,8 +19,8 @@ public:
                     const double_vec &knots ) :
     Curve( order, ctrl_pnts),
     knots_( knots ),
-    uni_type_( UniKnots::NONE ),
-    end_type_( EndKnots::NONE )
+    is_uni_( false ),
+    is_open_( false )
   {}
 
   virtual CAGD_POINT evaluate( double t ) const;
@@ -52,15 +38,14 @@ public:
     return ctrl_pnts_.size() < knots_.size() - order_;
   }
 
+  void makeUniformKnotVector();
+  void makeOpenKnotVector();
+
   int findKnotSpan( double t ) const;
 
   void evaluateBasisFunctions( int span, double t, double *N ) const;
 
   std::vector< int > findAffectedSegments( int controlPointIndex ) const;
-
-  void generateUniformFloatingKnotVector();
-  void enforceOpenEndCondition();
-  void enforceOpenUniform();
 
   virtual void connectC0_bezier( const Bezier &other );
   virtual void connectC1_bezier( const Bezier &other );
@@ -72,6 +57,6 @@ public:
 
   double_vec knots_;
   double_vec u_vec_;
-  UniKnots uni_type_;
-  EndKnots end_type_;
+  bool is_uni_;
+  bool is_open_;
 };
