@@ -60,5 +60,5 @@ public:
   mutable int_vec seg_ids_;
   mutable int_vec pnt_ids_;
   GLubyte color_[ 3 ];
-  int     poly_seg_id_;
+  mutable int_vec poly_seg_ids_;
 };
