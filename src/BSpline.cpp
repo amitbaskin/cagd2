@@ -192,6 +192,60 @@ void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 }
 
 /******************************************************************************
+* BSpline::enforceOpenEndCondition
+******************************************************************************/
+void BSpline::enforceOpenEndCondition()
+{
+  int degree = order_ - 1;
+  double firstKnot = knots_.front();
+
+  for( int i = 0; i < degree; ++i )
+  {
+    if( knots_[ i ] != firstKnot )
+      knots_.insert( knots_.begin(), firstKnot );
+  }
+
+  double lastKnot = knots_.back();
+
+  for( int i = 0; i < degree; ++i )
+  {
+    if( knots_[ knots_.size() - 1 - i ] != lastKnot )
+      knots_.push_back( lastKnot );
+  }
+}
+
+/******************************************************************************
+* BSpline::enforceOpenUniform
+******************************************************************************/
+void BSpline::enforceOpenUniform()
+{
+  int degree = order_ - 1;
+  int n = ctrl_pnts_.size() - 1;
+
+  double firstKnot = knots_.front();
+  double lastKnot = knots_.back();
+
+  for( int i = 0; i < degree; ++i )
+  {
+    if( knots_[ i ] != firstKnot )
+      knots_.insert( knots_.begin(), firstKnot );
+  }
+
+  for( int i = 0; i < degree; ++i )
+  {
+    if( knots_[ knots_.size() - 1 - i ] != lastKnot )
+      knots_.push_back( lastKnot );
+  }
+
+  int internalKnotsStart = degree;
+  int internalKnotsEnd = knots_.size() - degree - 1;
+  double step = ( lastKnot - firstKnot ) / ( internalKnotsEnd - internalKnotsStart + 1 );
+
+  for( int i = internalKnotsStart; i <= internalKnotsEnd; ++i )
+    knots_[ i ] = firstKnot + ( i - internalKnotsStart ) * step;
+}
+
+/******************************************************************************
 * BSpline::generateUniformFloatingKnotVector
 ******************************************************************************/
 void BSpline::generateUniformFloatingKnotVector()

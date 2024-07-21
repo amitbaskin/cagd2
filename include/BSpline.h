@@ -59,6 +59,8 @@ public:
   std::vector< int > findAffectedSegments( int controlPointIndex ) const;
 
   void generateUniformFloatingKnotVector();
+  void enforceOpenEndCondition();
+  void enforceOpenUniform();
 
   virtual void connectC0_bezier( const Bezier &other );
   virtual void connectC1_bezier( const Bezier &other );
