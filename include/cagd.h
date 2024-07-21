@@ -60,7 +60,9 @@ enum
   CAGD_USER,
   CAGD_SETTINGS,
   CAGD_CLEAN_ALL,
-  CAGD_CURVE_COLOR/* use this one to create your own control */
+  CAGD_CURVE_COLOR,
+  CAGD_REMOVE_CURVE,
+  CAGD_REMOVE_CTRL_PT
 };
 
 #ifdef __cplusplus

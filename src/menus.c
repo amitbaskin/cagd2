@@ -3,13 +3,15 @@
 #include "menus.h"
 #include "resource.h"
 #include "color.h"
-#include "crv_utils.h"
 #include "options.h"
 
 char buffer1[ BUFSIZ ];
 char buffer2[ BUFSIZ ];
 char buffer3[ BUFSIZ ];
 UINT myText2;
+
+Curve *active_rmb_curve = nullptr;
+std::tuple< Curve *, int > active_crv_ctrl_pt = std::make_tuple( nullptr, -1 );
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
 
@@ -41,6 +43,7 @@ void init_menus()
   // register callback to handle lmb on cur_curve
   cagdRegisterCallback( CAGD_LBUTTONDOWN, lmb_down_cb, NULL );
   cagdRegisterCallback( CAGD_LBUTTONUP, lmb_up_cb, NULL );
+  cagdRegisterCallback( CAGD_RBUTTONUP, rmb_up_cb, NULL );
 }
 
 /******************************************************************************
@@ -139,6 +142,22 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
   case CAGD_CURVE_COLOR:
     handle_curve_color_menu();
     break;
+  case CAGD_REMOVE_CURVE:
+    handle_rmb_remove_curve();
+    break;
+  }
+}
+
+/******************************************************************************
+* handle_rmb_remove_curve
+******************************************************************************/
+void handle_rmb_remove_curve()
+{
+  if( active_rmb_curve != nullptr )
+  {
+    //active_rmb_curve->remove(); TODO if have time. not in PDF
+    active_rmb_curve = nullptr;
+    cagdRedraw();
   }
 }
 
@@ -226,4 +245,103 @@ void lmb_up_cb( int x, int y, PVOID userData )
 {
   set_active_pt_id( K_NOT_USED );
   set_active_pt_is_first_move( true );
+}
+
+/******************************************************************************
+* rmb_up_cb
+******************************************************************************/
+void rmb_up_cb( int x, int y, PVOID userData )
+{
+  UINT id;
+  UINT pt_id = K_NOT_USED;
+  UINT polyline_id = K_NOT_USED;
+  Curve *crv = nullptr;
+  std::tuple< Curve *, int > crv_pnt_ctrl;
+
+  for( cagdPick( x, y ); id = cagdPickNext();)
+  {
+    if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POINT )
+      pt_id = id;
+    if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POLYLINE )
+      polyline_id = id;
+
+    if( pt_id != K_NOT_USED && polyline_id != K_NOT_USED )
+      break;
+  }
+
+  if( pt_id != K_NOT_USED )
+    crv_pnt_ctrl = get_pnt_crv_ctrl( id );
+
+  if( polyline_id != K_NOT_USED )
+    crv = get_seg_crv( polyline_id );
+
+  if( std::get< 0 >( crv_pnt_ctrl ) != nullptr )
+  {
+    active_crv_ctrl_pt = crv_pnt_ctrl;
+    show_rmb_on_ctrl_pt_menu( x, y );
+  }
+  else if( crv != nullptr )
+  {
+    active_rmb_curve = crv;
+    show_rmb_on_curve_menu( x, y );
+  }
+  else
+    show_no_selection_rmb_menu( x, y );
+
+}
+
+/******************************************************************************
+* show_rmb_on_curve_menu
+******************************************************************************/
+void show_rmb_on_curve_menu( int x, int y )
+{
+  HWND hWnd = auxGetHWND();
+  POINT pt;
+  pt.x = x;
+  pt.y = y;
+  ClientToScreen( hWnd, &pt );
+
+  HMENU rmb_menu = CreatePopupMenu();
+  AppendMenu( rmb_menu, MF_STRING, CAGD_REMOVE_CURVE, TEXT( "Remove Curve" ) );
+
+  TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
+  DestroyMenu( rmb_menu );
+}
+
+/******************************************************************************
+* show_rmb_on_ctrl_pt_menu
+******************************************************************************/
+void show_rmb_on_ctrl_pt_menu( int x, int y )
+{
+  HWND hWnd = auxGetHWND();
+  POINT pt;
+  pt.x = x;
+  pt.y = y;
+  ClientToScreen( hWnd, &pt );
+
+  HMENU rmb_menu = CreatePopupMenu();
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CLEAN_ALL, TEXT( "Remove Point" ) );
+
+  TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
+  DestroyMenu( rmb_menu );
+}
+
+/******************************************************************************
+* handle_no_selection_rmb
+******************************************************************************/
+void show_no_selection_rmb_menu( int x, int y )
+{
+  HWND hWnd = auxGetHWND();
+  POINT pt;
+  pt.x = x;
+  pt.y = y;
+  ClientToScreen( hWnd, &pt );
+
+  HMENU rmb_menu = CreatePopupMenu();
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CLEAN_ALL, TEXT( "Item 1" ) );
+  AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CLEAN_ALL, TEXT( "Clean All" ) );
+
+  TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
+  DestroyMenu( rmb_menu );
 }
