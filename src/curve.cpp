@@ -35,6 +35,10 @@ Curve::Curve( int order, point_vec ctrl_pnts ) :
 void Curve::rmv_ctrl_pnt( int idx )
 {
   erase_pnt_to_crv_ctrl( pnt_ids_[ idx ] );
+  erase_ctrl_seg_to_pnts( poly_seg_ids_[ idx ] );
+
+  if( idx > 0 && ( size_t )idx < pnt_ids_.size() )
+    erase_ctrl_seg_to_pnts( poly_seg_ids_[ idx - 1 ] );
 
   pnt_ids_.erase( pnt_ids_.begin() + idx );
   ctrl_pnts_.erase( ctrl_pnts_.begin() + idx );
@@ -80,32 +84,13 @@ void Curve::print() const
 void Curve::show_ctrl_poly()
 {
   size_t cur_pnts_num = ctrl_pnts_.size();
-  size_t old_pnts_num = pnt_ids_.size();
-  bool reuse_ids = old_pnts_num >= cur_pnts_num;
-
-  if( old_pnts_num > cur_pnts_num )
-  {
-    for( size_t i = cur_pnts_num; i < old_pnts_num; ++i )
-    {
-      cagdFreeSegment( pnt_ids_[ i ] );
-      erase_pnt_to_crv_ctrl( pnt_ids_[ i ] );
-
-      if( i < old_pnts_num )
-      {
-        cagdFreeSegment( poly_seg_ids_[ i ] );
-        erase_ctrl_seg_to_pnts( poly_seg_ids_[ i ] );
-      }
-    }
-
-    pnt_ids_.resize( cur_pnts_num );
-  }
 
   if( cur_pnts_num > 1 )
   {
     CAGD_POINT prev_pnt = { ctrl_pnts_[ 0 ].x, ctrl_pnts_[ 0 ].y, 0.0 };
     CAGD_POINT cur_pnt;
 
-    if( reuse_ids )
+    if( pnt_ids_.size() > 0 )
     {
       set_norm_color();
       cagdReusePoint( pnt_ids_[ 0 ], &prev_pnt );
@@ -117,14 +102,13 @@ void Curve::show_ctrl_poly()
       map_pnt_to_crv_ctrl( pnt_id, this, 0 );
     }
 
-
     for( size_t i = 1; i < cur_pnts_num; ++i )
     {
       cur_pnt = { ctrl_pnts_[ i ].x, ctrl_pnts_[ i ].y, 0.0 };
       CAGD_POINT pnts[ 2 ] = { prev_pnt, cur_pnt };
       set_norm_color();
 
-      if( reuse_ids )
+      if( i < pnt_ids_.size() )
       {
         cagdReusePoint( pnt_ids_[ i ], &cur_pnt );
         set_bi_color();
@@ -147,6 +131,8 @@ void Curve::show_ctrl_poly()
       prev_pnt = cur_pnt;
     }
   }
+
+  pnt_ids_.resize( cur_pnts_num );
 }
 
 /******************************************************************************

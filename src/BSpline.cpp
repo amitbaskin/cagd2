@@ -203,7 +203,30 @@ void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 }
 
 /******************************************************************************
-* Bezier::makeUniformKnotVector
+* BSpline::update_u_vec
+******************************************************************************/
+void BSpline::update_u_vec()
+{
+  size_t knots_num = knots_.size();
+  double prev_knot = knots_.front();
+  double cur_knot = prev_knot;
+
+  u_vec_.clear();
+
+  for( size_t i = 1; i < knots_num; ++i )
+  {
+    cur_knot = knots_[ i ];
+
+    if( double_cmp( cur_knot, prev_knot ) > 0 )
+    {
+      prev_knot = cur_knot;
+      u_vec_.push_back( cur_knot );
+    }
+  }
+}
+
+/******************************************************************************
+* BSpline::makeUniformKnotVector
 ******************************************************************************/
 void BSpline::makeUniformKnotVector()
 {
@@ -212,6 +235,9 @@ void BSpline::makeUniformKnotVector()
 
   double minKnotValue = DEF_START_DOM;
   double maxKnotValue = DEF_END_DOM;
+
+  double prev_knot = -HUGE_DOUBLE;
+  double cur_knot = -HUGE_DOUBLE;
 
   if( knots_.size() > 1 )
   {
@@ -225,9 +251,13 @@ void BSpline::makeUniformKnotVector()
 
   for( int i = 0; i <= numControlPoints + degree; ++i )
   {
-    knots_.push_back( minKnotValue + ( range * i ) /
-                      ( ( double  )numControlPoints + ( double )degree ) );
+    cur_knot = minKnotValue + ( range * i ) /
+               ( ( double )numControlPoints + ( double )degree );
+
+    knots_.push_back( cur_knot );
   }
+
+  update_u_vec();
 }
 
 /******************************************************************************
@@ -249,6 +279,8 @@ void BSpline::makeOpenKnotVector()
 
   for( int i = numControlPoints; i < numControlPoints + order_; ++i )
     knots_[ i ] = maxKnotValue;
+
+  update_u_vec();
 }
 
 /******************************************************************************
@@ -263,12 +295,42 @@ void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
   }
   else
   {
-    std::vector< int > u_vec_idxs;
+    /*std::vector< int > u_vec_idxs;
 
     for( size_t i = 0; i < u_vec_.size(); ++i )
       u_vec_idxs.push_back( i );
 
-    show_crv_helper( u_vec_idxs );
+    show_crv_helper( u_vec_idxs );*/
+
+    size_t num_steps = get_default_num_steps();
+    auto pnts = new CAGD_POINT[ num_steps ];
+
+    if( pnts != NULL )
+    {
+      double min_val = knots_.front();
+      double max_val = knots_.back();
+      double delta = max_val - min_val;
+      double jump = 1.0 / ( double )( num_steps - 1 );
+
+      cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
+
+      for( size_t i = 0; i < num_steps; ++i )
+      {
+        double param = min_val + delta * jump * i;
+        pnts[ i ] = evaluate( param );
+      }
+
+      if( seg_ids_.size() > 0 )
+        cagdReusePolyline( seg_ids_[ 0 ], pnts, num_steps );
+      else
+      {
+        int seg_id = cagdAddPolyline( pnts, num_steps );
+        seg_ids_.push_back( seg_id );
+        map_seg_to_crv( seg_id, ( Curve * )this );
+      }
+
+      delete[] pnts;
+    }
   }
 }
 
@@ -278,7 +340,7 @@ void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
 {
   double normalized_num_samps = get_default_num_steps() /
-    u_vec_[ u_vec_.size() - 1 ];
+                                u_vec_[ u_vec_.size() - 1 ];
 
   double seg_ids_num = seg_ids_.size();
 
@@ -318,6 +380,8 @@ void BSpline::show_crv_helper( std::vector< int > u_vec_idxs ) const
         map_seg_to_crv( seg_id, ( Curve * )this );
       }
     }
+
+    seg_ids_.resize( u_vec_idxs.size() - 1 );
 
     delete[] pnts;
   }
@@ -390,17 +454,20 @@ void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
   double_vec right( p + 1 );
 
   N[ 0 ] = 1.0;
+
   for( int j = 1; j <= p; ++j )
   {
     left[ j ] = t - knots_[ span + 1 - j ];
     right[ j ] = knots_[ span + j ] - t;
     double saved = 0.0;
+
     for( int r = 0; r < j; ++r )
     {
       double temp = N[ r ] / ( right[ r + 1 ] + left[ j - r ] );
       N[ r ] = saved + right[ r + 1 ] * temp;
       saved = left[ j - r ] * temp;
     }
+
     N[ j ] = saved;
   }
 }

@@ -35,7 +35,6 @@ void Bezier::rmv_ctrl_pnt( int idx )
 void Bezier::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 {
   Curve::add_ctrl_pnt( ctrl_pnt, idx );
-
   show_crv( idx );
 }
 
