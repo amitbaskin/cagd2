@@ -7,6 +7,14 @@
 
 class Curve;
 
+typedef struct
+{
+  int active_pt_id;
+  int last_pos[2]; // in screen coordinates
+  bool first_move;
+
+} active_ctrl_pt_data; // for lmb drag of ctrl pt
+
 void load_curves( int dummy1, int dummy2, void *p_data );
 
 void clean_all_curves();
@@ -21,6 +29,12 @@ void erase_pnt_from_map( int pnt_id );
 
 int get_active_pt_id();
 void set_active_pt_id( int id );
+
+int *get_active_pt_last_pos();
+void set_active_pt_last_pos( int pos[2] );
+
+bool get_active_pt_is_first_move();
+void set_active_pt_is_first_move( bool value );
 
 std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id );
 Curve *get_seg_crv( int seg_id );

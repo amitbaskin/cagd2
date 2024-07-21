@@ -73,9 +73,6 @@ static void callback( UINT message, int x, int y )
   list[ message ].callback( x, y, list[ message ].data );
 }
 
-static int old_x = K_NOT_USED;
-static int old_y = K_NOT_USED;
-
 /* BUGFIX: mplav@csd 17/12/96: CALLBACK modificator for proper linkage. */
 /* Error appeared on WinNT 4.0: menu was not properly redrawn. */
 static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
@@ -264,21 +261,25 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     }
     else if( state & MK_LBUTTON && get_active_pt_id() != K_NOT_USED )
     {
+      int last_pos[2];
       double new_pos[2];
-      if( old_x == K_NOT_USED && old_y == K_NOT_USED )
+      if( get_active_pt_is_first_move() )
       {
-        old_x = x;
-        old_y = y;
+        last_pos[0] = x;
+        last_pos[1] = y;
+        set_active_pt_last_pos( last_pos );
+        set_active_pt_is_first_move( false );
       }
 
       calculate_ctrl_pnt_updated_pos( get_active_pt_id(), 
-                                      LOINT( lParam ) - old_x, 
-                                      HIINT( lParam ) - old_y, 
+                                      LOINT( lParam ) - *get_active_pt_last_pos(), 
+                                      HIINT( lParam ) - *( get_active_pt_last_pos() + 1 ),
                                       new_pos[0], 
                                       new_pos[1] );
 
-      old_x = LOINT( lParam );
-      old_y = HIINT( lParam );
+      last_pos[0] = LOINT( lParam );
+      last_pos[1] = HIINT( lParam );
+      set_active_pt_last_pos( last_pos );
       
 
       update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );

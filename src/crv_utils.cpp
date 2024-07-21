@@ -13,7 +13,7 @@
 std::vector< Curve * > cur_curves;
 std::map< int, Curve * > seg_to_crv;
 std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
-int active_pt_id = K_NOT_USED;
+active_ctrl_pt_data active_drag_pt = { K_NOT_USED, { 0, 0 }, true };
 
 void print_error( const std::string &message );
 static inline void ltrim( std::string &str );
@@ -47,7 +47,7 @@ size_t parse_file( const std::string &filePath );
 ******************************************************************************/
 int get_active_pt_id()
 {
-  return active_pt_id;
+  return active_drag_pt.active_pt_id;
 }
 
 /******************************************************************************
@@ -55,7 +55,40 @@ int get_active_pt_id()
 ******************************************************************************/
 void set_active_pt_id( int id )
 {
-  active_pt_id = id;
+  active_drag_pt.active_pt_id = id;
+}
+
+/******************************************************************************
+* get_active_pt_last_pos
+******************************************************************************/
+int *get_active_pt_last_pos()
+{
+  return active_drag_pt.last_pos;
+}
+
+/******************************************************************************
+* set_active_pt_last_pos
+******************************************************************************/
+void set_active_pt_last_pos( int pos[2] )
+{
+  active_drag_pt.last_pos[0] = pos[0];
+  active_drag_pt.last_pos[1] = pos[1];
+}
+
+/******************************************************************************
+* get_active_pt_is_first_move
+******************************************************************************/
+bool get_active_pt_is_first_move()
+{
+  return active_drag_pt.first_move;
+}
+
+/******************************************************************************
+* set_active_pt_last_pos
+******************************************************************************/
+void set_active_pt_is_first_move( bool value )
+{
+  active_drag_pt.first_move = value;
 }
 
 /******************************************************************************

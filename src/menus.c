@@ -225,4 +225,5 @@ void lmb_down_cb( int x, int y, PVOID userData )
 void lmb_up_cb( int x, int y, PVOID userData )
 {
   set_active_pt_id( K_NOT_USED );
+  set_active_pt_is_first_move( true );
 }
