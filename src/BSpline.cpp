@@ -9,10 +9,34 @@
 #include "crv_utils.h"
 
 /******************************************************************************
+* BSpline::rmv_ctrl_pnt
+******************************************************************************/
+void BSpline::rmv_ctrl_pnt( int idx )
+{
+  // TODO - how to update the knot vector accordingly???
+
+  show_crv( idx, CtrlOp::RMV );
+}
+
+/******************************************************************************
+* Bezier::add_ctrl_pnt
+******************************************************************************/
+void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
+{
+  Curve::add_ctrl_pnt( ctrl_pnt, idx );
+
+  // TODO - how to update the knot vector accordingly???
+
+  show_crv( idx, CtrlOp::ADD );
+}
+
+/******************************************************************************
 * BSpline::show_crv
 ******************************************************************************/
-void BSpline::show_crv( int chg_ctrl_idx ) const
+void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 {
+  // TODO how to calc affected segments when add / rmv ctrl point???
+
   if( chg_ctrl_idx != K_NOT_USED )
   {
     std::vector< int > u_vec_idxs = findAffectedSegments( chg_ctrl_idx );

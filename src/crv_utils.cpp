@@ -15,7 +15,6 @@ std::map< int, Curve * > seg_to_crv;
 std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
 int active_pt_id = K_NOT_USED;
 
-
 void print_error( const std::string &message );
 static inline void ltrim( std::string &str );
 static inline void rtrim( std::string &str );
@@ -87,6 +86,14 @@ void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx )
 }
 
 /******************************************************************************
+* erase_pnt_from_map
+******************************************************************************/
+void erase_pnt_from_map( int pnt_id )
+{
+  pnt_to_crv_ctrl.erase( pnt_id );
+}
+
+/******************************************************************************
 * get_pnt_crv_ctrl
 ******************************************************************************/
 std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
@@ -109,8 +116,8 @@ void update_ctrl_pnt( int pnt_id, double new_x, double new_y )
 
   if( p_curve != nullptr )
   {
-    double old_pos_x = p_curve->ctrl_pnts_[ctrl_idx].x;
-    double old_pos_y = p_curve->ctrl_pnts_[ctrl_idx].y;
+    double old_pos_x = p_curve->ctrl_pnts_[ ctrl_idx ].x;
+    double old_pos_y = p_curve->ctrl_pnts_[ ctrl_idx ].y;
 
     p_curve->ctrl_pnts_[ ctrl_idx ].x = new_x;
     p_curve->ctrl_pnts_[ ctrl_idx ].y = new_y;
@@ -155,11 +162,11 @@ void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
 
   if( p_curve != nullptr )
   {
-    double move_vec[2];
-    cagdGetMoveVec( dx, dy, move_vec[0], move_vec[1] );
+    double move_vec[ 2 ];
+    cagdGetMoveVec( dx, dy, move_vec[ 0 ], move_vec[ 1 ] );
 
-    new_x = p_curve->ctrl_pnts_[ctrl_idx].x + move_vec[0];
-    new_y = p_curve->ctrl_pnts_[ctrl_idx].y + move_vec[1];
+    new_x = p_curve->ctrl_pnts_[ ctrl_idx ].x + move_vec[ 0 ];
+    new_y = p_curve->ctrl_pnts_[ ctrl_idx ].y + move_vec[ 1 ];
   }
 }
 
@@ -194,7 +201,9 @@ static inline void ltrim( std::string &str )
              std::find_if( str.begin(),
                            str.end(),
                            []( unsigned char ch )
-                           { return !std::isspace( ch ); } ) );
+                           {
+                             return !std::isspace( ch );
+                           } ) );
 }
 
 /******************************************************************************

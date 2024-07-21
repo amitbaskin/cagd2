@@ -22,19 +22,19 @@ static GLdouble sensitive = 1;
 
 void cagdGetMoveVec( int dX, int dY, double &x, double &y )
 {
-  CAGD_POINT origin, where[2];
+  CAGD_POINT origin, where[ 2 ];
   WORD theView = view;
   cagdSetView( CAGD_ORTHO );
   cagdToObject( 0, 0, where );
-  origin = where[0];
+  origin = where[ 0 ];
   cagdToObject( dX, dY, where );
   cagdSetView( theView );
 
-  x = where[0].x - origin.x;
-  y = where[0].y - origin.y;
+  x = where[ 0 ].x - origin.x;
+  y = where[ 0 ].y - origin.y;
 }
 
-void cagdPick(int x, int y)
+void cagdPick( int x, int y )
 {
   glMatrixMode( GL_PROJECTION );
   glPushMatrix();

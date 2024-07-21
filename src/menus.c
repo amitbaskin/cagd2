@@ -206,13 +206,16 @@ void handle_clean_all_menu()
 void lmb_down_cb( int x, int y, PVOID userData )
 {
   UINT id;
+
   for( cagdPick( x, y ); id = cagdPickNext();)
+  {
     if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POINT )
       break;
-  if( id )
-  {
-    set_active_pt_id( id );
   }
+
+  if( id )
+    set_active_pt_id( id );
+
   cagdRedraw();
 }
 

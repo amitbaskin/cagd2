@@ -17,9 +17,29 @@ void Bezier::print() const
 }
 
 /******************************************************************************
+* Bezier::rmv_ctrl_pnt
+******************************************************************************/
+void Bezier::rmv_ctrl_pnt( int idx )
+{
+  Curve::rmv_ctrl_pnt( idx );
+
+  show_crv( idx );
+}
+
+/******************************************************************************
+* Bezier::add_ctrl_pnt
+******************************************************************************/
+void Bezier::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
+{
+  Curve::add_ctrl_pnt( ctrl_pnt, idx );
+
+  show_crv( idx );
+}
+
+/******************************************************************************
 * Bezier::show_crv
 ******************************************************************************/
-void Bezier::show_crv( int chg_ctrl_idx ) const
+void Bezier::show_crv( int chg_ctrl_idx, CtrlOp ) const
 {
   if( chg_ctrl_idx != K_NOT_USED )
     MP_cache_.clear();
