@@ -210,11 +210,23 @@ void BSpline::makeUniformKnotVector()
   int numControlPoints = ctrl_pnts_.size();
   int degree = order_ - 1;
 
+  double minKnotValue = DEF_START_DOM;
+  double maxKnotValue = DEF_END_DOM;
+
+  if( knots_.size() > 1 )
+  {
+    double minKnotValue = knots_.front();
+    double maxKnotValue = knots_.back();
+  }
+
   knots_.clear();
+
+  double range = maxKnotValue - minKnotValue;
+
   for( int i = 0; i <= numControlPoints + degree; ++i )
   {
-    knots_.push_back( ( double )( i ) /
-                      ( ( double )numControlPoints + ( double )degree ) );
+    knots_.push_back( minKnotValue + ( range * i ) /
+                      ( ( double  )numControlPoints + ( double )degree ) );
   }
 }
 
@@ -226,11 +238,11 @@ void BSpline::makeOpenKnotVector()
   int numControlPoints = ctrl_pnts_.size();
   int degree = order_ - 1;
 
-  if( knots_.empty() )
-    knots_.resize( numControlPoints + order_ );
-
   double minKnotValue = knots_.front();
   double maxKnotValue = knots_.back();
+
+  if( knots_.empty() )
+    knots_.resize( numControlPoints + order_ );
 
   for( int i = 0; i <= degree; ++i )
     knots_[ i ] = minKnotValue;

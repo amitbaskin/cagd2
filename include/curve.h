@@ -6,6 +6,8 @@
 
 #define IS_DEBUG 1
 #define K_NOT_USED -1
+#define DEF_START_DOM 0.0
+#define DEF_END_DOM 0.0
 
 class Bezier;
 class BSpline;
