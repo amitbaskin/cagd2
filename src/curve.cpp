@@ -6,7 +6,7 @@
 /******************************************************************************
 * Curve::Curve
 ******************************************************************************/
-Curve::Curve() : order_( 0 ), poly_seg_id_( K_NOT_USED )
+Curve::Curve() : order_( 0 )
 {
   const unsigned char *curve_color = get_curve_color();
 
@@ -19,7 +19,6 @@ Curve::Curve() : order_( 0 ), poly_seg_id_( K_NOT_USED )
 * Curve::Curve
 ******************************************************************************/
 Curve::Curve( int order, point_vec ctrl_pnts ) :
-  poly_seg_id_( K_NOT_USED ),
   order_( order ),
   ctrl_pnts_( ctrl_pnts )
 {
@@ -35,7 +34,7 @@ Curve::Curve( int order, point_vec ctrl_pnts ) :
 ******************************************************************************/
 void Curve::rmv_ctrl_pnt( int idx )
 {
-  erase_pnt_from_map( pnt_ids_[ idx ] );
+  erase_pnt_to_crv_ctrl( pnt_ids_[ idx ] );
 
   pnt_ids_.erase( pnt_ids_.begin() + idx );
   ctrl_pnts_.erase( ctrl_pnts_.begin() + idx );
@@ -80,47 +79,73 @@ void Curve::print() const
 ******************************************************************************/
 void Curve::show_ctrl_poly()
 {
-  size_t num_pts = ctrl_pnts_.size();
+  size_t cur_pnts_num = ctrl_pnts_.size();
+  size_t old_pnts_num = pnt_ids_.size();
+  bool reuse_ids = old_pnts_num >= cur_pnts_num;
 
-  if( num_pts > 1 )
+  if( old_pnts_num > cur_pnts_num )
   {
-    auto pnts = new CAGD_POINT[ num_pts ];
-
-    if( pnts != nullptr )
+    for( size_t i = cur_pnts_num; i < old_pnts_num; ++i )
     {
-      set_norm_color();
+      cagdFreeSegment( pnt_ids_[ i ] );
+      erase_pnt_to_crv_ctrl( pnt_ids_[ i ] );
 
-      for( size_t i = 0; i < num_pts; i++ )
+      if( i < old_pnts_num )
       {
-        if( ctrl_pnts_[ i ].z == 0 )
-        {
-          print_error( "control point can't have weight 0" );
-          return;
-        }
-
-        pnts[ i ] = { ctrl_pnts_[ i ].x/* / curve_data->ctrl_pts[i].z*/,
-                      ctrl_pnts_[ i ].y/* / curve_data->ctrl_pts[i].z*/,
-                      0.0 };
-
-        if( pnt_ids_.size() < num_pts )
-        {
-          int pnt_id = cagdAddPoint( &pnts[ i ] );
-          pnt_ids_.push_back( pnt_id );
-          map_pnt_to_crv_ctrl( pnt_id, this, i );
-        }
-        else
-          cagdReusePoint( pnt_ids_[ i ], &pnts[ i ] );
+        cagdFreeSegment( poly_seg_ids_[ i ] );
+        erase_ctrl_seg_to_pnts( poly_seg_ids_[ i ] );
       }
     }
 
-    set_bi_color();
+    pnt_ids_.resize( cur_pnts_num );
+  }
 
-    if( poly_seg_id_ == K_NOT_USED )
-      poly_seg_id_ = cagdAddPolyline( pnts, num_pts );
+  if( cur_pnts_num > 1 )
+  {
+    CAGD_POINT prev_pnt = { ctrl_pnts_[ 0 ].x, ctrl_pnts_[ 0 ].y, 0.0 };
+    CAGD_POINT cur_pnt;
+
+    if( reuse_ids )
+    {
+      set_norm_color();
+      cagdReusePoint( pnt_ids_[ 0 ], &prev_pnt );
+    }
     else
-      cagdReusePolyline( poly_seg_id_, pnts, num_pts );
+    {
+      int pnt_id = cagdAddPoint( &prev_pnt );
+      pnt_ids_.push_back( pnt_id );
+      map_pnt_to_crv_ctrl( pnt_id, this, 0 );
+    }
 
-    delete[] pnts;
+
+    for( size_t i = 1; i < cur_pnts_num; ++i )
+    {
+      cur_pnt = { ctrl_pnts_[ i ].x, ctrl_pnts_[ i ].y, 0.0 };
+      CAGD_POINT pnts[ 2 ] = { prev_pnt, cur_pnt };
+      set_norm_color();
+
+      if( reuse_ids )
+      {
+        cagdReusePoint( pnt_ids_[ i ], &cur_pnt );
+        set_bi_color();
+        cagdReusePolyline( poly_seg_ids_[ i - 1 ], pnts, 2 );
+      }
+      else
+      {
+        int pnt_id = cagdAddPoint( &cur_pnt );
+
+        pnt_ids_.push_back( pnt_id );
+        map_pnt_to_crv_ctrl( pnt_id, this, i );
+
+        set_bi_color();
+        int poly_seg_id = cagdAddPolyline( pnts, 2 );
+
+        map_ctrl_seg_to_pnts( poly_seg_id, pnt_ids_[ i - 1 ], pnt_id );
+        poly_seg_ids_.push_back( poly_seg_id );
+      }
+
+      prev_pnt = cur_pnt;
+    }
   }
 }
 

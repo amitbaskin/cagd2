@@ -13,6 +13,7 @@
 std::vector< Curve * > cur_curves;
 std::map< int, Curve * > seg_to_crv;
 std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
+std::map< int, std::tuple< int, int > > ctrl_seg_to_pnts;
 active_ctrl_pt_data active_drag_pt = { K_NOT_USED, { 0, 0 }, true };
 
 void print_error( const std::string &message );
@@ -119,11 +120,27 @@ void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx )
 }
 
 /******************************************************************************
-* erase_pnt_from_map
+* map_ctrl_seg_to_pnts
 ******************************************************************************/
-void erase_pnt_from_map( int pnt_id )
+void map_ctrl_seg_to_pnts( int seg_id, int pnt1, int pnt2 )
+{
+  ctrl_seg_to_pnts[ seg_id ] = std::make_tuple( pnt1, pnt2 );
+}
+
+/******************************************************************************
+* erase_pnt_to_crv_ctrl
+******************************************************************************/
+void erase_pnt_to_crv_ctrl( int pnt_id )
 {
   pnt_to_crv_ctrl.erase( pnt_id );
+}
+
+/******************************************************************************
+* erase_ctrl_seg_to_pnts
+******************************************************************************/
+void erase_ctrl_seg_to_pnts( int seg_id )
+{
+  ctrl_seg_to_pnts.erase( seg_id );
 }
 
 /******************************************************************************
@@ -134,7 +151,18 @@ std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
   if( pnt_to_crv_ctrl.find( pnt_id ) != pnt_to_crv_ctrl.end() )
     return pnt_to_crv_ctrl[ pnt_id ];
   else
-    return std::make_tuple( nullptr, -1 );
+    return std::make_tuple( nullptr, K_NOT_USED );
+}
+
+/******************************************************************************
+* get_ctrl_seg_pnts
+******************************************************************************/
+std::tuple< int, int > get_ctrl_seg_pnts( int seg_id )
+{
+  if( ctrl_seg_to_pnts.find( seg_id ) != ctrl_seg_to_pnts.end() )
+    return ctrl_seg_to_pnts[ seg_id ];
+  else
+    return std::make_tuple( K_NOT_USED, K_NOT_USED );
 }
 
 /******************************************************************************

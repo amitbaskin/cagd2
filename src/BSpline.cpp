@@ -171,9 +171,17 @@ void BSpline::connectG1_bspline( const BSpline &other )
 ******************************************************************************/
 void BSpline::rmv_ctrl_pnt( int idx )
 {
-  // TODO - how to update the knot vector accordingly???
+  Curve::rmv_ctrl_pnt( idx );
 
-  show_crv( idx, CtrlOp::RMV );
+  if( is_uni_ )
+  {
+    makeUniformKnotVector();
+
+    if( is_open_ )
+      makeOpenKnotVector();
+
+    show_crv( idx, CtrlOp::RMV );
+  }
 }
 
 /******************************************************************************
@@ -183,106 +191,64 @@ void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 {
   Curve::add_ctrl_pnt( ctrl_pnt, idx );
 
-  // TODO - how to update the knot vector accordingly???
-
-  if( uni_type_ == UniKnots::FLOAT )
-    generateUniformFloatingKnotVector();
-
-  show_crv( idx, CtrlOp::ADD );
-}
-
-/******************************************************************************
-* BSpline::enforceOpenEndCondition
-******************************************************************************/
-void BSpline::enforceOpenEndCondition()
-{
-  int degree = order_ - 1;
-  double firstKnot = knots_.front();
-
-  for( int i = 0; i < degree; ++i )
+  if( is_uni_ )
   {
-    if( knots_[ i ] != firstKnot )
-      knots_.insert( knots_.begin(), firstKnot );
-  }
+    makeUniformKnotVector();
 
-  double lastKnot = knots_.back();
+    if( is_open_ )
+      makeOpenKnotVector();
 
-  for( int i = 0; i < degree; ++i )
-  {
-    if( knots_[ knots_.size() - 1 - i ] != lastKnot )
-      knots_.push_back( lastKnot );
+    show_crv( idx, CtrlOp::ADD );
   }
 }
 
 /******************************************************************************
-* BSpline::enforceOpenUniform
+* Bezier::makeUniformKnotVector
 ******************************************************************************/
-void BSpline::enforceOpenUniform()
-{
-  int degree = order_ - 1;
-  int n = ctrl_pnts_.size() - 1;
-
-  double firstKnot = knots_.front();
-  double lastKnot = knots_.back();
-
-  for( int i = 0; i < degree; ++i )
-  {
-    if( knots_[ i ] != firstKnot )
-      knots_.insert( knots_.begin(), firstKnot );
-  }
-
-  for( int i = 0; i < degree; ++i )
-  {
-    if( knots_[ knots_.size() - 1 - i ] != lastKnot )
-      knots_.push_back( lastKnot );
-  }
-
-  int internalKnotsStart = degree;
-  int internalKnotsEnd = knots_.size() - degree - 1;
-  double step = ( lastKnot - firstKnot ) / ( internalKnotsEnd - internalKnotsStart + 1 );
-
-  for( int i = internalKnotsStart; i <= internalKnotsEnd; ++i )
-    knots_[ i ] = firstKnot + ( i - internalKnotsStart ) * step;
-}
-
-/******************************************************************************
-* BSpline::generateUniformFloatingKnotVector
-******************************************************************************/
-void BSpline::generateUniformFloatingKnotVector()
+void BSpline::makeUniformKnotVector()
 {
   int numControlPoints = ctrl_pnts_.size();
-  int degree = numControlPoints - 1;
-  int numKnots = degree + order_ + 1;
+  int degree = order_ - 1;
 
-  knots_.resize( numKnots );
-  u_vec_.clear();
+  double minKnotValue = DEF_START_DOM;
+  double maxKnotValue = DEF_END_DOM;
 
-  for( int i = 0; i < order_; ++i )
+  if( knots_.size() > 1 )
   {
-    knots_[ i ] = 0.0;
-
-    if( i == 0 || double_cmp( knots_[ i ], knots_[ i - 1 ] ) > 0 )
-      u_vec_.push_back( knots_[ i ] );
+    double minKnotValue = knots_.front();
+    double maxKnotValue = knots_.back();
   }
 
-  for( int i = order_; i < numKnots - order_; ++i )
+  knots_.clear();
+
+  double range = maxKnotValue - minKnotValue;
+
+  for( int i = 0; i <= numControlPoints + degree; ++i )
   {
-    knots_[ i ] = ( static_cast< double >( i ) -
-                    static_cast< double >( order_ ) + 1.0 ) /
-                  ( static_cast< double >( numKnots ) -
-                    2.0 * static_cast< double >( order_ ) + 1.0 );
-
-    if( i == 0 || double_cmp( knots_[ i ], knots_[ i - 1 ] ) > 0 )
-      u_vec_.push_back( knots_[ i ] );
+    knots_.push_back( minKnotValue + ( range * i ) /
+                      ( ( double  )numControlPoints + ( double )degree ) );
   }
+}
 
-  for( int i = numKnots - order_; i < numKnots; ++i )
-  {
-    knots_[ i ] = 1.0;
+/******************************************************************************
+* Bezier::makeOpenKnotVector
+******************************************************************************/
+void BSpline::makeOpenKnotVector()
+{
+  int numControlPoints = ctrl_pnts_.size();
+  int degree = order_ - 1;
 
-    if( i == 0 || double_cmp( knots_[ i ], knots_[ i - 1 ] ) > 0 )
-      u_vec_.push_back( knots_[ i ] );
-  }
+  double minKnotValue = knots_.front();
+  double maxKnotValue = knots_.back();
+
+  if( knots_.empty() )
+    knots_.resize( numControlPoints + order_ );
+
+  for( int i = 0; i <= degree; ++i )
+    knots_[ i ] = minKnotValue;
+
+  for( int i = numControlPoints; i < numControlPoints + order_; ++i )
+    knots_[ i ] = maxKnotValue;
 }
 
 /******************************************************************************
@@ -290,9 +256,7 @@ void BSpline::generateUniformFloatingKnotVector()
 ******************************************************************************/
 void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 {
-  // TODO how to calc affected segments when add / rmv ctrl point???
-
-  if( chg_ctrl_idx != K_NOT_USED )
+  if( false && chg_ctrl_idx != K_NOT_USED )
   {
     std::vector< int > u_vec_idxs = findAffectedSegments( chg_ctrl_idx );
     show_crv_helper( u_vec_idxs );
@@ -489,24 +453,13 @@ std::vector<int> BSpline::findAffectedSegments( int controlPointIndex ) const
   std::vector<int> affectedSegments;
   int degree = order_ - 1;
 
-  // Ensure the control point index is within valid range
-  if( ( size_t )controlPointIndex < 0 ||
-      ( size_t )controlPointIndex >= ctrl_pnts_.size() )
-  {
-    throw std::out_of_range( "Control point index is out of range." );
-  }
-
-  // Knot span influenced by the control point P_i
   double T_i = knots_[ controlPointIndex ];
   double T_i_k_plus_1 = knots_[ controlPointIndex + degree + 1 ];
 
-  // Iterate over the unique knot values in u_vec_
   for( size_t i = 0; i < u_vec_.size() - 1; ++i )
   {
     if( u_vec_[ i ] >= T_i && u_vec_[ i ] < T_i_k_plus_1 )
-    {
       affectedSegments.push_back( i );
-    }
   }
 
   return affectedSegments;
