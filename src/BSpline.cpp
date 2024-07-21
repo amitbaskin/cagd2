@@ -239,10 +239,14 @@ void BSpline::enforceOpenUniform()
 
   int internalKnotsStart = degree;
   int internalKnotsEnd = knots_.size() - degree - 1;
-  double step = ( lastKnot - firstKnot ) / ( internalKnotsEnd - internalKnotsStart + 1 );
+  double step = ( lastKnot - firstKnot ) /
+    ( ( double )internalKnotsEnd - ( double )internalKnotsStart + 1 );
 
   for( int i = internalKnotsStart; i <= internalKnotsEnd; ++i )
-    knots_[ i ] = firstKnot + ( i - internalKnotsStart ) * step;
+  {
+    knots_[ i ] = firstKnot + ( ( double )i -
+                                ( double )internalKnotsStart ) * step;
+  }
 }
 
 /******************************************************************************
@@ -292,7 +296,7 @@ void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 {
   // TODO how to calc affected segments when add / rmv ctrl point???
 
-  if( chg_ctrl_idx != K_NOT_USED )
+  if( false && chg_ctrl_idx != K_NOT_USED )
   {
     std::vector< int > u_vec_idxs = findAffectedSegments( chg_ctrl_idx );
     show_crv_helper( u_vec_idxs );
