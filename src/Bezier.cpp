@@ -6,6 +6,7 @@
 #include "options.h"
 #include "color.h"
 #include "crv_utils.h"
+#include <vectors.h>
 
 /******************************************************************************
 * Bezier::print
@@ -122,13 +123,24 @@ void Bezier::computeMP() const
   // Compute M * P
   for( int i = 0; i <= n; ++i )
   {
+    double weight_sum = 0.0;
+
     MP_cache_[ i ].x = 0.0;
     MP_cache_[ i ].y = 0.0;
+
     for( int j = 0; j <= n; ++j )
     {
-      MP_cache_[ i ].x += base_matrix[ i ][ j ] * ctrl_pnts_[ j ].x;
-      MP_cache_[ i ].y += base_matrix[ i ][ j ] * ctrl_pnts_[ j ].y;
+      double w_base = base_matrix[ i ][ j ]/* * ctrl_pnts_[ j ].z*/;
+      MP_cache_[ i ].x += w_base * ctrl_pnts_[ j ].x;
+      MP_cache_[ i ].y += w_base * ctrl_pnts_[ j ].y;
+      /*weight_sum += w_base;*/
     }
+
+    /*if( double_cmp( weight_sum, 0.0 ) != 0 )
+    {
+      MP_cache_[ i ].x /= weight_sum;
+      MP_cache_[ i ].y /= weight_sum;
+    }*/
   }
 }
 

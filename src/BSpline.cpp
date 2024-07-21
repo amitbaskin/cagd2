@@ -205,10 +205,20 @@ CAGD_POINT BSpline::evaluate( double param ) const
 
   CAGD_POINT CC = { 0.0, 0.0, 0.0 };
 
+  double weight_sum = 0.0;
+
   for( int j = 0; j <= pp; ++j )
   {
-    CC.x += NN[ j ] * ctrl_pnts_[ span - pp + j ].x;
-    CC.y += NN[ j ] * ctrl_pnts_[ span - pp + j ].y;
+    double wNN = NN[ j ] * ctrl_pnts_[ span - pp + j ].z;
+    CC.x += wNN * ctrl_pnts_[ span - pp + j ].x;
+    CC.y += wNN * ctrl_pnts_[ span - pp + j ].y;
+    weight_sum += wNN;
+  }
+
+  if( double_cmp( weight_sum, 0.0 ) != 0 )
+  {
+    CC.x /= weight_sum;
+    CC.y /= weight_sum;
   }
 
   delete[] NN;
