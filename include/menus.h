@@ -1,6 +1,8 @@
 #pragma once
 
 #include "crv_utils.h"
+#include "Bezier.h"
+#include "BSpline.h"
 
 void init_menus();
 
@@ -15,7 +17,10 @@ void handle_settings_menu();
 void handle_clean_all_menu();
 void handle_curve_color_menu();
 void handle_rmb_remove_curve();
+void handle_rmb_remove_ctrl_pt();
+void handle_rmb_insert_ctrl_pt();
 
+void show_rmb_on_ctrl_polyline_menu( int x, int y );
 void show_rmb_on_curve_menu( int x, int y );
 void show_rmb_on_ctrl_pt_menu( int x, int y );
 void show_no_selection_rmb_menu( int x, int y );
