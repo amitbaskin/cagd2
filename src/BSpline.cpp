@@ -307,8 +307,8 @@ void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 
     if( pnts != NULL )
     {
-      double min_val = knots_.front();
-      double max_val = knots_.back();
+      double min_val = knots_[ order_ -1 ];
+      double max_val = knots_[ ctrl_pnts_.size() ];
       double delta = max_val - min_val;
       double jump = 1.0 / ( double )( num_steps - 1 );
 
@@ -477,13 +477,10 @@ void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
 ******************************************************************************/
 CAGD_POINT BSpline::evaluate( double param ) const
 {
-  int pp = order_ - 1;
-  int nn = ctrl_pnts_.size() - 1;
+  int degree = order_ - 1;
 
-  if( param < knots_[ pp ] || param > knots_[ nn + 1 ] )
-  {
+  if( param < knots_[ degree ] || param > knots_[ ctrl_pnts_.size() ] )
     throw std::out_of_range( "Parameter t is out of range." );
-  }
 
   int span = findKnotSpan( param );
   double *NN = new double[ order_ + 1 ];
@@ -493,11 +490,11 @@ CAGD_POINT BSpline::evaluate( double param ) const
 
   double weight_sum = 0.0;
 
-  for( int j = 0; j <= pp; ++j )
+  for( int j = 0; j <= degree; ++j )
   {
-    double wNN = NN[ j ] * ctrl_pnts_[ span - pp + j ].z;
-    CC.x += wNN * ctrl_pnts_[ span - pp + j ].x;
-    CC.y += wNN * ctrl_pnts_[ span - pp + j ].y;
+    double wNN = NN[ j ] * ctrl_pnts_[ span - degree + j ].z;
+    CC.x += wNN * ctrl_pnts_[ span - degree + j ].x;
+    CC.y += wNN * ctrl_pnts_[ span - degree + j ].y;
     weight_sum += wNN;
   }
 
