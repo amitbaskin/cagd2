@@ -658,6 +658,7 @@ void BSpline::updateUniqueKnotsAndMultiplicity()
 {
   u_vec_.clear();
   multiplicity_.clear();
+
   for( double knot : knots_ )
   {
     if( u_vec_.empty() || u_vec_.back() != knot )
@@ -669,5 +670,89 @@ void BSpline::updateUniqueKnotsAndMultiplicity()
     {
       multiplicity_.back()++;
     }
+  }
+}
+
+/******************************************************************************
+* BSpline::addKnot
+******************************************************************************/
+void BSpline::addKnot( double new_knot )
+{
+  auto it = std::lower_bound( knots_.begin(), knots_.end(), new_knot );
+  int insert_pos = it - knots_.begin();
+  knots_.insert( it, new_knot );
+
+  // Ensure the knot vector remains in non-decreasing order
+  ensureNonDecreasingKnotVector();
+
+  // Update u_vec_ and multiplicity_ to reflect changes
+  updateUniqueKnotsAndMultiplicity();
+
+  // Refine the control points
+  // Insert new control point(s) using de Boor's algorithm or similar
+  point_vec new_ctrl_pnts;
+  int p = order_ - 1;
+
+  for( int i = 0; i <= insert_pos - p - 1; ++i )
+  {
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+  }
+
+  for( int i = insert_pos - p; i <= insert_pos - 1; ++i )
+  {
+    double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
+    CAGD_POINT new_point;
+    new_point.x = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x + alpha * ctrl_pnts_[ i ].x;
+    new_point.y = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y + alpha * ctrl_pnts_[ i ].y;
+    new_ctrl_pnts.push_back( new_point );
+  }
+
+  for( size_t i = insert_pos; i < ctrl_pnts_.size(); ++i )
+  {
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+  }
+
+  ctrl_pnts_ = new_ctrl_pnts;
+}
+
+/******************************************************************************
+* BSpline::removeKnot
+******************************************************************************/
+void BSpline::removeKnot( double knot )
+{
+  auto it = std::find( knots_.begin(), knots_.end(), knot );
+  if( it != knots_.end() )
+  {
+    int remove_pos = it - knots_.begin();
+    knots_.erase( it );
+
+    // Update u_vec_ and multiplicity_ to reflect changes
+    updateUniqueKnotsAndMultiplicity();
+
+    // Adjust control points
+    // Remove control point(s) using de Boor's algorithm or similar
+    point_vec new_ctrl_pnts;
+    int p = order_ - 1;
+
+    for( int i = 0; i <= remove_pos - p - 1; ++i )
+    {
+      new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+    }
+
+    for( int i = remove_pos - p; i <= remove_pos - 1; ++i )
+    {
+      double alpha = ( knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
+      CAGD_POINT new_point;
+      new_point.x = ( ctrl_pnts_[ i ].x - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x ) / alpha;
+      new_point.y = ( ctrl_pnts_[ i ].y - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y ) / alpha;
+      new_ctrl_pnts.push_back( new_point );
+    }
+
+    for( size_t i = remove_pos; i < ctrl_pnts_.size(); ++i )
+    {
+      new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+    }
+
+    ctrl_pnts_ = new_ctrl_pnts;
   }
 }

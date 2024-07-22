@@ -57,6 +57,8 @@ public:
   virtual void connectC1_bspline( const BSpline &bspline );
   virtual void connectG1_bspline( const BSpline &bspline );
 
+  void addKnot( double new_knot );
+  void removeKnot( double knot );
   void onKnotDrag( int knot_index, const CAGD_POINT &new_position );
   void ensureNonDecreasingKnotVector();
   void updateUniqueKnotsAndMultiplicity();
