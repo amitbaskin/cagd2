@@ -4,6 +4,7 @@
 #include <options.h>
 #include <color.h>
 #include <vectors.h>
+#include <cmath>
 
 #include "BSpline.h"
 #include "Bezier.h"
@@ -527,4 +528,146 @@ std::vector<int> BSpline::findAffectedSegments( int controlPointIndex ) const
   }
 
   return affectedSegments;
+}
+
+/******************************************************************************
+* BSpline::interpolate
+******************************************************************************/
+CAGD_POINT BSpline::interpolate( const CAGD_POINT &P1, const CAGD_POINT &P2,
+                                 double t ) const
+{
+  CAGD_POINT result;
+  result.x = P1.x + t * ( P2.x - P1.x );
+  result.y = P1.y + t * ( P2.y - P1.y );
+  return result;
+}
+
+/******************************************************************************
+* BSpline::distance
+******************************************************************************/
+double BSpline::distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const
+{
+  return std::sqrt( std::pow( P2.x - P1.x, 2 ) + std::pow( P2.y - P1.y, 2 ) );
+}
+
+/******************************************************************************
+* BSpline::mapPositionToParam
+******************************************************************************/
+double BSpline::mapPositionToParam( const CAGD_POINT &position ) const
+{
+  int num_control_points = ctrl_pnts_.size();
+  double total_length = 0.0;
+
+  // Calculate total length of the control polygon
+  for( int i = 1; i < num_control_points; ++i )
+  {
+    total_length += distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
+  }
+
+  double accumulated_length = 0.0;
+  for( int i = 1; i < num_control_points; ++i )
+  {
+    double segment_length = distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
+    double next_accumulated_length = accumulated_length + segment_length;
+
+    double min_x = min( ctrl_pnts_[ i - 1 ].x, ctrl_pnts_[ i ].x );
+    double max_x = max( ctrl_pnts_[ i - 1 ].x, ctrl_pnts_[ i ].x );
+    double min_y = min( ctrl_pnts_[ i - 1 ].y, ctrl_pnts_[ i ].y );
+    double max_y = max( ctrl_pnts_[ i - 1 ].y, ctrl_pnts_[ i ].y );
+
+    if( position.x >= min_x && position.x <= max_x &&
+        position.y >= min_y && position.y <= max_y )
+    {
+
+      double t = distance( ctrl_pnts_[ i - 1 ], position ) / segment_length;
+      return ( accumulated_length + t * segment_length ) / total_length;
+    }
+
+    accumulated_length = next_accumulated_length;
+  }
+
+  return 1.0; // In case the position is exactly at the end
+}
+
+/******************************************************************************
+* BSpline::mapParamToPosition
+******************************************************************************/
+CAGD_POINT BSpline::mapParamToPosition( double param ) const
+{
+  int num_control_points = ctrl_pnts_.size();
+  double total_length = 0.0;
+
+  // Calculate total length of the control polygon
+  for( int i = 1; i < num_control_points; ++i )
+  {
+    total_length += distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
+  }
+
+  double accumulated_length = 0.0;
+  for( int i = 1; i < num_control_points; ++i )
+  {
+    double segment_length = distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
+    double next_accumulated_length = accumulated_length + segment_length;
+
+    if( param >= accumulated_length / total_length &&
+        param <= next_accumulated_length / total_length )
+    {
+      double t = ( param * total_length - accumulated_length ) / segment_length;
+      return interpolate( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ], t );
+    }
+
+    accumulated_length = next_accumulated_length;
+  }
+
+  return ctrl_pnts_.back(); // In case param is exactly 1.0
+}
+
+/******************************************************************************
+* BSpline::onKnotDrag
+******************************************************************************/
+void BSpline::onKnotDrag( int knot_index, const CAGD_POINT &new_position )
+{
+  double new_param = mapPositionToParam( new_position );
+  knots_[ knot_index ] = new_param;
+
+  // Ensure the knot vector remains in non-decreasing order
+  ensureNonDecreasingKnotVector();
+
+  // Update u_vec_ and multiplicity_ to reflect changes
+  updateUniqueKnotsAndMultiplicity();
+}
+
+/******************************************************************************
+* BSpline::ensureNonDecreasingKnotVector
+******************************************************************************/
+void BSpline::ensureNonDecreasingKnotVector()
+{
+  for( size_t i = 1; i < knots_.size(); ++i )
+  {
+    if( knots_[ i ] < knots_[ i - 1 ] )
+    {
+      std::swap( knots_[ i ], knots_[ i - 1 ] );
+    }
+  }
+}
+
+/******************************************************************************
+* BSpline::updateUniqueKnotsAndMultiplicity
+******************************************************************************/
+void BSpline::updateUniqueKnotsAndMultiplicity()
+{
+  u_vec_.clear();
+  multiplicity_.clear();
+  for( double knot : knots_ )
+  {
+    if( u_vec_.empty() || u_vec_.back() != knot )
+    {
+      u_vec_.push_back( knot );
+      multiplicity_.push_back( 1 );
+    }
+    else
+    {
+      multiplicity_.back()++;
+    }
+  }
 }

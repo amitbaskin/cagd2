@@ -57,8 +57,17 @@ public:
   virtual void connectC1_bspline( const BSpline &bspline );
   virtual void connectG1_bspline( const BSpline &bspline );
 
+  void onKnotDrag( int knot_index, const CAGD_POINT &new_position );
+  void ensureNonDecreasingKnotVector();
+  void updateUniqueKnotsAndMultiplicity();
+  CAGD_POINT interpolate( const CAGD_POINT &P1, const CAGD_POINT &P2, double t ) const;
+  double distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const;
+  double mapPositionToParam( const CAGD_POINT &position ) const;
+  CAGD_POINT mapParamToPosition( double param ) const;
+
   double_vec knots_;
   double_vec u_vec_;
+  double_vec multiplicity_;
   bool is_uni_;
   bool is_open_;
 };
