@@ -29,13 +29,13 @@ public:
     return ctrl_pnts_.size() < ( size_t )order_;
   }
 
-  virtual void connectC0_bezier( const Bezier &other );
-  virtual void connectC1_bezier( const Bezier &other );
-  virtual void connectG1_bezier( const Bezier &other );
+  virtual void connectC0_bezier( const Bezier *other );
+  virtual void connectC1_bezier( const Bezier *other );
+  virtual void connectG1_bezier( const Bezier *other );
 
-  virtual void connectC0_bspline( const BSpline &bspline );
-  virtual void connectC1_bspline( const BSpline &bspline );
-  virtual void connectG1_bspline( const BSpline &bspline );
+  virtual void connectC0_bspline( const BSpline *bspline );
+  virtual void connectC1_bspline( const BSpline *bspline );
+  virtual void connectG1_bspline( const BSpline *bspline );
 
   void computeMP() const;
   void calculateMatrixM( std::vector<std::vector<GLdouble>> &M ) const;

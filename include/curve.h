@@ -19,13 +19,6 @@ enum class CtrlOp
   RMV = 2
 };
 
-enum class CurveType
-{
-  CURVE_TYPE_NONE = 0,
-  CURVE_TYPE_BEZIER = 1,
-  CURVE_TYPE_BSPLINE = 2
-};
-
 typedef std::vector< CAGD_POINT > point_vec;
 typedef std::vector< double > double_vec;
 typedef std::vector< int > int_vec;
@@ -42,13 +35,13 @@ public:
   virtual bool is_miss_ctrl_pnts() const = 0;
   virtual CAGD_POINT evaluate( double param ) const = 0;
 
-  virtual void connectC0_bezier( const Bezier &other ) = 0;
-  virtual void connectC1_bezier( const Bezier &other ) = 0;
-  virtual void connectG1_bezier( const Bezier &other ) = 0;
+  virtual void connectC0_bezier( const Bezier *other ) = 0;
+  virtual void connectC1_bezier( const Bezier *other ) = 0;
+  virtual void connectG1_bezier( const Bezier *other ) = 0;
 
-  virtual void connectC0_bspline( const BSpline &bspline ) = 0;
-  virtual void connectC1_bspline( const BSpline &bspline ) = 0;
-  virtual void connectG1_bspline( const BSpline &bspline ) = 0;
+  virtual void connectC0_bspline( const BSpline *bspline ) = 0;
+  virtual void connectC1_bspline( const BSpline *bspline ) = 0;
+  virtual void connectG1_bspline( const BSpline *bspline ) = 0;
 
   virtual void add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx );
   virtual void rmv_ctrl_pnt( int idx );
@@ -56,6 +49,7 @@ public:
 
   void show_ctrl_poly();
   void add_ctrl_pnt_from_str( std::istringstream &line );
+  void update_weight( int pnt_idx, double val );
 
   int order_;
   point_vec ctrl_pnts_;

@@ -267,7 +267,7 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
       new_pos[0] = p.x;
       new_pos[1] = p.y;
 
-      update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );
+      update_ctrl_pnt_callback( get_active_pt_id(), new_pos[0], new_pos[1] );
     }
     else
       callback( CAGD_MOUSEMOVE, LOINT( lParam ), HIINT( lParam ) );

@@ -4,6 +4,7 @@
 #include <options.h>
 #include <color.h>
 #include <vectors.h>
+#include <cmath>
 
 #include "BSpline.h"
 #include "Bezier.h"
@@ -13,9 +14,9 @@
 /******************************************************************************
 * BSpline::connectC0_bezier
 ******************************************************************************/
-void BSpline::connectC0_bezier( const Bezier &other )
+void BSpline::connectC0_bezier( const Bezier *other )
 {
-  ctrl_pnts_.back() = other.ctrl_pnts_.front();
+  ctrl_pnts_.back() = other->ctrl_pnts_.front();
 
   int degree = order_ - 1;
   int knotCount = knots_.size() - 1;
@@ -28,14 +29,14 @@ void BSpline::connectC0_bezier( const Bezier &other )
 /******************************************************************************
 * BSpline::connectC1_bezier
 ******************************************************************************/
-void BSpline::connectC1_bezier( const Bezier &other )
+void BSpline::connectC1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = {
         startPointOther.x - ( secondCtrlPointOther.x - startPointOther.x ),
@@ -48,14 +49,14 @@ void BSpline::connectC1_bezier( const Bezier &other )
 /******************************************************************************
 * BSpline::connectG1_bezier
 ******************************************************************************/
-void BSpline::connectG1_bezier( const Bezier &other )
+void BSpline::connectG1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
@@ -86,13 +87,13 @@ void BSpline::connectG1_bezier( const Bezier &other )
 /******************************************************************************
 * BSpline::connectC0_bspline
 ******************************************************************************/
-void BSpline::connectC0_bspline( const BSpline &other )
+void BSpline::connectC0_bspline( const BSpline *other )
 {
   double tEndThis = knots_.back();
   CAGD_POINT endPointThis = evaluate( tEndThis );
 
-  double tStartOther = other.knots_.front();
-  CAGD_POINT startPointOther = other.evaluate( tStartOther );
+  double tStartOther = other->knots_.front();
+  CAGD_POINT startPointOther = other->evaluate( tStartOther );
 
   ctrl_pnts_.back() = startPointOther;
 
@@ -106,14 +107,14 @@ void BSpline::connectC0_bspline( const BSpline &other )
 /******************************************************************************
 * BSpline::connectC1_bspline
 ******************************************************************************/
-void BSpline::connectC1_bspline( const BSpline &other )
+void BSpline::connectC1_bspline( const BSpline *other )
 {
   connectC0_bspline( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
@@ -131,14 +132,14 @@ void BSpline::connectC1_bspline( const BSpline &other )
 /******************************************************************************
 * BSpline::connectG1_bspline
 ******************************************************************************/
-void BSpline::connectG1_bspline( const BSpline &other )
+void BSpline::connectG1_bspline( const BSpline *other )
 {
   connectC0_bspline( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
@@ -307,8 +308,8 @@ void BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 
     if( pnts != NULL )
     {
-      double min_val = knots_.front();
-      double max_val = knots_.back();
+      double min_val = knots_[ order_ -1 ];
+      double max_val = knots_[ ctrl_pnts_.size() ];
       double delta = max_val - min_val;
       double jump = 1.0 / ( double )( num_steps - 1 );
 
@@ -477,13 +478,10 @@ void BSpline::evaluateBasisFunctions( int span, double t, double *N ) const
 ******************************************************************************/
 CAGD_POINT BSpline::evaluate( double param ) const
 {
-  int pp = order_ - 1;
-  int nn = ctrl_pnts_.size() - 1;
+  int degree = order_ - 1;
 
-  if( param < knots_[ pp ] || param > knots_[ nn + 1 ] )
-  {
+  if( param < knots_[ degree ] || param > knots_[ ctrl_pnts_.size() ] )
     throw std::out_of_range( "Parameter t is out of range." );
-  }
 
   int span = findKnotSpan( param );
   double *NN = new double[ order_ + 1 ];
@@ -493,11 +491,11 @@ CAGD_POINT BSpline::evaluate( double param ) const
 
   double weight_sum = 0.0;
 
-  for( int j = 0; j <= pp; ++j )
+  for( int j = 0; j <= degree; ++j )
   {
-    double wNN = NN[ j ] * ctrl_pnts_[ span - pp + j ].z;
-    CC.x += wNN * ctrl_pnts_[ span - pp + j ].x;
-    CC.y += wNN * ctrl_pnts_[ span - pp + j ].y;
+    double wNN = NN[ j ] * ctrl_pnts_[ span - degree + j ].z;
+    CC.x += wNN * ctrl_pnts_[ span - degree + j ].x;
+    CC.y += wNN * ctrl_pnts_[ span - degree + j ].y;
     weight_sum += wNN;
   }
 
@@ -530,4 +528,136 @@ std::vector<int> BSpline::findAffectedSegments( int controlPointIndex ) const
   }
 
   return affectedSegments;
+}
+
+/******************************************************************************
+* BSpline::interpolate
+******************************************************************************/
+CAGD_POINT BSpline::interpolate( const CAGD_POINT &P1, const CAGD_POINT &P2,
+                                 double t ) const
+{
+  CAGD_POINT result;
+  result.x = P1.x + t * ( P2.x - P1.x );
+  result.y = P1.y + t * ( P2.y - P1.y );
+  return result;
+}
+
+/******************************************************************************
+* BSpline::distance
+******************************************************************************/
+double BSpline::distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const
+{
+  return std::sqrt( std::pow( P2.x - P1.x, 2 ) + std::pow( P2.y - P1.y, 2 ) );
+}
+
+/******************************************************************************
+* BSpline::ensureNonDecreasingKnotVector
+******************************************************************************/
+void BSpline::ensureNonDecreasingKnotVector()
+{
+  for( size_t i = 1; i < knots_.size(); ++i )
+  {
+    if( knots_[ i ] < knots_[ i - 1 ] )
+      std::swap( knots_[ i ], knots_[ i - 1 ] );
+  }
+}
+
+/******************************************************************************
+* BSpline::updateUniqueKnotsAndMultiplicity
+******************************************************************************/
+void BSpline::updateUniqueKnotsAndMultiplicity()
+{
+  u_vec_.clear();
+  multiplicity_.clear();
+
+  for( double knot : knots_ )
+  {
+    if( u_vec_.empty() || u_vec_.back() != knot )
+    {
+      u_vec_.push_back( knot );
+      multiplicity_.push_back( 1 );
+    }
+    else
+      multiplicity_.back()++;
+  }
+}
+
+/******************************************************************************
+* BSpline::addKnot
+******************************************************************************/
+void BSpline::addKnot( double new_knot )
+{
+  auto it = std::lower_bound( knots_.begin(), knots_.end(), new_knot );
+  int insert_pos = it - knots_.begin();
+  knots_.insert( it, new_knot );
+  ensureNonDecreasingKnotVector();
+  updateUniqueKnotsAndMultiplicity();
+
+  point_vec new_ctrl_pnts;
+  int p = order_ - 1;
+
+  for( int i = 0; i <= insert_pos - p - 1; ++i )
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+
+  for( int i = insert_pos - p; i <= insert_pos - 1; ++i )
+  {
+    double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
+    CAGD_POINT new_point;
+    new_point.x = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x + alpha * ctrl_pnts_[ i ].x;
+    new_point.y = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y + alpha * ctrl_pnts_[ i ].y;
+    new_ctrl_pnts.push_back( new_point );
+  }
+
+  for( size_t i = insert_pos; i < ctrl_pnts_.size(); ++i )
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+
+  ctrl_pnts_ = new_ctrl_pnts;
+}
+
+/******************************************************************************
+* BSpline::updateKnot
+******************************************************************************/
+void BSpline::updateKnot( int knot_idx, double new_param )
+{
+  if( ( size_t )knot_idx >= knots_.size() )
+    throw std::runtime_error( "wrong knot idx" );
+
+  knots_[ knot_idx ] = new_param;
+  ensureNonDecreasingKnotVector();
+  updateUniqueKnotsAndMultiplicity();
+}
+
+/******************************************************************************
+* BSpline::rmvKnot
+******************************************************************************/
+void BSpline::rmvKnot( int knot_idx )
+{
+  double knot = knots_[ knot_idx ];
+
+  if( ( size_t )knot_idx >= knots_.size() )
+    throw std::runtime_error( "wrong knot idx" );
+
+  knots_.erase( knots_.begin() + knot_idx );
+
+  updateUniqueKnotsAndMultiplicity();
+
+  point_vec new_ctrl_pnts;
+  int p = order_ - 1;
+
+  for( int i = 0; i <= knot_idx - p - 1; ++i )
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+
+  for( int i = knot_idx - p; i <= knot_idx - 1; ++i )
+  {
+    double alpha = ( knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
+    CAGD_POINT new_point;
+    new_point.x = ( ctrl_pnts_[ i ].x - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x ) / alpha;
+    new_point.y = ( ctrl_pnts_[ i ].y - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y ) / alpha;
+    new_ctrl_pnts.push_back( new_point );
+  }
+
+  for( size_t i = knot_idx; i < ctrl_pnts_.size(); ++i )
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+
+  ctrl_pnts_ = new_ctrl_pnts;
 }

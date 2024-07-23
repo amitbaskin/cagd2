@@ -41,23 +41,23 @@ void Bezier::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 /******************************************************************************
 * Bezier::connectC0_bezier
 ******************************************************************************/
-void Bezier::connectC0_bezier( const Bezier &other )
+void Bezier::connectC0_bezier( const Bezier *other )
 {
-  ctrl_pnts_.back() = other.ctrl_pnts_.front();
+  ctrl_pnts_.back() = other->ctrl_pnts_.front();
 }
 
 /******************************************************************************
 * Bezier::connectC1_bezier
 ******************************************************************************/
-void Bezier::connectC1_bezier( const Bezier &other )
+void Bezier::connectC1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
     CAGD_POINT secondLastCtrlPntThis = ctrl_pnts_[ ctrl_pnts_.size() - 2 ];
-    CAGD_POINT firstCtrlPntOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPntOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT firstCtrlPntOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPntOther = other->ctrl_pnts_[ 1 ];
 
     CAGD_POINT tangentDirection =
     {
@@ -78,14 +78,14 @@ void Bezier::connectC1_bezier( const Bezier &other )
 /******************************************************************************
 * Bezier::connectG1_bezier
 ******************************************************************************/
-void Bezier::connectG1_bezier( const Bezier &other )
+void Bezier::connectG1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT firstCtrlPntOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPntOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT firstCtrlPntOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPntOther = other->ctrl_pnts_[ 1 ];
 
     CAGD_POINT lastCtrlPntThis = ctrl_pnts_.back();
 
@@ -115,23 +115,23 @@ void Bezier::connectG1_bezier( const Bezier &other )
 /******************************************************************************
 * Bezier::connectC0_bspline
 ******************************************************************************/
-void Bezier::connectC0_bspline( const BSpline &bspline )
+void Bezier::connectC0_bspline( const BSpline *bspline )
 {
-  CAGD_POINT startPoint = bspline.evaluate( bspline.knots_.front() );
+  CAGD_POINT startPoint = bspline->evaluate( bspline->knots_.front() );
   ctrl_pnts_.back() = startPoint;
 }
 
 /******************************************************************************
 * Bezier::connectC1_bspline
 ******************************************************************************/
-void Bezier::connectC1_bspline( const BSpline &bspline )
+void Bezier::connectC1_bspline( const BSpline *bspline )
 {
-  CAGD_POINT startPoint = bspline.evaluate( bspline.knots_.front() );
+  CAGD_POINT startPoint = bspline->evaluate( bspline->knots_.front() );
   ctrl_pnts_.back() = startPoint;
 
-  if( ctrl_pnts_.size() > 1 && bspline.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && bspline->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT secondCtrlPntBSpline = bspline.ctrl_pnts_[ 1 ];
+    CAGD_POINT secondCtrlPntBSpline = bspline->ctrl_pnts_[ 1 ];
 
     double dxBSpline = secondCtrlPntBSpline.x - startPoint.x;
     double dyBSpline = secondCtrlPntBSpline.y - startPoint.y;
@@ -149,14 +149,14 @@ void Bezier::connectC1_bspline( const BSpline &bspline )
 /******************************************************************************
 * Bezier::connectG1_bspline
 ******************************************************************************/
-void Bezier::connectG1_bspline( const BSpline &bspline )
+void Bezier::connectG1_bspline( const BSpline *bspline )
 {
   connectC0_bspline( bspline );
 
-  if( ctrl_pnts_.size() > 1 && bspline.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && bspline->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPoint = bspline.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPntBSpline = bspline.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPoint = bspline->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPntBSpline = bspline->ctrl_pnts_[ 1 ];
 
     double dxBSpline = secondCtrlPntBSpline.x - startPoint.x;
     double dyBSpline = secondCtrlPntBSpline.y - startPoint.y;
