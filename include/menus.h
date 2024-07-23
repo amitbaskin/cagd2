@@ -15,6 +15,8 @@ void lmb_up_cb( int x, int y, PVOID userData );
 
 void rmb_up_cb( int x, int y, PVOID userData );
 
+void mouse_move_cb( int x, int y, PVOID userData );
+
 void handle_settings_menu();
 void handle_clean_all_menu();
 void handle_curve_color_menu();

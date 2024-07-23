@@ -50,6 +50,7 @@ public:
   void show_ctrl_poly();
   void add_ctrl_pnt_from_str( std::istringstream &line );
   void update_weight( int pnt_idx, double val );
+  void change_color( BYTE red, BYTE green, BYTE blue );
 
   int order_;
   point_vec ctrl_pnts_;
