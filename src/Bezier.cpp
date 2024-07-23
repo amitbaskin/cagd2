@@ -25,17 +25,14 @@ void Bezier::print() const
 void Bezier::rmv_ctrl_pnt( int idx )
 {
   Curve::rmv_ctrl_pnt( idx );
-
-  show_crv( idx );
 }
 
 /******************************************************************************
 * Bezier::add_ctrl_pnt
 ******************************************************************************/
-void Bezier::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
+void Bezier::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
 {
   Curve::add_ctrl_pnt( ctrl_pnt, idx );
-  show_crv( idx );
 }
 
 /******************************************************************************
@@ -43,7 +40,7 @@ void Bezier::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 ******************************************************************************/
 void Bezier::connectC0_bezier( const Bezier *other )
 {
-  ctrl_pnts_.back() = other->ctrl_pnts_.front();
+  ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = other->ctrl_pnts_.front();
 }
 
 /******************************************************************************
@@ -66,12 +63,11 @@ void Bezier::connectC1_bezier( const Bezier *other )
       secondCtrlPntOther.z - firstCtrlPntOther.z
     };
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
-    {
-      firstCtrlPntOther.x - tangentDirection.x,
-      firstCtrlPntOther.y - tangentDirection.y,
-      firstCtrlPntOther.z - tangentDirection.z
-    };
+    CAGD_POINT new_pnt = { firstCtrlPntOther.x - tangentDirection.x,
+                           firstCtrlPntOther.y - tangentDirection.y,
+                           firstCtrlPntOther.z - tangentDirection.z };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -104,11 +100,11 @@ void Bezier::connectG1_bezier( const Bezier *other )
       dzOther /= lengthOther;
     }
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = {
-        lastCtrlPntThis.x - dxOther,
-        lastCtrlPntThis.y - dyOther,
-        lastCtrlPntThis.z - dzOther
-    };
+    CAGD_POINT new_pnt = { lastCtrlPntThis.x - dxOther,
+                           lastCtrlPntThis.y - dyOther,
+                           lastCtrlPntThis.z - dzOther };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -118,7 +114,7 @@ void Bezier::connectG1_bezier( const Bezier *other )
 void Bezier::connectC0_bspline( const BSpline *bspline )
 {
   CAGD_POINT startPoint = bspline->evaluate( bspline->knots_.front() );
-  ctrl_pnts_.back() = startPoint;
+  ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = startPoint;
 }
 
 /******************************************************************************
@@ -127,7 +123,7 @@ void Bezier::connectC0_bspline( const BSpline *bspline )
 void Bezier::connectC1_bspline( const BSpline *bspline )
 {
   CAGD_POINT startPoint = bspline->evaluate( bspline->knots_.front() );
-  ctrl_pnts_.back() = startPoint;
+  ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = startPoint;
 
   if( ctrl_pnts_.size() > 1 && bspline->ctrl_pnts_.size() > 1 )
   {
@@ -137,12 +133,11 @@ void Bezier::connectC1_bspline( const BSpline *bspline )
     double dyBSpline = secondCtrlPntBSpline.y - startPoint.y;
     double dzBSpline = secondCtrlPntBSpline.z - startPoint.z;
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
-    {
-      startPoint.x - dxBSpline,
-      startPoint.y - dyBSpline,
-      startPoint.z - dzBSpline
-    };
+    CAGD_POINT new_pnt = { startPoint.x - dxBSpline,
+                           startPoint.y - dyBSpline,
+                           startPoint.z - dzBSpline };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -175,12 +170,11 @@ void Bezier::connectG1_bspline( const BSpline *bspline )
 
     CAGD_POINT lastCtrlPntThis = ctrl_pnts_.back();
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
-    {
-      lastCtrlPntThis.x - dxBSpline,
-      lastCtrlPntThis.y - dyBSpline,
-      lastCtrlPntThis.z - dzBSpline
-    };
+    CAGD_POINT new_pnt = { lastCtrlPntThis.x - dxBSpline,
+                           lastCtrlPntThis.y - dyBSpline,
+                           lastCtrlPntThis.z - dzBSpline };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -189,8 +183,7 @@ void Bezier::connectG1_bspline( const BSpline *bspline )
 ******************************************************************************/
 void Bezier::show_crv( int chg_ctrl_idx, CtrlOp ) const
 {
-  if( chg_ctrl_idx != K_NOT_USED )
-    MP_cache_.clear();
+  MP_cache_.clear();
 
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
 

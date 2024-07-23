@@ -353,6 +353,9 @@ void lmb_up_cb( int x, int y, PVOID userData )
     {
       ConnType conn = is_c0 ? ConnType::C0 : is_c1 ? ConnType::C1 : ConnType::G1;
       connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn  );
+      is_c0 = false;
+      is_c1 = false;
+      is_g1 = false;
     }
   }
 }

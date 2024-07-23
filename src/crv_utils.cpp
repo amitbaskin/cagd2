@@ -270,6 +270,10 @@ void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
         throw std::runtime_error( "invalid conn type" );
       }
     }
+
+    p_crv_1->show_ctrl_poly();
+    p_crv_1->show_crv();
+    cagdRedraw();
   }
   catch( const std::runtime_error &err )
   {

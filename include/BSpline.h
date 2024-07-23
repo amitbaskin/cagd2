@@ -29,7 +29,7 @@ public:
                          CtrlOp op = CtrlOp::NONE ) const;
 
   virtual void print() const;
-  virtual void add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx );
+  virtual void add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx );
   virtual void rmv_ctrl_pnt( int idx );
   void show_crv_helper( std::vector< int > u_vec ) const;
 
