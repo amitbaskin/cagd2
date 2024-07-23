@@ -149,3 +149,15 @@ void Curve::add_ctrl_pnt_from_str( std::istringstream &line )
     ctrl_pnts_.push_back( point );
   }
 }
+
+/******************************************************************************
+* Curve::update_weight
+******************************************************************************/
+void Curve::update_weight( int pnt_idx, double val )
+{
+  if( ( size_t )pnt_idx >= ctrl_pnts_.size() )
+    throw std::runtime_error( "wrong ctrl pnt idx" );
+
+  ctrl_pnts_[ pnt_idx ].z = val;
+  show_crv();
+}

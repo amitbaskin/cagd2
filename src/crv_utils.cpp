@@ -167,6 +167,30 @@ std::tuple< int, int > get_ctrl_seg_pnts( int seg_id )
 }
 
 /******************************************************************************
+* update_weight_callback
+******************************************************************************/
+void update_weight_callback( int seg_id, int pnt_idx, double val )
+{
+  try
+  {
+    Curve *p_crv = nullptr;
+    CurveType crv_type = get_crv( seg_id, &p_crv );
+
+    if( crv_type == CurveType::NONE )
+    {
+      throw std::runtime_error( "wrong crv type" );
+    }
+
+    p_crv->update_weight( pnt_idx, val );
+    cagdRedraw();
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
 * get_crv
 ******************************************************************************/
 CurveType get_crv( int seg_id, Curve **rp_crv )

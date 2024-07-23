@@ -64,6 +64,7 @@ void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
 
 CurveType get_crv( int seg_id, Curve **rp_crv );
 
+void update_weight_callback( int seg_id, int pnt_idx, double val );
 void make_open_callback( int seg_id );
 void make_uni_callback( int seg_id );
 void update_knot_callback( int seg_id, int knot_idx, double new_val );

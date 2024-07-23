@@ -619,7 +619,7 @@ void BSpline::addKnot( double new_knot )
 ******************************************************************************/
 void BSpline::updateKnot( int knot_idx, double new_param )
 {
-  if( knot_idx >= knots_.size() )
+  if( ( size_t )knot_idx >= knots_.size() )
     throw std::runtime_error( "wrong knot idx" );
 
   knots_[ knot_idx ] = new_param;
@@ -634,7 +634,7 @@ void BSpline::rmvKnot( int knot_idx )
 {
   double knot = knots_[ knot_idx ];
 
-  if( knot_idx >= knots_.size() )
+  if( ( size_t )knot_idx >= knots_.size() )
     throw std::runtime_error( "wrong knot idx" );
 
   knots_.erase( knots_.begin() + knot_idx );
