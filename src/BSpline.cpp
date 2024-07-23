@@ -17,12 +17,7 @@
 void BSpline::connectC0_bezier( const Bezier *other )
 {
   ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = other->ctrl_pnts_.front();
-
-  int degree = order_ - 1;
-  int knotCount = knots_.size() - 1;
-
-  for( int i = 1; i <= degree; ++i )
-    knots_[ knotCount - i ] = knots_[ knotCount - degree - 1 ];
+  makeOpenKnotVector();
 }
 
 /******************************************************************************
