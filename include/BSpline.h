@@ -49,23 +49,21 @@ public:
 
   std::vector< int > findAffectedSegments( int controlPointIndex ) const;
 
-  virtual void connectC0_bezier( const Bezier &other );
-  virtual void connectC1_bezier( const Bezier &other );
-  virtual void connectG1_bezier( const Bezier &other );
+  virtual void connectC0_bezier( const Bezier *other );
+  virtual void connectC1_bezier( const Bezier *other );
+  virtual void connectG1_bezier( const Bezier *other );
 
-  virtual void connectC0_bspline( const BSpline &bspline );
-  virtual void connectC1_bspline( const BSpline &bspline );
-  virtual void connectG1_bspline( const BSpline &bspline );
+  virtual void connectC0_bspline( const BSpline *bspline );
+  virtual void connectC1_bspline( const BSpline *bspline );
+  virtual void connectG1_bspline( const BSpline *bspline );
 
   void addKnot( double new_knot );
-  void removeKnot( double knot );
-  void onKnotDrag( int knot_index, const CAGD_POINT &new_position );
+  void rmvKnot( int knot_idx );
+  void updateKnot( int knot_idx, double new_param );
   void ensureNonDecreasingKnotVector();
   void updateUniqueKnotsAndMultiplicity();
   CAGD_POINT interpolate( const CAGD_POINT &P1, const CAGD_POINT &P2, double t ) const;
   double distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const;
-  double mapPositionToParam( const CAGD_POINT &position ) const;
-  CAGD_POINT mapParamToPosition( double param ) const;
 
   double_vec knots_;
   double_vec u_vec_;

@@ -271,18 +271,18 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         set_active_pt_is_first_move( false );
       }
 
-      calculate_ctrl_pnt_updated_pos( get_active_pt_id(), 
-                                      LOINT( lParam ) - *get_active_pt_last_pos(), 
+      calculate_ctrl_pnt_updated_pos( get_active_pt_id(),
+                                      LOINT( lParam ) - *get_active_pt_last_pos(),
                                       HIINT( lParam ) - *( get_active_pt_last_pos() + 1 ),
-                                      new_pos[0], 
+                                      new_pos[0],
                                       new_pos[1] );
 
       last_pos[0] = LOINT( lParam );
       last_pos[1] = HIINT( lParam );
       set_active_pt_last_pos( last_pos );
-      
 
-      update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );
+
+      update_ctrl_pnt_callback( get_active_pt_id(), new_pos[0], new_pos[1] );
     }
     else
       callback( CAGD_MOUSEMOVE, LOINT( lParam ), HIINT( lParam ) );

@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <stdexcept>
 
 #include "vectors.h"
 #include "options.h"
@@ -166,9 +167,211 @@ std::tuple< int, int > get_ctrl_seg_pnts( int seg_id )
 }
 
 /******************************************************************************
-* update_ctrl_pnt
+* get_crv
 ******************************************************************************/
-void update_ctrl_pnt( int pnt_id, double new_x, double new_y )
+CurveType get_crv( int seg_id, Curve **rp_crv )
+{
+  *rp_crv = get_seg_crv( seg_id );
+
+  if( *rp_crv == nullptr )
+    throw std::runtime_error( "bad map for seg id to crv" );
+
+  BSpline *p_bspline = dynamic_cast< BSpline * >( *rp_crv );
+
+  if( p_bspline != nullptr )
+    return CurveType::BSPLINE;
+
+  Bezier *p_bezier = dynamic_cast< Bezier * >( *rp_crv );
+
+  if( p_bezier != nullptr )
+    return CurveType::BEZIER;
+  else
+    throw std::runtime_error( "bad map for seg id to crv" );
+}
+
+/******************************************************************************
+* connect_callback
+******************************************************************************/
+void connect_callback( int seg_id_1, int seg_id_2, ConnType conn )
+{
+  try
+  {
+    Curve *p_crv_1 = nullptr;
+    Curve *p_crv_2 = nullptr;
+    CurveType crv_type_1 = get_crv( seg_id_1, &p_crv_1 );
+    CurveType crv_type_2 = get_crv( seg_id_2, &p_crv_2 );
+
+    switch( conn )
+    {
+      case ConnType::C0:
+      {
+        if( crv_type_2 == CurveType::BSPLINE )
+          p_crv_1->connectC0_bspline( ( BSpline * )p_crv_2 );
+        else if( crv_type_2 == CurveType::BEZIER )
+          p_crv_1->connectC0_bezier( ( Bezier * )p_crv_2 );
+        else
+        {
+          throw std::runtime_error( "invalid crv type" );
+        }
+        break;
+      }
+
+      case ConnType::C1:
+      {
+        if( crv_type_2 == CurveType::BSPLINE )
+          p_crv_1->connectC1_bspline( ( BSpline * )p_crv_2 );
+        else if( crv_type_2 == CurveType::BEZIER )
+          p_crv_1->connectC1_bezier( ( Bezier * )p_crv_2 );
+        else
+        {
+          throw std::runtime_error( "invalid crv type" );
+        }
+        break;
+      }
+
+      case ConnType::G1:
+      {
+        if( crv_type_2 == CurveType::BSPLINE )
+          p_crv_1->connectG1_bspline( ( BSpline * )p_crv_2 );
+        else if( crv_type_2 == CurveType::BEZIER )
+          p_crv_1->connectG1_bezier( ( Bezier * )p_crv_2 );
+        else
+        {
+          throw std::runtime_error( "invalid crv type" );
+        }
+        break;
+      }
+      default:
+      {
+        throw std::runtime_error( "invalid conn type" );
+      }
+    }
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
+* make_open_callback
+******************************************************************************/
+void make_open_callback( int seg_id )
+{
+  try
+  {
+    Curve *p_crv = nullptr;
+    CurveType crv_type = get_crv( seg_id, &p_crv );
+
+    if( crv_type != CurveType::BSPLINE )
+    {
+      throw std::runtime_error( "wrong crv type" );
+    }
+
+    ( ( BSpline * )p_crv )->makeOpenKnotVector();
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
+* make_uni_callback
+******************************************************************************/
+void make_uni_callback( int seg_id )
+{
+  try
+  {
+    Curve *p_crv = nullptr;
+    CurveType crv_type = get_crv( seg_id, &p_crv );
+
+    if( crv_type != CurveType::BSPLINE )
+    {
+      throw std::runtime_error( "wrong crv type" );
+    }
+
+    ( ( BSpline * )p_crv )->makeUniformKnotVector();
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
+* update_knot_callback
+******************************************************************************/
+void update_knot_callback( int seg_id, int knot_idx, double new_val )
+{
+  try
+  {
+    Curve *p_crv = nullptr;
+    CurveType crv_type = get_crv( seg_id, &p_crv );
+
+    if( crv_type != CurveType::BSPLINE )
+    {
+      throw std::runtime_error( "wrong crv type" );
+    }
+
+    ( ( BSpline * )p_crv )->updateKnot( knot_idx, new_val );
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
+* add_knot_callback
+******************************************************************************/
+void add_knot_callback( int seg_id, double val )
+{
+  try
+  {
+    Curve *p_crv = nullptr;
+    CurveType crv_type = get_crv( seg_id, &p_crv );
+
+    if( crv_type != CurveType::BSPLINE )
+    {
+      throw std::runtime_error( "wrong crv type" );
+    }
+
+    ( ( BSpline * )p_crv )->addKnot( val );
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
+* rmv_knot_callback
+******************************************************************************/
+void rmv_knot_callback( int seg_id, int knot_idx )
+{
+  try
+  {
+    Curve *p_crv = nullptr;
+    CurveType crv_type = get_crv( seg_id, &p_crv );
+
+    if( crv_type != CurveType::BSPLINE )
+    {
+      throw std::runtime_error( "wrong crv type" );
+    }
+
+    ( ( BSpline * )p_crv )->rmvKnot( knot_idx );
+  }
+  catch( const std::runtime_error &err )
+  {
+    throw err;
+  }
+}
+
+/******************************************************************************
+* update_ctrl_pnt_callback
+******************************************************************************/
+void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y )
 {
   std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
 

@@ -14,9 +14,9 @@
 /******************************************************************************
 * BSpline::connectC0_bezier
 ******************************************************************************/
-void BSpline::connectC0_bezier( const Bezier &other )
+void BSpline::connectC0_bezier( const Bezier *other )
 {
-  ctrl_pnts_.back() = other.ctrl_pnts_.front();
+  ctrl_pnts_.back() = other->ctrl_pnts_.front();
 
   int degree = order_ - 1;
   int knotCount = knots_.size() - 1;
@@ -29,14 +29,14 @@ void BSpline::connectC0_bezier( const Bezier &other )
 /******************************************************************************
 * BSpline::connectC1_bezier
 ******************************************************************************/
-void BSpline::connectC1_bezier( const Bezier &other )
+void BSpline::connectC1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = {
         startPointOther.x - ( secondCtrlPointOther.x - startPointOther.x ),
@@ -49,14 +49,14 @@ void BSpline::connectC1_bezier( const Bezier &other )
 /******************************************************************************
 * BSpline::connectG1_bezier
 ******************************************************************************/
-void BSpline::connectG1_bezier( const Bezier &other )
+void BSpline::connectG1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
@@ -87,13 +87,13 @@ void BSpline::connectG1_bezier( const Bezier &other )
 /******************************************************************************
 * BSpline::connectC0_bspline
 ******************************************************************************/
-void BSpline::connectC0_bspline( const BSpline &other )
+void BSpline::connectC0_bspline( const BSpline *other )
 {
   double tEndThis = knots_.back();
   CAGD_POINT endPointThis = evaluate( tEndThis );
 
-  double tStartOther = other.knots_.front();
-  CAGD_POINT startPointOther = other.evaluate( tStartOther );
+  double tStartOther = other->knots_.front();
+  CAGD_POINT startPointOther = other->evaluate( tStartOther );
 
   ctrl_pnts_.back() = startPointOther;
 
@@ -107,14 +107,14 @@ void BSpline::connectC0_bspline( const BSpline &other )
 /******************************************************************************
 * BSpline::connectC1_bspline
 ******************************************************************************/
-void BSpline::connectC1_bspline( const BSpline &other )
+void BSpline::connectC1_bspline( const BSpline *other )
 {
   connectC0_bspline( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
@@ -132,14 +132,14 @@ void BSpline::connectC1_bspline( const BSpline &other )
 /******************************************************************************
 * BSpline::connectG1_bspline
 ******************************************************************************/
-void BSpline::connectG1_bspline( const BSpline &other )
+void BSpline::connectG1_bspline( const BSpline *other )
 {
   connectC0_bspline( other );
 
-  if( ctrl_pnts_.size() > 1 && other.ctrl_pnts_.size() > 1 )
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
-    CAGD_POINT startPointOther = other.ctrl_pnts_.front();
-    CAGD_POINT secondCtrlPointOther = other.ctrl_pnts_[ 1 ];
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
@@ -551,93 +551,6 @@ double BSpline::distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const
 }
 
 /******************************************************************************
-* BSpline::mapPositionToParam
-******************************************************************************/
-double BSpline::mapPositionToParam( const CAGD_POINT &position ) const
-{
-  int num_control_points = ctrl_pnts_.size();
-  double total_length = 0.0;
-
-  // Calculate total length of the control polygon
-  for( int i = 1; i < num_control_points; ++i )
-  {
-    total_length += distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
-  }
-
-  double accumulated_length = 0.0;
-  for( int i = 1; i < num_control_points; ++i )
-  {
-    double segment_length = distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
-    double next_accumulated_length = accumulated_length + segment_length;
-
-    double min_x = min( ctrl_pnts_[ i - 1 ].x, ctrl_pnts_[ i ].x );
-    double max_x = max( ctrl_pnts_[ i - 1 ].x, ctrl_pnts_[ i ].x );
-    double min_y = min( ctrl_pnts_[ i - 1 ].y, ctrl_pnts_[ i ].y );
-    double max_y = max( ctrl_pnts_[ i - 1 ].y, ctrl_pnts_[ i ].y );
-
-    if( position.x >= min_x && position.x <= max_x &&
-        position.y >= min_y && position.y <= max_y )
-    {
-
-      double t = distance( ctrl_pnts_[ i - 1 ], position ) / segment_length;
-      return ( accumulated_length + t * segment_length ) / total_length;
-    }
-
-    accumulated_length = next_accumulated_length;
-  }
-
-  return 1.0; // In case the position is exactly at the end
-}
-
-/******************************************************************************
-* BSpline::mapParamToPosition
-******************************************************************************/
-CAGD_POINT BSpline::mapParamToPosition( double param ) const
-{
-  int num_control_points = ctrl_pnts_.size();
-  double total_length = 0.0;
-
-  // Calculate total length of the control polygon
-  for( int i = 1; i < num_control_points; ++i )
-  {
-    total_length += distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
-  }
-
-  double accumulated_length = 0.0;
-  for( int i = 1; i < num_control_points; ++i )
-  {
-    double segment_length = distance( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ] );
-    double next_accumulated_length = accumulated_length + segment_length;
-
-    if( param >= accumulated_length / total_length &&
-        param <= next_accumulated_length / total_length )
-    {
-      double t = ( param * total_length - accumulated_length ) / segment_length;
-      return interpolate( ctrl_pnts_[ i - 1 ], ctrl_pnts_[ i ], t );
-    }
-
-    accumulated_length = next_accumulated_length;
-  }
-
-  return ctrl_pnts_.back(); // In case param is exactly 1.0
-}
-
-/******************************************************************************
-* BSpline::onKnotDrag
-******************************************************************************/
-void BSpline::onKnotDrag( int knot_index, const CAGD_POINT &new_position )
-{
-  double new_param = mapPositionToParam( new_position );
-  knots_[ knot_index ] = new_param;
-
-  // Ensure the knot vector remains in non-decreasing order
-  ensureNonDecreasingKnotVector();
-
-  // Update u_vec_ and multiplicity_ to reflect changes
-  updateUniqueKnotsAndMultiplicity();
-}
-
-/******************************************************************************
 * BSpline::ensureNonDecreasingKnotVector
 ******************************************************************************/
 void BSpline::ensureNonDecreasingKnotVector()
@@ -645,9 +558,7 @@ void BSpline::ensureNonDecreasingKnotVector()
   for( size_t i = 1; i < knots_.size(); ++i )
   {
     if( knots_[ i ] < knots_[ i - 1 ] )
-    {
       std::swap( knots_[ i ], knots_[ i - 1 ] );
-    }
   }
 }
 
@@ -667,9 +578,7 @@ void BSpline::updateUniqueKnotsAndMultiplicity()
       multiplicity_.push_back( 1 );
     }
     else
-    {
       multiplicity_.back()++;
-    }
   }
 }
 
@@ -681,22 +590,14 @@ void BSpline::addKnot( double new_knot )
   auto it = std::lower_bound( knots_.begin(), knots_.end(), new_knot );
   int insert_pos = it - knots_.begin();
   knots_.insert( it, new_knot );
-
-  // Ensure the knot vector remains in non-decreasing order
   ensureNonDecreasingKnotVector();
-
-  // Update u_vec_ and multiplicity_ to reflect changes
   updateUniqueKnotsAndMultiplicity();
 
-  // Refine the control points
-  // Insert new control point(s) using de Boor's algorithm or similar
   point_vec new_ctrl_pnts;
   int p = order_ - 1;
 
   for( int i = 0; i <= insert_pos - p - 1; ++i )
-  {
     new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
-  }
 
   for( int i = insert_pos - p; i <= insert_pos - 1; ++i )
   {
@@ -708,51 +609,55 @@ void BSpline::addKnot( double new_knot )
   }
 
   for( size_t i = insert_pos; i < ctrl_pnts_.size(); ++i )
-  {
     new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
-  }
 
   ctrl_pnts_ = new_ctrl_pnts;
 }
 
 /******************************************************************************
-* BSpline::removeKnot
+* BSpline::updateKnot
 ******************************************************************************/
-void BSpline::removeKnot( double knot )
+void BSpline::updateKnot( int knot_idx, double new_param )
 {
-  auto it = std::find( knots_.begin(), knots_.end(), knot );
-  if( it != knots_.end() )
+  if( knot_idx >= knots_.size() )
+    throw std::runtime_error( "wrong knot idx" );
+
+  knots_[ knot_idx ] = new_param;
+  ensureNonDecreasingKnotVector();
+  updateUniqueKnotsAndMultiplicity();
+}
+
+/******************************************************************************
+* BSpline::rmvKnot
+******************************************************************************/
+void BSpline::rmvKnot( int knot_idx )
+{
+  double knot = knots_[ knot_idx ];
+
+  if( knot_idx >= knots_.size() )
+    throw std::runtime_error( "wrong knot idx" );
+
+  knots_.erase( knots_.begin() + knot_idx );
+
+  updateUniqueKnotsAndMultiplicity();
+
+  point_vec new_ctrl_pnts;
+  int p = order_ - 1;
+
+  for( int i = 0; i <= knot_idx - p - 1; ++i )
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+
+  for( int i = knot_idx - p; i <= knot_idx - 1; ++i )
   {
-    int remove_pos = it - knots_.begin();
-    knots_.erase( it );
-
-    // Update u_vec_ and multiplicity_ to reflect changes
-    updateUniqueKnotsAndMultiplicity();
-
-    // Adjust control points
-    // Remove control point(s) using de Boor's algorithm or similar
-    point_vec new_ctrl_pnts;
-    int p = order_ - 1;
-
-    for( int i = 0; i <= remove_pos - p - 1; ++i )
-    {
-      new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
-    }
-
-    for( int i = remove_pos - p; i <= remove_pos - 1; ++i )
-    {
-      double alpha = ( knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
-      CAGD_POINT new_point;
-      new_point.x = ( ctrl_pnts_[ i ].x - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x ) / alpha;
-      new_point.y = ( ctrl_pnts_[ i ].y - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y ) / alpha;
-      new_ctrl_pnts.push_back( new_point );
-    }
-
-    for( size_t i = remove_pos; i < ctrl_pnts_.size(); ++i )
-    {
-      new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
-    }
-
-    ctrl_pnts_ = new_ctrl_pnts;
+    double alpha = ( knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
+    CAGD_POINT new_point;
+    new_point.x = ( ctrl_pnts_[ i ].x - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x ) / alpha;
+    new_point.y = ( ctrl_pnts_[ i ].y - ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y ) / alpha;
+    new_ctrl_pnts.push_back( new_point );
   }
+
+  for( size_t i = knot_idx; i < ctrl_pnts_.size(); ++i )
+    new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+
+  ctrl_pnts_ = new_ctrl_pnts;
 }
