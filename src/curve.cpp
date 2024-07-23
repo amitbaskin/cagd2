@@ -184,3 +184,14 @@ void Curve::update_weight( int pnt_idx, double val )
 
   ctrl_pnts_[ pnt_idx ].z = val;
 }
+
+/******************************************************************************
+* Curve::change_color
+******************************************************************************/
+void Curve::change_color( BYTE red, BYTE green, BYTE blue )
+{
+  for( auto seg_id : seg_ids_ )
+    cagdSetSegmentColor( seg_id, red, green, blue );
+  
+  cagdRedraw();
+}

@@ -18,6 +18,7 @@ Curve *active_rmb_curve = nullptr;
 int active_pnt_id = K_NOT_USED;
 int active_rmb_ctrl_polyline = K_NOT_USED;
 int cur_rmb_screen_pick[2] = { K_NOT_USED, K_NOT_USED };
+int hilited_pt_id = K_NOT_USED;
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
 
@@ -50,6 +51,7 @@ void init_menus()
   cagdRegisterCallback( CAGD_LBUTTONDOWN, lmb_down_cb, NULL );
   cagdRegisterCallback( CAGD_LBUTTONUP, lmb_up_cb, NULL );
   cagdRegisterCallback( CAGD_RBUTTONUP, rmb_up_cb, NULL );
+  cagdRegisterCallback( CAGD_MOUSEMOVE, mouse_move_cb, NULL );
 }
 
 /******************************************************************************
@@ -231,6 +233,7 @@ void handle_rmb_insert_ctrl_pt()
 void handle_rmb_connect_c0()
 {
   is_c0 = true;
+  active_rmb_curve->change_color( 255, 165, 0 );
 }
 
 /******************************************************************************
@@ -239,6 +242,7 @@ void handle_rmb_connect_c0()
 void handle_rmb_connect_c1()
 {
   is_c1 = true;
+  active_rmb_curve->change_color( 255, 165, 0 );
 }
 
 /******************************************************************************
@@ -247,6 +251,7 @@ void handle_rmb_connect_c1()
 void handle_rmb_connect_g1()
 {
   is_g1 = true;
+  active_rmb_curve->change_color( 255, 165, 0 );
 }
 
 /******************************************************************************
@@ -377,6 +382,8 @@ void lmb_up_cb( int x, int y, PVOID userData )
 
     if( sec_seg_id != 0 )
     {
+      active_rmb_curve->change_color( 255, 0, 0 );
+
       ConnType conn = is_c0 ? ConnType::C0 : is_c1 ? ConnType::C1 : ConnType::G1;
       connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn  );
       is_c0 = false;
@@ -544,4 +551,35 @@ void clean_active_rmb_data()
   active_rmb_curve = nullptr;
   active_rmb_ctrl_polyline = K_NOT_USED;
   cur_rmb_screen_pick[0] = K_NOT_USED;
+}
+
+/******************************************************************************
+* mouse_move_cb
+******************************************************************************/
+void mouse_move_cb( int x, int y, PVOID userData )
+{
+  int id = K_NOT_USED;
+
+  for( cagdPick( x, y ); id = cagdPickNext();)
+  {
+    if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POINT )
+      break;
+  }
+
+  if( id > 0 )
+  {
+    cagdSetSegmentColor( id, 255, 255, 0 );
+    cagdRedraw();
+    hilited_pt_id = id;
+  }
+  else
+  {
+    if( hilited_pt_id != K_NOT_USED )
+    {
+      cagdSetSegmentColor( hilited_pt_id, 0, 255, 0 );
+      cagdRedraw();
+    }
+
+    hilited_pt_id = K_NOT_USED;
+  }
 }
