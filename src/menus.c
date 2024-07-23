@@ -10,6 +10,10 @@ char buffer2[ BUFSIZ ];
 char buffer3[ BUFSIZ ];
 UINT myText2;
 
+bool is_c0 = false;
+bool is_c1 = false;
+bool is_g1 = false;
+
 Curve *active_rmb_curve = nullptr;
 std::tuple< Curve *, int > active_crv_ctrl_pt = std::make_tuple( nullptr, -1 );
 int active_rmb_ctrl_polyline = K_NOT_USED;
@@ -156,6 +160,16 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
   case CAGD_INSERT_CTRL_PT:
     handle_rmb_insert_ctrl_pt();
     break;
+
+  case CAGD_CONNECT_C0:
+    handle_rmb_connect_c0();
+    break;
+  case CAGD_CONNECT_C1:
+    handle_rmb_connect_c1();
+    break;
+  case CAGD_CONNECT_G1:
+    handle_rmb_connect_g1();
+    break;
   }
 }
 
@@ -187,6 +201,30 @@ void handle_rmb_insert_ctrl_pt()
 
     //TODO
   }
+}
+
+/******************************************************************************
+* handle_rmb_connect_c0
+******************************************************************************/
+void handle_rmb_connect_c0()
+{
+  is_c0 = true;
+}
+
+/******************************************************************************
+* handle_rmb_connect_c1
+******************************************************************************/
+void handle_rmb_connect_c1()
+{
+  is_c1 = true;
+}
+
+/******************************************************************************
+* handle_rmb_connect_g1
+******************************************************************************/
+void handle_rmb_connect_g1()
+{
+  is_g1 = true;
 }
 
 /******************************************************************************
@@ -304,7 +342,39 @@ void lmb_down_cb( int x, int y, PVOID userData )
 void lmb_up_cb( int x, int y, PVOID userData )
 {
   set_active_pt_id( K_NOT_USED );
-  set_active_pt_is_first_move( true );
+
+  int sec_seg_id = 0;
+
+  if( is_c0 || is_c1 || is_g1 )
+  {
+    sec_seg_id = get_crv_by_pick( x, y );
+
+    if( sec_seg_id != 0 )
+    {
+      ConnType conn = is_c0 ? ConnType::C0 : is_c1 ? ConnType::C1 : ConnType::G1;
+      connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn  );
+    }
+  }
+}
+
+/******************************************************************************
+* get_crv_by_pick
+******************************************************************************/
+UINT get_crv_by_pick( int x, int y )
+{
+  UINT id = 0;
+  UINT seg_id = 0;
+
+  for( cagdPick( x, y ); id = cagdPickNext(); )
+  {
+    if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POLYLINE )
+    {
+      seg_id = id;
+      break;
+    }
+  }
+
+  return seg_id;
 }
 
 /******************************************************************************
@@ -394,6 +464,9 @@ void show_rmb_on_curve_menu( int x, int y )
 
   HMENU rmb_menu = CreatePopupMenu();
   AppendMenu( rmb_menu, MF_STRING, CAGD_INSERT_CTRL_PT, TEXT( "Insert Control Point" ) );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C0, TEXT( "Connect C0" ) );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C1, TEXT( "Connect C1" ) );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_G1, TEXT( "Connect G1" ) );
 
   TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
   DestroyMenu( rmb_menu );

@@ -214,9 +214,9 @@ CurveType get_crv( int seg_id, Curve **rp_crv )
 }
 
 /******************************************************************************
-* connect_callback
+* connect_crv_callback
 ******************************************************************************/
-void connect_callback( int seg_id_1, int seg_id_2, ConnType conn )
+void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
 {
   try
   {
