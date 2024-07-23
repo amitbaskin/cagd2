@@ -13,7 +13,7 @@
 
 std::vector< Curve * > cur_curves;
 std::map< int, Curve * > seg_to_crv;
-std::map< int, std::tuple< Curve *, int > > pnt_to_crv_ctrl;
+std::map< int, Curve * > pnt_to_crv;
 std::map< int, std::tuple< int, int > > ctrl_seg_to_pnts;
 active_ctrl_pt_data active_drag_pt = { K_NOT_USED, { 0, 0 }, true };
 
@@ -113,11 +113,11 @@ void map_seg_to_crv( int seg_id, Curve *p_curve )
 }
 
 /******************************************************************************
-* map_pnt_to_crv_ctrl
+* map_pnt_to_crv
 ******************************************************************************/
-void map_pnt_to_crv_ctrl( int pnt_id, Curve *p_curve, int ctrl_idx )
+void map_pnt_to_crv( int pnt_id, Curve *p_curve )
 {
-  pnt_to_crv_ctrl[ pnt_id ] = std::make_tuple( p_curve, ctrl_idx );
+  pnt_to_crv[ pnt_id ] = p_curve;
 }
 
 /******************************************************************************
@@ -129,11 +129,11 @@ void map_ctrl_seg_to_pnts( int seg_id, int pnt1, int pnt2 )
 }
 
 /******************************************************************************
-* erase_pnt_to_crv_ctrl
+* erase_pnt_to_crv
 ******************************************************************************/
-void erase_pnt_to_crv_ctrl( int pnt_id )
+void erase_pnt_to_crv( int pnt_id )
 {
-  pnt_to_crv_ctrl.erase( pnt_id );
+  pnt_to_crv.erase( pnt_id );
 }
 
 /******************************************************************************
@@ -145,14 +145,14 @@ void erase_ctrl_seg_to_pnts( int seg_id )
 }
 
 /******************************************************************************
-* get_pnt_crv_ctrl
+* get_pnt_crv
 ******************************************************************************/
-std::tuple< Curve *, int > get_pnt_crv_ctrl( int pnt_id )
+Curve *get_pnt_crv( int pnt_id )
 {
-  if( pnt_to_crv_ctrl.find( pnt_id ) != pnt_to_crv_ctrl.end() )
-    return pnt_to_crv_ctrl[ pnt_id ];
+  if( pnt_to_crv.find( pnt_id ) != pnt_to_crv.end() )
+    return pnt_to_crv[ pnt_id ];
   else
-    return std::make_tuple( nullptr, K_NOT_USED );
+    return nullptr;
 }
 
 /******************************************************************************
@@ -401,21 +401,25 @@ void rmv_knot_callback( int seg_id, int knot_idx )
 ******************************************************************************/
 void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y )
 {
-  std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
+  Curve *p_crv = get_pnt_crv( pnt_id );
 
-  auto p_curve = std::get< 0 >( crv_ctrl_idx );
-  auto ctrl_idx = std::get< 1 >( crv_ctrl_idx );
-
-  if( p_curve != nullptr )
+  if( p_crv != nullptr )
   {
-    double old_pos_x = p_curve->ctrl_pnts_[ ctrl_idx ].x;
-    double old_pos_y = p_curve->ctrl_pnts_[ ctrl_idx ].y;
+    int pnt_idx = p_crv->get_pnt_id_idx( pnt_id );
 
-    p_curve->ctrl_pnts_[ ctrl_idx ].x = new_x;
-    p_curve->ctrl_pnts_[ ctrl_idx ].y = new_y;
+    if( pnt_idx == K_NOT_USED )
+    {
+      throw std::runtime_error( "bad pnt id" );
+    }
 
-    p_curve->show_ctrl_poly();
-    p_curve->show_crv( ctrl_idx );
+    double old_pos_x = p_crv->ctrl_pnts_[ pnt_idx ].x;
+    double old_pos_y = p_crv->ctrl_pnts_[ pnt_idx ].y;
+
+    p_crv->ctrl_pnts_[ pnt_idx ].x = new_x;
+    p_crv->ctrl_pnts_[ pnt_idx ].y = new_y;
+
+    p_crv->show_ctrl_poly();
+    p_crv->show_crv( pnt_idx );
     cagdRedraw();
   }
 }

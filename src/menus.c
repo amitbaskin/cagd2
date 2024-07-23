@@ -15,7 +15,7 @@ bool is_c1 = false;
 bool is_g1 = false;
 
 Curve *active_rmb_curve = nullptr;
-std::tuple< Curve *, int > active_rmb_crv_ctrl_pt = std::make_tuple( nullptr, -1 );
+int active_pnt_id = K_NOT_USED;
 int active_rmb_ctrl_polyline = K_NOT_USED;
 int cur_rmb_screen_pick[2] = { K_NOT_USED, K_NOT_USED };
 
@@ -191,8 +191,8 @@ void handle_rmb_remove_curve()
 ******************************************************************************/
 void handle_rmb_insert_ctrl_pt()
 {
-  Curve *p_curve = std::get< 0 >( active_rmb_crv_ctrl_pt );
-  auto ctrl_idx = std::get< 1 >( active_rmb_crv_ctrl_pt );
+  Curve *p_curve = active_rmb_curve;
+  auto ctrl_idx = p_curve->get_pnt_id_idx( active_pnt_id );
 
   if( p_curve != nullptr &&
       ctrl_idx != K_NOT_USED &&
@@ -201,17 +201,19 @@ void handle_rmb_insert_ctrl_pt()
     Bezier *bz_crv = dynamic_cast< Bezier * >( p_curve );
     BSpline *bs_crv = dynamic_cast< BSpline * >( p_curve );
 
-    CAGD_POINT p = screen_to_world_coord( cur_rmb_screen_pick[0], 
+    CAGD_POINT p = screen_to_world_coord( cur_rmb_screen_pick[0],
                                           cur_rmb_screen_pick[1] );
 
     if( bz_crv != nullptr )
     {
       bz_crv->add_ctrl_pnt( p, ctrl_idx );
+      bz_crv->show_ctrl_poly();
       bz_crv->show_crv();
     }
     else if( bs_crv != nullptr )
     {
       bs_crv->add_ctrl_pnt( p, ctrl_idx );
+      bs_crv->show_ctrl_poly();
       bs_crv->show_crv();
     }
     else
@@ -252,8 +254,8 @@ void handle_rmb_connect_g1()
 ******************************************************************************/
 void handle_rmb_remove_ctrl_pt()
 {
-  Curve *p_curve = std::get< 0 >( active_rmb_crv_ctrl_pt );
-  auto ctrl_idx = std::get< 1 >( active_rmb_crv_ctrl_pt );
+  Curve *p_curve = active_rmb_curve;
+  auto ctrl_idx = p_curve->get_pnt_id_idx( active_pnt_id );
 
   if( p_curve != nullptr && ctrl_idx != K_NOT_USED )
   {
@@ -263,11 +265,13 @@ void handle_rmb_remove_ctrl_pt()
     if( bz_crv != nullptr )
     {
       bz_crv->rmv_ctrl_pnt( ctrl_idx );
+      bz_crv->show_ctrl_poly();
       bz_crv->show_crv();
     }
     else if( bs_crv != nullptr )
     {
       bs_crv->rmv_ctrl_pnt( ctrl_idx );
+      bs_crv->show_ctrl_poly();
       bs_crv->show_crv();
     }
     else
@@ -411,7 +415,6 @@ void rmb_up_cb( int x, int y, PVOID userData )
   UINT pt_id = K_NOT_USED;
   UINT polyline_id = K_NOT_USED;
   Curve *crv = nullptr;
-  std::tuple< Curve *, int > crv_pnt_ctrl = std::make_tuple( nullptr, K_NOT_USED );
   std::tuple< int, int > neibor_pts = std::make_tuple( K_NOT_USED, K_NOT_USED );
 
   for( cagdPick( x, y ); id = cagdPickNext();)
@@ -425,18 +428,16 @@ void rmb_up_cb( int x, int y, PVOID userData )
       break;
   }
 
-  if( pt_id != K_NOT_USED )
-    crv_pnt_ctrl = get_pnt_crv_ctrl( id );
-
   if( polyline_id != K_NOT_USED )
   {
     crv = get_seg_crv( polyline_id );
     neibor_pts = get_ctrl_seg_pnts( polyline_id );
   }
 
-  if( std::get< 0 >( crv_pnt_ctrl ) != nullptr ) // RMB on ctrl pt
+  if( pt_id != K_NOT_USED ) // RMB on ctrl pt
   {
-    active_rmb_crv_ctrl_pt = crv_pnt_ctrl;
+    active_pnt_id = pt_id;
+    active_rmb_curve = get_pnt_crv( pt_id );
     show_rmb_on_ctrl_pt_menu( x, y );
   }
   else if( crv != nullptr ) // RMB on curve
@@ -447,7 +448,7 @@ void rmb_up_cb( int x, int y, PVOID userData )
   else if( std::get< 0 >( neibor_pts ) != K_NOT_USED && // RMB on control points polyline
            std::get< 1 >( neibor_pts ) != K_NOT_USED )
   {
-    active_rmb_crv_ctrl_pt = get_pnt_crv_ctrl( std::get< 1 >( neibor_pts ) );
+    active_rmb_curve = get_pnt_crv( std::get< 1 >( neibor_pts ) );
     active_rmb_ctrl_polyline = polyline_id;
     cur_rmb_screen_pick[0] = x;
     cur_rmb_screen_pick[1] = y;
@@ -541,7 +542,6 @@ void show_no_selection_rmb_menu( int x, int y )
 void clean_active_rmb_data()
 {
   active_rmb_curve = nullptr;
-  active_rmb_crv_ctrl_pt = std::make_tuple( nullptr, -1 );
   active_rmb_ctrl_polyline = K_NOT_USED;
   cur_rmb_screen_pick[0] = K_NOT_USED;
 }

@@ -262,7 +262,7 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     else if( state & MK_LBUTTON && get_active_pt_id() != K_NOT_USED )
     {
       double new_pos[2];
-      
+
       CAGD_POINT p = screen_to_world_coord( LOINT( lParam ), HIINT( lParam ) );
       new_pos[0] = p.x;
       new_pos[1] = p.y;

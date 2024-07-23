@@ -34,16 +34,10 @@ Curve::Curve( int order, point_vec ctrl_pnts ) :
 ******************************************************************************/
 void Curve::rmv_ctrl_pnt( int idx )
 {
-  erase_pnt_to_crv_ctrl( pnt_ids_[ idx ] );
-  erase_ctrl_seg_to_pnts( poly_seg_ids_[ idx ] );
-
-  if( idx > 0 && ( size_t )idx < pnt_ids_.size() )
-    erase_ctrl_seg_to_pnts( poly_seg_ids_[ idx - 1 ] );
-
+  erase_pnt_to_crv( pnt_ids_[ idx ] );
+  cagdFreeSegment( pnt_ids_[ idx ] );
   pnt_ids_.erase( pnt_ids_.begin() + idx );
   ctrl_pnts_.erase( ctrl_pnts_.begin() + idx );
-
-  show_ctrl_poly();
 }
 
 /******************************************************************************
@@ -51,13 +45,13 @@ void Curve::rmv_ctrl_pnt( int idx )
 ******************************************************************************/
 void Curve::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
 {
-  /*int pnt_id = cagdAddPoint( &ctrl_pnt );
-  map_pnt_to_crv_ctrl( pnt_id, this, idx );
-  pnt_ids_.insert( pnt_ids_ .begin() + idx, pnt_id );*/
+  int pnt_id = cagdAddPoint( &ctrl_pnt );
+
+  map_pnt_to_crv( pnt_id, this );
+
+  pnt_ids_.insert( pnt_ids_ .begin() + idx, pnt_id );
 
   ctrl_pnts_.insert( ctrl_pnts_.begin() + idx, ctrl_pnt );
-
-  show_ctrl_poly();
 }
 
 /******************************************************************************
@@ -79,10 +73,27 @@ void Curve::print() const
 }
 
 /******************************************************************************
+* Curve::clean_ctrl_poly
+******************************************************************************/
+void Curve::clean_ctrl_poly()
+{
+  for( size_t i = 0; i < poly_seg_ids_.size(); ++i )
+  {
+    erase_ctrl_seg_to_pnts( poly_seg_ids_[ i ] );
+    erase_ctrl_seg_to_pnts( poly_seg_ids_[ i ] );
+    cagdFreeSegment( poly_seg_ids_[ i ] );
+  }
+
+  poly_seg_ids_.clear();
+}
+
+/******************************************************************************
 * Curve::show_ctrl_poly
 ******************************************************************************/
 void Curve::show_ctrl_poly()
 {
+  clean_ctrl_poly();
+
   size_t cur_pnts_num = ctrl_pnts_.size();
 
   if( cur_pnts_num > 1 )
@@ -99,7 +110,7 @@ void Curve::show_ctrl_poly()
     {
       int pnt_id = cagdAddPoint( &prev_pnt );
       pnt_ids_.push_back( pnt_id );
-      map_pnt_to_crv_ctrl( pnt_id, this, 0 );
+      map_pnt_to_crv( pnt_id, this );
     }
 
     for( size_t i = 1; i < cur_pnts_num; ++i )
@@ -108,31 +119,44 @@ void Curve::show_ctrl_poly()
       CAGD_POINT pnts[ 2 ] = { prev_pnt, cur_pnt };
       set_norm_color();
 
+      int pnt_id = K_NOT_USED;
+
       if( i < pnt_ids_.size() )
       {
+        pnt_id = pnt_ids_[ i ];
         cagdReusePoint( pnt_ids_[ i ], &cur_pnt );
         set_bi_color();
-        cagdReusePolyline( poly_seg_ids_[ i - 1 ], pnts, 2 );
       }
       else
       {
-        int pnt_id = cagdAddPoint( &cur_pnt );
-
+        pnt_id = cagdAddPoint( &cur_pnt );
         pnt_ids_.push_back( pnt_id );
-        map_pnt_to_crv_ctrl( pnt_id, this, i );
-
-        set_bi_color();
-        int poly_seg_id = cagdAddPolyline( pnts, 2 );
-
-        map_ctrl_seg_to_pnts( poly_seg_id, pnt_ids_[ i - 1 ], pnt_id );
-        poly_seg_ids_.push_back( poly_seg_id );
+        map_pnt_to_crv( pnt_id, this );
       }
+
+      set_bi_color();
+      int poly_seg_id = cagdAddPolyline( pnts, 2 );
+      map_ctrl_seg_to_pnts( poly_seg_id, pnt_ids_[ i - 1 ], pnt_id );
+      poly_seg_ids_.push_back( poly_seg_id );
 
       prev_pnt = cur_pnt;
     }
   }
 
   pnt_ids_.resize( cur_pnts_num );
+}
+
+/******************************************************************************
+* Curve::get_pnt_id_idx
+******************************************************************************/
+int Curve::get_pnt_id_idx( int pnt_id )
+{
+  auto it = std::find( pnt_ids_.begin(), pnt_ids_.end(), pnt_id );
+
+  if( it != pnt_ids_.end() )
+    return std::distance( pnt_ids_.begin(), it );
+  else
+    return K_NOT_USED;
 }
 
 /******************************************************************************
@@ -159,5 +183,4 @@ void Curve::update_weight( int pnt_idx, double val )
     throw std::runtime_error( "wrong ctrl pnt idx" );
 
   ctrl_pnts_[ pnt_idx ].z = val;
-  show_crv();
 }

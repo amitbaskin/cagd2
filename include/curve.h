@@ -47,7 +47,9 @@ public:
   virtual void rmv_ctrl_pnt( int idx );
   virtual void print() const;
 
+  void clean_ctrl_poly();
   void show_ctrl_poly();
+  int get_pnt_id_idx( int pnt_id );
   void add_ctrl_pnt_from_str( std::istringstream &line );
   void update_weight( int pnt_idx, double val );
 
