@@ -261,26 +261,11 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     }
     else if( state & MK_LBUTTON && get_active_pt_id() != K_NOT_USED )
     {
-      int last_pos[2];
       double new_pos[2];
-      if( get_active_pt_is_first_move() )
-      {
-        last_pos[0] = x;
-        last_pos[1] = y;
-        set_active_pt_last_pos( last_pos );
-        set_active_pt_is_first_move( false );
-      }
-
-      calculate_ctrl_pnt_updated_pos( get_active_pt_id(), 
-                                      LOINT( lParam ) - *get_active_pt_last_pos(), 
-                                      HIINT( lParam ) - *( get_active_pt_last_pos() + 1 ),
-                                      new_pos[0], 
-                                      new_pos[1] );
-
-      last_pos[0] = LOINT( lParam );
-      last_pos[1] = HIINT( lParam );
-      set_active_pt_last_pos( last_pos );
       
+      CAGD_POINT p = screen_to_world_coord( LOINT( lParam ), HIINT( lParam ) );
+      new_pos[0] = p.x;
+      new_pos[1] = p.y;
 
       update_ctrl_pnt( get_active_pt_id(), new_pos[0], new_pos[1] );
     }

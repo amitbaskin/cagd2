@@ -166,6 +166,7 @@ extern "C" {
   BOOL cagdToObject( int, int, CAGD_POINT[ 2 ] );
   BOOL cagdToWindow( CAGD_POINT *, int *, int * );
   void cagdGetMoveVec( int dX, int dY, double &x, double &y );
+  CAGD_POINT screen_to_world_coord( int x, int y );
   /************************************************************************
   * General segment functions						*
   ************************************************************************/

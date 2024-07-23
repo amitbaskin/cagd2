@@ -211,27 +211,6 @@ void load_curves( int dummy1, int dummy2, void *p_data )
 }
 
 /******************************************************************************
-* calculate_ctrl_pnt_updated_pos
-******************************************************************************/
-void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
-                                     double &new_x, double &new_y )
-{
-  std::tuple< Curve *, int > crv_ctrl_idx = get_pnt_crv_ctrl( pnt_id );
-
-  auto p_curve = std::get< 0 >( crv_ctrl_idx );
-  auto ctrl_idx = std::get< 1 >( crv_ctrl_idx );
-
-  if( p_curve != nullptr )
-  {
-    double move_vec[ 2 ];
-    cagdGetMoveVec( dx, dy, move_vec[ 0 ], move_vec[ 1 ] );
-
-    new_x = p_curve->ctrl_pnts_[ ctrl_idx ].x + move_vec[ 0 ];
-    new_y = p_curve->ctrl_pnts_[ ctrl_idx ].y + move_vec[ 1 ];
-  }
-}
-
-/******************************************************************************
 * get_seg_crv
 ******************************************************************************/
 Curve *get_seg_crv( int seg_id )

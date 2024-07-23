@@ -24,3 +24,5 @@ void show_rmb_on_ctrl_polyline_menu( int x, int y );
 void show_rmb_on_curve_menu( int x, int y );
 void show_rmb_on_ctrl_pt_menu( int x, int y );
 void show_no_selection_rmb_menu( int x, int y );
+
+void clean_active_rmb_data();

@@ -44,5 +44,3 @@ bool get_active_pt_is_first_move();
 void set_active_pt_is_first_move( bool value );
 
 void update_ctrl_pnt( int pnt_id, double new_x, double new_y );
-void calculate_ctrl_pnt_updated_pos( int pnt_id, int dx, int dy,
-                                     double &new_x, double &new_y );

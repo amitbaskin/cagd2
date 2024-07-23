@@ -20,6 +20,36 @@ static GLint nHits;
 static GLint fuzziness = 4;
 static GLdouble sensitive = 1;
 
+CAGD_POINT screen_to_world_coord( int x, int y )
+{
+  CAGD_POINT p[2];
+  cagdToObject( x, y, p );
+
+  CAGD_POINT p1 = p[0];
+  CAGD_POINT p2 = p[1];
+
+  CAGD_POINT intersection;
+
+  // If both points are on the XY plane
+  if( p1.z == 0 && p2.z == 0 )
+  {
+    // Arbitrarily choose p1 as the intersection point
+    intersection = p1;
+  }
+  else
+  {
+    // Find the parameter t where the line intersects the XY plane (z = 0)
+    double t = -p1.z / ( p2.z - p1.z );
+
+    // Calculate the intersection point
+    intersection.x = p1.x + t * ( p2.x - p1.x );
+    intersection.y = p1.y + t * ( p2.y - p1.y );
+    intersection.z = 0;
+  }
+
+  return intersection;
+}
+
 void cagdGetMoveVec( int dX, int dY, double &x, double &y )
 {
   CAGD_POINT origin, where[ 2 ];
