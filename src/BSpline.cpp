@@ -16,14 +16,13 @@
 ******************************************************************************/
 void BSpline::connectC0_bezier( const Bezier *other )
 {
-  ctrl_pnts_.back() = other->ctrl_pnts_.front();
+  ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = other->ctrl_pnts_.front();
 
   int degree = order_ - 1;
   int knotCount = knots_.size() - 1;
+
   for( int i = 1; i <= degree; ++i )
-  {
     knots_[ knotCount - i ] = knots_[ knotCount - degree - 1 ];
-  }
 }
 
 /******************************************************************************
@@ -38,11 +37,14 @@ void BSpline::connectC1_bezier( const Bezier *other )
     CAGD_POINT startPointOther = other->ctrl_pnts_.front();
     CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = {
-        startPointOther.x - ( secondCtrlPointOther.x - startPointOther.x ),
-        startPointOther.y - ( secondCtrlPointOther.y - startPointOther.y ),
-        startPointOther.z - ( secondCtrlPointOther.z - startPointOther.z )
+    CAGD_POINT new_pnt =
+    {
+      startPointOther.x - ( secondCtrlPointOther.x - startPointOther.x ),
+      startPointOther.y - ( secondCtrlPointOther.y - startPointOther.y ),
+      startPointOther.z - ( secondCtrlPointOther.z - startPointOther.z )
     };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -75,12 +77,14 @@ void BSpline::connectG1_bezier( const Bezier *other )
 
     CAGD_POINT endPointThis = ctrl_pnts_.back();
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    CAGD_POINT new_pnt =
     {
       endPointThis.x - dxOther,
       endPointThis.y - dyOther,
       endPointThis.z - dzOther
     };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -95,7 +99,8 @@ void BSpline::connectC0_bspline( const BSpline *other )
   double tStartOther = other->knots_.front();
   CAGD_POINT startPointOther = other->evaluate( tStartOther );
 
-  ctrl_pnts_.back() = startPointOther;
+  rmv_ctrl_pnt( ctrl_pnts_.size() - 1 );
+  add_ctrl_pnt( startPointOther, ctrl_pnts_.size() - 1 );
 
   int degree = order_ - 1;
   int knotCount = knots_.size() - 1;
@@ -120,12 +125,14 @@ void BSpline::connectC1_bspline( const BSpline *other )
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
     double dzOther = secondCtrlPointOther.z - startPointOther.z;
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    CAGD_POINT new_pnt =
     {
       startPointOther.x - dxOther,
       startPointOther.y - dyOther,
       startPointOther.z - dzOther
     };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -158,12 +165,14 @@ void BSpline::connectG1_bspline( const BSpline *other )
 
     CAGD_POINT endPointThis = ctrl_pnts_.back();
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] =
+    CAGD_POINT new_pnt =
     {
       endPointThis.x - dxOther,
       endPointThis.y - dyOther,
       endPointThis.z - dzOther
     };
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
   }
 }
 
@@ -180,15 +189,13 @@ void BSpline::rmv_ctrl_pnt( int idx )
 
     if( is_open_ )
       makeOpenKnotVector();
-
-    show_crv( idx, CtrlOp::RMV );
   }
 }
 
 /******************************************************************************
 * Bezier::add_ctrl_pnt
 ******************************************************************************/
-void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
+void BSpline::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
 {
   Curve::add_ctrl_pnt( ctrl_pnt, idx );
 

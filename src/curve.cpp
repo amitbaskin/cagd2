@@ -49,7 +49,7 @@ void Curve::rmv_ctrl_pnt( int idx )
 /******************************************************************************
 * Curve::add_ctrl_pnt
 ******************************************************************************/
-void Curve::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
+void Curve::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
 {
   /*int pnt_id = cagdAddPoint( &ctrl_pnt );
   map_pnt_to_crv_ctrl( pnt_id, this, idx );
