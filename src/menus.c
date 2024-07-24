@@ -16,7 +16,7 @@ ConnType conn = ConnType::NONE;
 Curve *active_rmb_curve = nullptr;
 int active_pnt_id = K_NOT_USED;
 int active_rmb_ctrl_polyline = K_NOT_USED;
-int cur_rmb_screen_pick[2] = { K_NOT_USED, K_NOT_USED };
+int cur_rmb_screen_pick[ 2 ] = { K_NOT_USED, K_NOT_USED };
 int hilited_pt_id = K_NOT_USED;
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
@@ -193,7 +193,11 @@ void handle_rmb_remove_curve()
 void handle_rmb_insert_ctrl_pt()
 {
   Curve *p_curve = active_rmb_curve;
-  auto ctrl_idx = p_curve->get_pnt_id_idx( active_pnt_id );
+
+  std::tuple< int, int > end_pnts =
+    get_ctrl_seg_pnts( active_rmb_ctrl_polyline );
+
+  auto ctrl_idx = p_curve->get_pnt_id_idx( std::get< 1 >( end_pnts ) );
 
   if( p_curve != nullptr &&
       ctrl_idx != K_NOT_USED &&
@@ -202,18 +206,18 @@ void handle_rmb_insert_ctrl_pt()
     Bezier *bz_crv = dynamic_cast< Bezier * >( p_curve );
     BSpline *bs_crv = dynamic_cast< BSpline * >( p_curve );
 
-    CAGD_POINT p = screen_to_world_coord( cur_rmb_screen_pick[0],
-                                          cur_rmb_screen_pick[1] );
+    CAGD_POINT pick_pnt = screen_to_world_coord( cur_rmb_screen_pick[ 0 ],
+                                                 cur_rmb_screen_pick[ 1 ] );
 
     if( bz_crv != nullptr )
     {
-      bz_crv->add_ctrl_pnt( p, ctrl_idx );
+      bz_crv->add_ctrl_pnt( pick_pnt, ctrl_idx );
       bz_crv->show_ctrl_poly();
       bz_crv->show_crv();
     }
     else if( bs_crv != nullptr )
     {
-      bs_crv->add_ctrl_pnt( p, ctrl_idx );
+      bs_crv->add_ctrl_pnt( pick_pnt, ctrl_idx );
       bs_crv->show_ctrl_poly();
       bs_crv->show_crv();
     }
