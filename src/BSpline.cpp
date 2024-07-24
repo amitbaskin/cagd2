@@ -139,7 +139,7 @@ bool BSpline::parseKnotsDescription( const std::string &description )
 void BSpline::connectC0_bezier( const Bezier *other )
 {
   ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = other->ctrl_pnts_.front();
-  makeOpenKnotVector();
+  interpolateEnd();
 }
 
 /******************************************************************************
@@ -226,17 +226,11 @@ double BSpline::get_dom_end() const
 ******************************************************************************/
 void BSpline::connectC0_bspline( const BSpline *other )
 {
-  order_ = other->order_;
-
-  ctrl_pnts_.back() = other->ctrl_pnts_.front();
-
-  for( size_t i = 1; i < other->ctrl_pnts_.size(); ++i )
-    add_ctrl_pnt( other->ctrl_pnts_[ i ], ctrl_pnts_.size() );
-
-  double lastKnotValue = knots_.back();
-
-  for( size_t i = other->order_; i < other->knots_.size(); ++i )
-    addKnot( other->knots_[ i ] + lastKnotValue );
+  CAGD_POINT other_end_pnt = other->evaluate( other->get_dom_start() );
+  int my_last_idx = ctrl_pnts_.size() - 1;
+  ctrl_pnts_[ my_last_idx ].x = other_end_pnt.x;
+  ctrl_pnts_[ my_last_idx ].y = other_end_pnt.y;
+  interpolateEnd();
 }
 
 /******************************************************************************
@@ -244,6 +238,8 @@ void BSpline::connectC0_bspline( const BSpline *other )
 ******************************************************************************/
 void BSpline::adjustForContinuity( const BSpline *other, bool isG1 )
 {
+  connectC0_bspline( other );
+
   order_ = other->order_;
 
   CAGD_POINT lastCtrlPoint = other->ctrl_pnts_.front();
@@ -253,6 +249,7 @@ void BSpline::adjustForContinuity( const BSpline *other, bool isG1 )
   {
     CAGD_POINT secondLastCtrlPoint = ctrl_pnts_[ ctrl_pnts_.size() - 2 ];
     CAGD_POINT firstCtrlPointOther = other->ctrl_pnts_[ 1 ];
+
     if( isG1 )
     {
       double dx1 = secondLastCtrlPoint.x - lastCtrlPoint.x;
@@ -271,14 +268,6 @@ void BSpline::adjustForContinuity( const BSpline *other, bool isG1 )
 
     ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = secondLastCtrlPoint;
   }
-
-  for( size_t i = 1; i < other->ctrl_pnts_.size(); ++i )
-    add_ctrl_pnt( other->ctrl_pnts_[ i ], ctrl_pnts_.size() );
-
-  double lastKnotValue = knots_.back();
-
-  for( size_t i = other->order_; i < other->knots_.size(); ++i )
-    addKnot( other->knots_[ i ] + lastKnotValue );
 }
 
 /******************************************************************************
@@ -327,8 +316,6 @@ void BSpline::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
 
     if( is_open_ )
       makeOpenKnotVector();
-
-    show_crv( idx, CtrlOp::ADD );
   }
 }
 
@@ -380,6 +367,20 @@ void BSpline::makeUniformKnotVector()
 
     knots_.push_back( cur_knot );
   }
+
+  update_u_vec();
+}
+
+/******************************************************************************
+* Bezier::interpolateEnd
+******************************************************************************/
+void BSpline::interpolateEnd()
+{
+  int numControlPoints = ctrl_pnts_.size();
+  double maxKnotValue = knots_.back();
+
+  for( int i = numControlPoints; i < numControlPoints + order_; ++i )
+    knots_[ i ] = maxKnotValue;
 
   update_u_vec();
 }
@@ -734,20 +735,24 @@ void BSpline::addKnot( double new_knot )
   int p = order_ - 1;
 
   for( int i = 0; i <= insert_pos - p - 1; ++i )
+  {
     new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+  }
 
-  for( int i = max( 0, insert_pos - p ); i <= insert_pos - 1; ++i )
+  for( int i = max( 1, insert_pos - p ); i <= min( insert_pos - 1, static_cast< int >( ctrl_pnts_.size() - 1 ) ); ++i )
   {
     double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + p + 1 ] - knots_[ i ] );
     CAGD_POINT new_point;
     new_point.x = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].x + alpha * ctrl_pnts_[ i ].x;
     new_point.y = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].y + alpha * ctrl_pnts_[ i ].y;
-    new_point.z = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].z + alpha * ctrl_pnts_[ i ].z;
+    new_point.z = ( 1.0 - alpha ) * ctrl_pnts_[ i - 1 ].z + alpha * ctrl_pnts_[ i ].z;\
     new_ctrl_pnts.push_back( new_point );
   }
 
   for( size_t i = insert_pos; i < ctrl_pnts_.size(); ++i )
+  {
     new_ctrl_pnts.push_back( ctrl_pnts_[ i ] );
+  }
 
   ctrl_pnts_ = new_ctrl_pnts;
 }

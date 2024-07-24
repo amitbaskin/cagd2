@@ -43,6 +43,7 @@ public:
   void update_u_vec();
 
   void makeUniformKnotVector();
+  void interpolateEnd();
   void makeOpenKnotVector();
 
   int findKnotSpan( double t ) const;
@@ -71,7 +72,7 @@ public:
   CAGD_POINT interpolate( const CAGD_POINT &P1, const CAGD_POINT &P2, double t ) const;
   double distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const;
 
-  const char * getKnotsDescription() const;
+  const char *getKnotsDescription() const;
   bool parseKnotsDescription( const std::string &description );
 
   double_vec knots_;
