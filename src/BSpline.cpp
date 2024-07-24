@@ -243,7 +243,6 @@ void BSpline::adjustForContinuity( const BSpline *other, bool isG1 )
   order_ = other->order_;
 
   CAGD_POINT lastCtrlPoint = other->ctrl_pnts_.front();
-  ctrl_pnts_.back() = lastCtrlPoint;
 
   if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
