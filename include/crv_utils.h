@@ -59,9 +59,7 @@ void set_active_pt_last_pos( int pos[2] );
 bool get_active_pt_is_first_move();
 void set_active_pt_is_first_move( bool value );
 
-void update_ctrl_pnt( int pnt_id, double new_x, double new_y );
-
-
+CurveType get_crv_type( Curve *p_crv );
 CurveType get_crv( int seg_id, Curve **rp_crv );
 
 void update_weight_callback( int seg_id, int pnt_idx, double val );

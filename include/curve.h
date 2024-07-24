@@ -29,8 +29,10 @@ public:
   Curve();
   Curve( int order_, point_vec ctrl_pnts_ );
 
-  virtual void show_crv( int chg_ctrl_idx = K_NOT_USED,
+  virtual bool show_crv( int chg_ctrl_idx = K_NOT_USED,
                          CtrlOp op = CtrlOp::NONE ) const = 0;
+
+  virtual void show_ctrl_poly();
 
   virtual bool is_miss_ctrl_pnts() const = 0;
   virtual CAGD_POINT evaluate( double param ) const = 0;
@@ -47,9 +49,7 @@ public:
   virtual void rmv_ctrl_pnt( int idx );
   virtual void print() const;
 
-  void clean_ctrl_poly();
-  void show_ctrl_poly();
-  int get_pnt_id_idx( int pnt_id );
+  void clean_ctrl_poly();  int get_pnt_id_idx( int pnt_id );
   void add_ctrl_pnt_from_str( std::istringstream &line );
   void update_weight( int pnt_idx, double val );
   void change_color( BYTE red, BYTE green, BYTE blue );

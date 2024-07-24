@@ -17,7 +17,7 @@ public:
 
   virtual CAGD_POINT evaluate( GLdouble t ) const;
 
-  virtual void show_crv( int chg_ctrl_idx = K_NOT_USED,
+  virtual bool show_crv( int chg_ctrl_idx = K_NOT_USED,
                          CtrlOp op = CtrlOp::NONE ) const;
 
   virtual void print() const;
@@ -29,10 +29,12 @@ public:
     return ctrl_pnts_.size() < ( size_t )order_;
   }
 
+  void connectSmoothBezier( const Bezier *other, bool isG1 );
   virtual void connectC0_bezier( const Bezier *other );
   virtual void connectC1_bezier( const Bezier *other );
   virtual void connectG1_bezier( const Bezier *other );
 
+  void connectSmoothBSpline( const BSpline *bspline, bool isG1 );
   virtual void connectC0_bspline( const BSpline *bspline );
   virtual void connectC1_bspline( const BSpline *bspline );
   virtual void connectG1_bspline( const BSpline *bspline );

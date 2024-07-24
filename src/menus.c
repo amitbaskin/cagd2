@@ -10,6 +10,9 @@
 char buffer1[ BUFSIZ ];
 char buffer2[ BUFSIZ ];
 char buffer3[ BUFSIZ ];
+
+char knots_buf[ BUFSIZ ];
+
 UINT myText2;
 
 ConnType conn = ConnType::NONE;
@@ -51,6 +54,46 @@ void init_menus()
   cagdRegisterCallback( CAGD_LBUTTONUP, lmb_up_cb, NULL );
   cagdRegisterCallback( CAGD_RBUTTONUP, rmb_up_cb, NULL );
   cagdRegisterCallback( CAGD_MOUSEMOVE, mouse_move_cb, NULL );
+}
+
+/******************************************************************************
+* KnotsDialogProc KNOTS DIALOG
+******************************************************************************/
+LRESULT CALLBACK KnotsDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
+{
+  BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+
+  switch( message )
+  {
+  case WM_INITDIALOG:
+  {
+    const char *str = p_bspline->getKnotsDescription();
+    SetDlgItemTextA( hDialog, IDC_KNOTS, str );
+    free( ( void * )str );
+    break;
+  }
+
+  case WM_COMMAND:
+    switch( LOWORD( wParam ) )
+    {
+    case IDOK:
+      GetDlgItemText( hDialog, IDC_KNOTS, knots_buf, sizeof( knots_buf ) );
+      EndDialog( hDialog, TRUE );
+      return TRUE;
+    case IDCANCEL:
+      EndDialog( hDialog, FALSE );
+      return TRUE;
+    default:
+      return FALSE;
+    }
+    break;
+
+  default:
+    return FALSE;
+    break;
+  }
+
+  return FALSE;
 }
 
 /******************************************************************************
@@ -170,6 +213,9 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
     break;
   case CAGD_CONNECT_G1:
     handle_rmb_connect_g1();
+    break;
+  case CAGD_MOD_KNOTS:
+    handle_mod_knots();
     break;
   }
 }
@@ -318,6 +364,30 @@ void handle_curve_color_menu()
 }
 
 /******************************************************************************
+* handle_mod_knots
+******************************************************************************/
+void handle_mod_knots()
+{
+  BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+
+  if( DialogBox( cagdGetModule(),
+                 MAKEINTRESOURCE( IDD_KNOTS ),
+                 cagdGetWindow(),
+                 ( DLGPROC )KnotsDialogProc ) )
+  {
+    p_bspline->parseKnotsDescription( knots_buf );
+
+    if( p_bspline->knots_.size() != p_bspline->ctrl_pnts_.size() + p_bspline->order_ )
+    {
+      print_error( "Please make sure the number of knots is\n"
+                   "the number of control points plus the order." );
+    }
+    else
+      p_bspline->show_crv();
+  }
+}
+
+/******************************************************************************
 * handle_settings_menu
 ******************************************************************************/
 void handle_settings_menu()
@@ -382,7 +452,15 @@ void lmb_up_cb( int x, int y, PVOID userData )
     if( sec_seg_id != 0 )
     {
       active_rmb_curve->change_color( 255, 0, 0 );
-      connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn  );
+
+      if( get_crv_type( active_rmb_curve ) != CurveType::BSPLINE ||
+          active_rmb_curve->seg_ids_[ 0 ] != sec_seg_id )
+      {
+        connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn );
+      }
+      else
+        print_error( "Please avoid trying to connect a bspline to itself." );
+
       conn = ConnType::NONE;
     }
   }
@@ -490,11 +568,16 @@ void show_rmb_on_curve_menu( int x, int y )
   pt.y = y;
   ClientToScreen( hWnd, &pt );
 
+  CurveType crv_type = get_crv_type( active_rmb_curve );
+
   HMENU rmb_menu = CreatePopupMenu();
   AppendMenu( rmb_menu, MF_STRING, CAGD_REMOVE_CURVE, TEXT( "Remove Curve" ) );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C0, TEXT( "Connect C0" ) );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C1, TEXT( "Connect C1" ) );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_G1, TEXT( "Connect G1" ) );
+
+  if( crv_type == CurveType::BSPLINE )
+    AppendMenu( rmb_menu, MF_STRING, CAGD_MOD_KNOTS, TEXT( "Modify Knots" ) );
 
   TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
   DestroyMenu( rmb_menu );

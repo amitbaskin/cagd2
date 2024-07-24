@@ -191,6 +191,24 @@ void update_weight_callback( int seg_id, int pnt_idx, double val )
 }
 
 /******************************************************************************
+* get_crv_type
+******************************************************************************/
+CurveType get_crv_type( Curve *p_crv )
+{
+  BSpline *p_bspline = dynamic_cast< BSpline * >( p_crv );
+
+  if( p_bspline != nullptr )
+    return CurveType::BSPLINE;
+
+  Bezier *p_bezier = dynamic_cast< Bezier * >( p_crv );
+
+  if( p_bezier != nullptr )
+    return CurveType::BEZIER;
+  else
+    throw std::runtime_error( "bad map for seg id to crv" );
+}
+
+/******************************************************************************
 * get_crv
 ******************************************************************************/
 CurveType get_crv( int seg_id, Curve **rp_crv )

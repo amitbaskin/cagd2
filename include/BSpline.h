@@ -4,6 +4,7 @@
 #include "cagd.h"
 #include "Curve.h"
 
+
 class Bezier;
 
 class BSpline : public Curve
@@ -25,7 +26,8 @@ public:
 
   virtual CAGD_POINT evaluate( double t ) const;
 
-  virtual void show_crv( int chg_ctrl_idx = K_NOT_USED,
+  virtual void show_ctrl_poly();
+  virtual bool show_crv( int chg_ctrl_idx = K_NOT_USED,
                          CtrlOp op = CtrlOp::NONE ) const;
 
   virtual void print() const;
@@ -49,10 +51,14 @@ public:
 
   std::vector< int > findAffectedSegments( int controlPointIndex ) const;
 
+  double get_dom_start() const;
+  double get_dom_end() const;
+
   virtual void connectC0_bezier( const Bezier *other );
   virtual void connectC1_bezier( const Bezier *other );
   virtual void connectG1_bezier( const Bezier *other );
 
+  void adjustForContinuity( const BSpline *other, bool isG1 );
   virtual void connectC0_bspline( const BSpline *bspline );
   virtual void connectC1_bspline( const BSpline *bspline );
   virtual void connectG1_bspline( const BSpline *bspline );
@@ -64,6 +70,9 @@ public:
   void updateUniqueKnotsAndMultiplicity();
   CAGD_POINT interpolate( const CAGD_POINT &P1, const CAGD_POINT &P2, double t ) const;
   double distance( const CAGD_POINT &P1, const CAGD_POINT &P2 ) const;
+
+  const char * getKnotsDescription() const;
+  bool parseKnotsDescription( const std::string &description );
 
   double_vec knots_;
   double_vec u_vec_;
