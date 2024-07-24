@@ -5,6 +5,7 @@
 #include "cagd.h"
 #include "internal.h"
 #include "crv_utils.h"
+#include "menus.h"
 
 #define LOINT(x) ((int)(short)LOWORD(x))
 #define HIINT(x) ((int)(short)HIWORD(x))
@@ -26,6 +27,9 @@ static PSTR defaultHelpText =
 
 static CALLBACK_ENTRY list[ CAGD_LAST ] = { { NULL, NULL } };
 static WORD state = 0;
+
+Curve *active_lmb_curve = nullptr;
+CAGD_POINT lmb_pnt = { 0 };
 
 static char fileName[ 0xffff ];
 static OPENFILENAME openFileName = {
@@ -157,6 +161,20 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
   case WM_LBUTTONDOWN:
 
+    if( active_lmb_curve == nullptr )
+      lmb_pnt = screen_to_world_coord( LOINT( lParam ), HIINT( lParam ) );
+
+    UINT id;
+
+    for( cagdPick( x, y ); id = cagdPickNext();)
+    {
+      if( cagdGetSegmentType( id ) == CAGD_SEGMENT_POLYLINE )
+        break;
+    }
+
+    if( id )
+      active_lmb_curve = get_seg_crv( id );
+
     if( !( state & ( MK_CONTROL | MK_SHIFT ) ) )
     {
       state |= MK_LBUTTON;
@@ -175,6 +193,7 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     return 0;
 
   case WM_LBUTTONUP:
+    active_lmb_curve = nullptr;
 
     if( !( state & MK_LBUTTON ) )
       return 0;
@@ -267,10 +286,37 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
       new_pos[0] = p.x;
       new_pos[1] = p.y;
 
-      update_ctrl_pnt_callback( get_active_pt_id(), new_pos[0], new_pos[1] );
+      int pnt_id = get_active_pt_id();
+      update_ctrl_pnt_callback( pnt_id, new_pos[0], new_pos[1] );
+      Curve *p_crv = get_pnt_crv( pnt_id );
+      p_crv->show_ctrl_poly();
+      p_crv->show_crv();
+      cagdRedraw();
     }
     else
-      callback( CAGD_MOUSEMOVE, LOINT( lParam ), HIINT( lParam ) );
+    {
+      if( active_lmb_curve != nullptr )
+      {
+        double vec_mv[ 2 ];
+        CAGD_POINT cur_pnt = screen_to_world_coord( LOINT( lParam ), HIINT( lParam ) );
+        vec_mv[ 0 ] = cur_pnt.x - lmb_pnt.x;
+        vec_mv[ 1 ] = cur_pnt.y - lmb_pnt.y;
+        lmb_pnt = cur_pnt;
+
+        for( size_t i = 0; i < active_lmb_curve->ctrl_pnts_.size(); ++i )
+        {
+          active_lmb_curve->ctrl_pnts_[ i ].x += vec_mv[ 0 ];
+          active_lmb_curve->ctrl_pnts_[ i ].y += vec_mv[ 1 ];
+        }
+
+        active_lmb_curve->show_ctrl_poly();
+        active_lmb_curve->show_crv();
+        cagdRedraw();
+      }
+      else
+        callback( CAGD_MOUSEMOVE, LOINT( lParam ), HIINT( lParam ) );
+    }
+
     return 0;
 
   case WM_TIMER:

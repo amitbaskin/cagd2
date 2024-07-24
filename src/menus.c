@@ -4,16 +4,15 @@
 #include "resource.h"
 #include "color.h"
 #include "options.h"
+#include <vectors.h>
+#include "crv_utils.h"
 
 char buffer1[ BUFSIZ ];
 char buffer2[ BUFSIZ ];
 char buffer3[ BUFSIZ ];
 UINT myText2;
 
-bool is_c0 = false;
-bool is_c1 = false;
-bool is_g1 = false;
-
+ConnType conn = ConnType::NONE;
 Curve *active_rmb_curve = nullptr;
 int active_pnt_id = K_NOT_USED;
 int active_rmb_ctrl_polyline = K_NOT_USED;
@@ -232,7 +231,7 @@ void handle_rmb_insert_ctrl_pt()
 ******************************************************************************/
 void handle_rmb_connect_c0()
 {
-  is_c0 = true;
+  conn = ConnType::C0;
   active_rmb_curve->change_color( 255, 165, 0 );
 }
 
@@ -241,7 +240,7 @@ void handle_rmb_connect_c0()
 ******************************************************************************/
 void handle_rmb_connect_c1()
 {
-  is_c1 = true;
+  conn = ConnType::C1;
   active_rmb_curve->change_color( 255, 165, 0 );
 }
 
@@ -250,7 +249,7 @@ void handle_rmb_connect_c1()
 ******************************************************************************/
 void handle_rmb_connect_g1()
 {
-  is_g1 = true;
+  conn = ConnType::G1;
   active_rmb_curve->change_color( 255, 165, 0 );
 }
 
@@ -363,8 +362,6 @@ void lmb_down_cb( int x, int y, PVOID userData )
 
   if( id )
     set_active_pt_id( id );
-
-  cagdRedraw();
 }
 
 /******************************************************************************
@@ -374,21 +371,15 @@ void lmb_up_cb( int x, int y, PVOID userData )
 {
   set_active_pt_id( K_NOT_USED );
 
-  int sec_seg_id = 0;
-
-  if( is_c0 || is_c1 || is_g1 )
+  if( conn != ConnType::NONE )
   {
-    sec_seg_id = get_crv_by_pick( x, y );
+    int sec_seg_id = get_crv_by_pick( x, y );
 
     if( sec_seg_id != 0 )
     {
       active_rmb_curve->change_color( 255, 0, 0 );
-
-      ConnType conn = is_c0 ? ConnType::C0 : is_c1 ? ConnType::C1 : ConnType::G1;
       connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn  );
-      is_c0 = false;
-      is_c1 = false;
-      is_g1 = false;
+      conn = ConnType::NONE;
     }
   }
 }

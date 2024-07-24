@@ -412,15 +412,8 @@ void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y )
       throw std::runtime_error( "bad pnt id" );
     }
 
-    double old_pos_x = p_crv->ctrl_pnts_[ pnt_idx ].x;
-    double old_pos_y = p_crv->ctrl_pnts_[ pnt_idx ].y;
-
     p_crv->ctrl_pnts_[ pnt_idx ].x = new_x;
     p_crv->ctrl_pnts_[ pnt_idx ].y = new_y;
-
-    p_crv->show_ctrl_poly();
-    p_crv->show_crv( pnt_idx );
-    cagdRedraw();
   }
 }
 
