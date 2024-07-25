@@ -45,6 +45,7 @@ void Curve::rmv_ctrl_pnt( int idx )
 ******************************************************************************/
 void Curve::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
 {
+  set_norm_color();
   int pnt_id = cagdAddPoint( &ctrl_pnt );
 
   map_pnt_to_crv( pnt_id, this );
@@ -108,6 +109,7 @@ void Curve::show_ctrl_poly()
     }
     else
     {
+      set_norm_color();
       int pnt_id = cagdAddPoint( &prev_pnt );
       pnt_ids_.push_back( pnt_id );
       map_pnt_to_crv( pnt_id, this );
@@ -125,7 +127,6 @@ void Curve::show_ctrl_poly()
       {
         pnt_id = pnt_ids_[ i ];
         cagdReusePoint( pnt_ids_[ i ], &cur_pnt );
-        set_bi_color();
       }
       else
       {
