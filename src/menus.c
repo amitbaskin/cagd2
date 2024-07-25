@@ -205,6 +205,14 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
     handle_rmb_insert_ctrl_pt();
     break;
 
+  case CAGD_PREPEND_CTRL_PT:
+    handle_rmb_prepend_ctrl_pt();
+    break;
+
+  case CAGD_APPEND_CTRL_PT:
+    handle_rmb_append_ctrl_pt();
+    break;
+
   case CAGD_CONNECT_C0:
     handle_rmb_connect_c0();
     break;
@@ -277,6 +285,91 @@ void handle_rmb_insert_ctrl_pt()
 }
 
 /******************************************************************************
+* handle_rmb_prepend_ctrl_pt
+******************************************************************************/
+void handle_rmb_prepend_ctrl_pt()
+{
+  Curve *p_curve = active_rmb_curve;
+
+  if( p_curve != nullptr )
+  {
+    Bezier *bz_crv = dynamic_cast< Bezier * >( p_curve );
+    BSpline *bs_crv = dynamic_cast< BSpline * >( p_curve );
+
+    CAGD_POINT new_pt_loc;
+    CAGD_POINT location_vec;
+    CAGD_POINT p0 = p_curve->ctrl_pnts_[0];
+    CAGD_POINT p1 = p_curve->ctrl_pnts_[1];
+    diff_vecs( &p0, &p1, &location_vec );
+
+    add_vecs( &p0, &location_vec, &new_pt_loc );
+
+    if( bz_crv != nullptr )
+    {
+      bz_crv->add_ctrl_pnt( new_pt_loc, 0 );
+      bz_crv->show_ctrl_poly();
+      bz_crv->show_crv();
+    }
+    else if( bs_crv != nullptr )
+    {
+      bs_crv->add_ctrl_pnt( new_pt_loc, 0 ); // not working good
+      bs_crv->show_ctrl_poly();
+      bs_crv->show_crv();
+    }
+
+    cagdRedraw();
+  }
+
+  clean_active_rmb_data();
+}
+
+/******************************************************************************
+* handle_rmb_append_ctrl_pt
+******************************************************************************/
+void handle_rmb_append_ctrl_pt()
+{
+  Curve *p_curve = active_rmb_curve;
+
+  if( p_curve != nullptr )
+  {
+    Bezier *bz_crv = dynamic_cast< Bezier * >( p_curve );
+    BSpline *bs_crv = dynamic_cast< BSpline * >( p_curve );
+
+    int num_ctrl_pts = p_curve->ctrl_pnts_.size();
+
+    if( num_ctrl_pts > 1 )
+    {
+      CAGD_POINT new_pt_loc;
+      CAGD_POINT location_vec;
+      CAGD_POINT p0 = p_curve->ctrl_pnts_[num_ctrl_pts - 1];
+      CAGD_POINT p1 = p_curve->ctrl_pnts_[num_ctrl_pts - 2];
+      diff_vecs( &p0, &p1, &location_vec );
+
+      add_vecs( &p0, &location_vec, &new_pt_loc );
+
+      if( bz_crv != nullptr )
+      {
+        bz_crv->add_ctrl_pnt( new_pt_loc, num_ctrl_pts );
+        bz_crv->show_ctrl_poly();
+        bz_crv->show_crv();
+      }
+      else if( bs_crv != nullptr )
+      {
+        bs_crv->add_ctrl_pnt( new_pt_loc, num_ctrl_pts ); // not working good
+        bs_crv->show_ctrl_poly();
+        bs_crv->show_crv();
+      }
+
+      cagdRedraw();
+    }
+    else
+      print_error( "Can't append control point with less than 2 existing" );
+  }
+
+  clean_active_rmb_data();
+}
+
+/******************************************************************************
 * handle_rmb_connect_c0
 ******************************************************************************/
 void handle_rmb_connect_c0()
@@ -330,6 +423,8 @@ void handle_rmb_remove_ctrl_pt()
     }
     else
       print_error( "Error removing control point" );
+
+    hilited_pt_id = K_NOT_USED;
 
     cagdRedraw();
   }
@@ -552,6 +647,8 @@ void show_rmb_on_ctrl_polyline_menu( int x, int y )
 
   HMENU rmb_menu = CreatePopupMenu();
   AppendMenu( rmb_menu, MF_STRING, CAGD_INSERT_CTRL_PT, TEXT( "Insert Control Point" ) );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_PREPEND_CTRL_PT, TEXT( "Prepend Control Point" ) );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_APPEND_CTRL_PT, TEXT( "Append Control Point" ) );
 
   TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
   DestroyMenu( rmb_menu );
@@ -572,12 +669,16 @@ void show_rmb_on_curve_menu( int x, int y )
 
   HMENU rmb_menu = CreatePopupMenu();
   AppendMenu( rmb_menu, MF_STRING, CAGD_REMOVE_CURVE, TEXT( "Remove Curve" ) );
+  AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C0, TEXT( "Connect C0" ) );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C1, TEXT( "Connect C1" ) );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_G1, TEXT( "Connect G1" ) );
 
   if( crv_type == CurveType::BSPLINE )
+  {
+    AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
     AppendMenu( rmb_menu, MF_STRING, CAGD_MOD_KNOTS, TEXT( "Modify Knots" ) );
+  }
 
   TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
   DestroyMenu( rmb_menu );
@@ -629,6 +730,7 @@ void clean_active_rmb_data()
   active_rmb_curve = nullptr;
   active_rmb_ctrl_polyline = K_NOT_USED;
   cur_rmb_screen_pick[0] = K_NOT_USED;
+  hilited_pt_id = K_NOT_USED;
 }
 
 /******************************************************************************

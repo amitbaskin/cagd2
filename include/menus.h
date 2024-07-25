@@ -24,6 +24,8 @@ void handle_curve_color_menu();
 void handle_rmb_remove_curve();
 void handle_rmb_remove_ctrl_pt();
 void handle_rmb_insert_ctrl_pt();
+void handle_rmb_prepend_ctrl_pt();
+void handle_rmb_append_ctrl_pt();
 void handle_rmb_connect_c0();
 void handle_rmb_connect_c1();
 void handle_rmb_connect_g1();
