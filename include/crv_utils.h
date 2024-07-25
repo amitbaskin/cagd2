@@ -6,6 +6,8 @@
 #define K_NOT_USED -1
 
 class Curve;
+class Bezier;
+class BSpline;
 
 typedef struct
 {
@@ -33,6 +35,8 @@ enum class ConnType
 
 void load_curves( int dummy1, int dummy2, void *p_data );
 
+void register_crv( Curve *p_crv );
+void free_crv( Curve *p_crv );
 void clean_all_curves();
 
 void print_error( const std::string &message );
@@ -43,6 +47,7 @@ void map_seg_to_crv( int seg_id, Curve *p_curve );
 void map_pnt_to_crv( int pnt_id, Curve *p_curve );
 void map_ctrl_seg_to_pnts( int seg_id, int pnt1, int pnt2 );
 
+void erase_seg_to_crv( int seg_id );
 void erase_pnt_to_crv( int pnt_id );
 void erase_ctrl_seg_to_pnts( int pnt_id );
 
@@ -71,3 +76,4 @@ void rmv_knot_callback( int seg_id, int knot_idx );
 
 void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y );
 void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType type );
+BSpline *createBSplineFromBezierCurves( Bezier *bezier1, Bezier *bezier2 );

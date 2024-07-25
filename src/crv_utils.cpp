@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -142,6 +142,14 @@ void erase_pnt_to_crv( int pnt_id )
 void erase_ctrl_seg_to_pnts( int seg_id )
 {
   ctrl_seg_to_pnts.erase( seg_id );
+}
+
+/******************************************************************************
+* erase_seg_to_crv
+******************************************************************************/
+void erase_seg_to_crv( int seg_id )
+{
+  seg_to_crv.erase( seg_id );
 }
 
 /******************************************************************************
@@ -292,11 +300,41 @@ void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
     p_crv_1->show_ctrl_poly();
     p_crv_1->show_crv();
     cagdRedraw();
+
+    if( get_crv_type( p_crv_1 ) == CurveType::BEZIER )
+      createBSplineFromBezierCurves( ( Bezier * )p_crv_1, ( Bezier * )p_crv_2 );
   }
   catch( const std::runtime_error &err )
   {
     throw err;
   }
+}
+
+/******************************************************************************
+* createBSplineFromBeziers
+******************************************************************************/
+BSpline *createBSplineFromBezierCurves( Bezier *bezier1, Bezier *bezier2 )
+{
+  point_vec combined_ctrl_pnts;
+  combined_ctrl_pnts.insert( combined_ctrl_pnts.end(), bezier1->ctrl_pnts_.begin(), bezier1->ctrl_pnts_.end() - 1 );
+  combined_ctrl_pnts.insert( combined_ctrl_pnts.end(), bezier2->ctrl_pnts_.begin(), bezier2->ctrl_pnts_.end() );
+
+  int order = bezier1->order_;
+
+  std::vector<double> knots;
+  int n = combined_ctrl_pnts.size();
+
+  for( int i = 0; i < order; ++i ) knots.push_back( 0.0 );
+  for( int i = 1; i < n - order + 1; ++i ) knots.push_back( static_cast< double >( i ) / ( n - order + 1 ) );
+  for( int i = 0; i < order; ++i ) knots.push_back( 1.0 );
+
+  free_crv( bezier1 );
+  free_crv( bezier2 );
+
+  auto new_bspline = new BSpline( order, combined_ctrl_pnts, knots );
+  register_crv( new_bspline );
+
+  return new_bspline;
 }
 
 /******************************************************************************
@@ -445,15 +483,7 @@ void load_curves( int dummy1, int dummy2, void *p_data )
   size_t first_new_idx = parse_file( file_str );
 
   if( first_new_idx < cur_curves.size() )
-  {
-    for( size_t i = first_new_idx; i < cur_curves.size(); ++i )
-    {
-      cur_curves[ i ]->show_ctrl_poly();
-      cur_curves[ i ]->show_crv();
-    }
-
     cagdRedraw();
-  }
 }
 
 /******************************************************************************
@@ -533,12 +563,51 @@ void skip_blank_and_comment_lines( std::ifstream &file )
 }
 
 /******************************************************************************
+* register_crv
+******************************************************************************/
+void register_crv( Curve *p_crv )
+{
+  p_crv->show_crv();
+  p_crv->show_ctrl_poly();
+  cur_curves.push_back( p_crv );
+}
+
+/******************************************************************************
+* free_crv
+******************************************************************************/
+void free_crv( Curve *p_crv )
+{
+  erase_seg_to_crv( p_crv->seg_ids_[ 0 ] );
+  cagdFreeSegment( p_crv->seg_ids_[ 0 ] );
+
+  for( int i = 0; i < p_crv->poly_seg_ids_.size(); ++i )
+  {
+    erase_seg_to_crv( p_crv->poly_seg_ids_[ i ] );
+    cagdFreeSegment( p_crv->poly_seg_ids_[ i ] );
+  }
+
+  for( int i = 0; i < p_crv->pnt_ids_.size(); ++i )
+  {
+    erase_pnt_to_crv( p_crv->pnt_ids_[ i ] );
+    erase_ctrl_seg_to_pnts( p_crv->pnt_ids_[ i ] );
+    cagdFreeSegment( p_crv->pnt_ids_[ i ] );
+  }
+
+  auto it = std::find( cur_curves.begin(), cur_curves.end(), p_crv );
+
+  if( it != cur_curves.end() )
+    cur_curves.erase( it );
+
+  delete p_crv;
+}
+
+/******************************************************************************
 * clean_current_curves
 ******************************************************************************/
 void clean_current_curves()
 {
   for( auto curve : cur_curves )
-    delete curve;
+    free_crv( curve );
 
   cur_curves.clear();
 }
@@ -777,7 +846,7 @@ size_t parse_file( const std::string &filePath )
     if( IS_DEBUG )
       curve->print();
 
-    cur_curves.push_back( curve );
+    register_crv( curve );
   }
 
   file.close();
