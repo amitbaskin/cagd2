@@ -77,3 +77,4 @@ void rmv_knot_callback( int seg_id, int knot_idx );
 void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y );
 void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType type );
 BSpline *createBSplineFromBezierCurves( Bezier *bezier1, Bezier *bezier2 );
+BSpline *createBSplineFromBSplines( BSpline *bspline1, BSpline *bspline2 );

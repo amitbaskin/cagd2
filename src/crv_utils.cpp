@@ -301,8 +301,16 @@ void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
     p_crv_1->show_crv();
     cagdRedraw();
 
-    if( get_crv_type( p_crv_1 ) == CurveType::BEZIER )
-      createBSplineFromBezierCurves( ( Bezier * )p_crv_1, ( Bezier * )p_crv_2 );
+    if( crv_type_1 == CurveType::BEZIER )
+    {
+      if( crv_type_2 == CurveType::BEZIER )
+        createBSplineFromBezierCurves( ( Bezier * )p_crv_1, ( Bezier * )p_crv_2 );
+    }
+    else
+    {
+      if( crv_type_2 == CurveType::BSPLINE )
+        createBSplineFromBSplines( ( BSpline * )p_crv_1, ( BSpline * )p_crv_2 );
+    }
   }
   catch( const std::runtime_error &err )
   {
@@ -335,6 +343,33 @@ BSpline *createBSplineFromBezierCurves( Bezier *bezier1, Bezier *bezier2 )
   register_crv( new_bspline );
 
   return new_bspline;
+}
+
+/******************************************************************************
+* createBSplineFromBSplines
+******************************************************************************/
+BSpline *createBSplineFromBSplines( BSpline *bspline1, BSpline *bspline2 )
+{
+  point_vec combined_ctrl_pnts;
+  combined_ctrl_pnts.insert( combined_ctrl_pnts.end(), bspline1->ctrl_pnts_.begin(), bspline1->ctrl_pnts_.end() - 1 );
+  combined_ctrl_pnts.insert( combined_ctrl_pnts.end(), bspline2->ctrl_pnts_.begin(), bspline2->ctrl_pnts_.end() );
+
+  int order = bspline1->order_;
+
+  std::vector<double> knots;
+  int n = combined_ctrl_pnts.size();
+
+  for( int i = 0; i < order; ++i ) knots.push_back( 0.0 );
+  for( int i = 1; i < n - order + 1; ++i ) knots.push_back( static_cast< double >( i ) / ( n - order + 1 ) );
+  for( int i = 0; i < order; ++i ) knots.push_back( 1.0 );
+
+  free_crv( bspline1 );
+  free_crv( bspline2 );
+
+  auto new_bspline = new BSpline( order, combined_ctrl_pnts, knots );
+  register_crv( new_bspline );
+
+  return new BSpline( order, combined_ctrl_pnts, knots );
 }
 
 /******************************************************************************
