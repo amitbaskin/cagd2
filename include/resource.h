@@ -12,6 +12,8 @@
 #define IDC_BLUE                        1017
 #define IDD_KNOTS                       1018
 #define IDC_KNOTS                       1019
+#define IDD_CHANGE_WEIGHT               1020
+#define IDC_CHANGE_WEIGHT               1021
 
 
 // Next default values for new objects

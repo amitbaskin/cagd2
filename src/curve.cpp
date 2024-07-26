@@ -97,7 +97,7 @@ void Curve::show_ctrl_poly()
 
   size_t cur_pnts_num = ctrl_pnts_.size();
 
-  if( cur_pnts_num > 1 )
+  if( cur_pnts_num > 0 )
   {
     CAGD_POINT prev_pnt = { ctrl_pnts_[ 0 ].x, ctrl_pnts_[ 0 ].y, 0.0 };
     CAGD_POINT cur_pnt;

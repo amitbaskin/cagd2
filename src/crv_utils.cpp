@@ -177,24 +177,16 @@ std::tuple< int, int > get_ctrl_seg_pnts( int seg_id )
 /******************************************************************************
 * update_weight_callback
 ******************************************************************************/
-void update_weight_callback( int seg_id, int pnt_idx, double val )
+void update_weight_callback( int pt_id, int pnt_idx, double val )
 {
-  try
+  Curve *p_crv = nullptr;
+  p_crv = get_pnt_crv( pt_id );
+
+  if( p_crv != nullptr )
   {
-    Curve *p_crv = nullptr;
-    CurveType crv_type = get_crv( seg_id, &p_crv );
-
-    if( crv_type == CurveType::NONE )
-    {
-      throw std::runtime_error( "wrong crv type" );
-    }
-
     p_crv->update_weight( pnt_idx, val );
+    p_crv->show_crv();
     cagdRedraw();
-  }
-  catch( const std::runtime_error &err )
-  {
-    throw err;
   }
 }
 
@@ -544,6 +536,17 @@ void print_error( const std::string &message )
 }
 
 /******************************************************************************
+* show_add_curve_help_text
+******************************************************************************/
+void show_add_curve_help_text()
+{
+  std::string text = "Left click on screen to add a control point.\n"
+                     "Click on middle mouse button to exit Add Curve Mode";
+  cagdSetHelpText( text.c_str() );
+  cagdShowHelp();
+}
+
+/******************************************************************************
 * ltrim
 ******************************************************************************/
 static inline void ltrim( std::string &str )
@@ -612,28 +615,54 @@ void register_crv( Curve *p_crv )
 ******************************************************************************/
 void free_crv( Curve *p_crv )
 {
-  erase_seg_to_crv( p_crv->seg_ids_[ 0 ] );
-  cagdFreeSegment( p_crv->seg_ids_[ 0 ] );
-
-  for( int i = 0; i < p_crv->poly_seg_ids_.size(); ++i )
+  if( p_crv != nullptr )
   {
-    erase_seg_to_crv( p_crv->poly_seg_ids_[ i ] );
-    cagdFreeSegment( p_crv->poly_seg_ids_[ i ] );
-  }
+    remove_crv_data( p_crv );
 
-  for( int i = 0; i < p_crv->pnt_ids_.size(); ++i )
+    erase_crv_from_cur_crvs( p_crv );
+
+    delete p_crv;
+    p_crv = nullptr;
+  }
+}
+
+/******************************************************************************
+* remove_crv_data
+******************************************************************************/
+void remove_crv_data( Curve *p_crv )
+{
+  if( p_crv != nullptr )
   {
-    erase_pnt_to_crv( p_crv->pnt_ids_[ i ] );
-    erase_ctrl_seg_to_pnts( p_crv->pnt_ids_[ i ] );
-    cagdFreeSegment( p_crv->pnt_ids_[ i ] );
-  }
+    if( p_crv->seg_ids_.size() > 0 )
+    {
+      erase_seg_to_crv( p_crv->seg_ids_[0] );
+      cagdFreeSegment( p_crv->seg_ids_[0] );
+    }
 
-  auto it = std::find( cur_curves.begin(), cur_curves.end(), p_crv );
+    for( int i = 0; i < p_crv->poly_seg_ids_.size(); ++i )
+    {
+      erase_seg_to_crv( p_crv->poly_seg_ids_[i] );
+      cagdFreeSegment( p_crv->poly_seg_ids_[i] );
+    }
+
+    for( int i = 0; i < p_crv->pnt_ids_.size(); ++i )
+    {
+      erase_pnt_to_crv( p_crv->pnt_ids_[i] );
+      erase_ctrl_seg_to_pnts( p_crv->pnt_ids_[i] );
+      cagdFreeSegment( p_crv->pnt_ids_[i] );
+    }
+  }
+}
+
+/******************************************************************************
+* erase_crv_from_cur_crvs
+******************************************************************************/
+void erase_crv_from_cur_crvs( Curve *p_curve )
+{
+  auto it = std::find( cur_curves.begin(), cur_curves.end(), p_curve );
 
   if( it != cur_curves.end() )
     cur_curves.erase( it );
-
-  delete p_crv;
 }
 
 /******************************************************************************
@@ -641,8 +670,14 @@ void free_crv( Curve *p_crv )
 ******************************************************************************/
 void clean_current_curves()
 {
-  for( auto curve : cur_curves )
-    free_crv( curve );
+  auto it = cur_curves.begin();
+  while( it != cur_curves.end() )
+  {
+    remove_crv_data( *it );
+    delete *it;
+    *it = nullptr;
+    it = cur_curves.erase( it );
+  }
 
   cur_curves.clear();
 }

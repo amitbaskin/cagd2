@@ -21,6 +21,10 @@ int active_pnt_id = K_NOT_USED;
 int active_rmb_ctrl_polyline = K_NOT_USED;
 int cur_rmb_screen_pick[ 2 ] = { K_NOT_USED, K_NOT_USED };
 int hilited_pt_id = K_NOT_USED;
+bool add_bezier_is_active = false;
+Bezier *add_bezier_active_crv = nullptr;
+bool add_bspline_is_active = false;
+BSpline *add_bspline_active_crv = nullptr;
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
 
@@ -54,6 +58,7 @@ void init_menus()
   cagdRegisterCallback( CAGD_LBUTTONUP, lmb_up_cb, NULL );
   cagdRegisterCallback( CAGD_RBUTTONUP, rmb_up_cb, NULL );
   cagdRegisterCallback( CAGD_MOUSEMOVE, mouse_move_cb, NULL );
+  cagdRegisterCallback( CAGD_MBUTTONUP, mmb_up_cb, NULL );
 }
 
 /******************************************************************************
@@ -133,6 +138,47 @@ LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, 
 }
 
 /******************************************************************************
+* WeightDialogProc CHANGE WEIGHT DIALOG
+******************************************************************************/
+LRESULT CALLBACK WeightDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
+{
+  Curve *p_curve = active_rmb_curve;
+  auto ctrl_idx = p_curve->get_pnt_id_idx( active_pnt_id );
+
+  switch( message )
+  {
+  case WM_INITDIALOG:
+    char buffer[50];
+    // Convert the double to a string
+    sprintf_s( buffer, sizeof( buffer ), "%lf", p_curve->ctrl_pnts_[ctrl_idx].z );
+    // Set the text of the dialog item
+    SetDlgItemText( hDialog, IDC_CHANGE_WEIGHT, buffer );
+    break;
+
+  case WM_COMMAND:
+    switch( LOWORD( wParam ) )
+    {
+    case IDOK:
+      GetDlgItemText( hDialog, IDC_CHANGE_WEIGHT, buffer1, sizeof( buffer1 ) );
+      EndDialog( hDialog, TRUE );
+      return TRUE;
+    case IDCANCEL:
+      EndDialog( hDialog, FALSE );
+      return TRUE;
+    default:
+      return FALSE;
+    }
+    break;
+
+  default:
+    return FALSE;
+    break;
+  }
+
+  return FALSE;
+}
+
+/******************************************************************************
 * CurveColorDialogProc Curve color_ DIALOG
 ******************************************************************************/
 LRESULT CALLBACK CurveColorDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
@@ -189,6 +235,18 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
     handle_clean_all_menu();
     break;
 
+  case CAGD_ADD_BEZIER_CURVE:
+    add_bezier_is_active = true;
+    add_bspline_is_active = false;
+    handle_add_curve_menu();
+    break;
+
+  case CAGD_ADD_BSPLINE_CURVE:
+    add_bspline_is_active = true;
+    add_bezier_is_active = false;
+    handle_add_curve_menu();
+    break;
+
   case CAGD_CURVE_COLOR:
     handle_curve_color_menu();
     break;
@@ -213,6 +271,10 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
     handle_rmb_append_ctrl_pt();
     break;
 
+  case CAGD_CHANGE_WEIGHT:
+    handle_change_weight_menu();
+    break;
+
   case CAGD_CONNECT_C0:
     handle_rmb_connect_c0();
     break;
@@ -235,10 +297,11 @@ void handle_rmb_remove_curve()
 {
   if( active_rmb_curve != nullptr )
   {
-    //active_rmb_curve->remove(); TODO if have time. not in PDF
-    active_rmb_curve = nullptr;
+    free_crv( active_rmb_curve );
     cagdRedraw();
   }
+
+  clean_active_rmb_data();
 }
 
 /******************************************************************************
@@ -478,8 +541,38 @@ void handle_mod_knots()
                    "the number of control points plus the order." );
     }
     else
+    {
       p_bspline->show_crv();
+      cagdRedraw();
+    }
   }
+}
+
+/******************************************************************************
+* handle_change_weight_menu
+******************************************************************************/
+void handle_change_weight_menu()
+{
+  if( DialogBox( cagdGetModule(),
+      MAKEINTRESOURCE( IDD_CHANGE_WEIGHT ),
+      cagdGetWindow(),
+      ( DLGPROC )WeightDialogProc ) )
+  {
+    double new_weight = 1;
+
+    if( sscanf( buffer1, "%lf", &new_weight ) == 1 )
+    {
+      Curve *p_curve = active_rmb_curve;
+      auto ctrl_idx = p_curve->get_pnt_id_idx( active_pnt_id );
+
+      if( ctrl_idx > 0 )
+        update_weight_callback( active_pnt_id, ctrl_idx, new_weight );
+    }
+    else
+      print_error( "Invalid input" );
+  }
+
+  clean_active_rmb_data();
 }
 
 /******************************************************************************
@@ -517,10 +610,45 @@ void handle_clean_all_menu()
 }
 
 /******************************************************************************
+* handle_add_curve_menu
+******************************************************************************/
+void handle_add_curve_menu()
+{
+  int sc_x = cur_rmb_screen_pick[0];
+  int sc_y = cur_rmb_screen_pick[1];
+  CAGD_POINT pt0 = screen_to_world_coord( sc_x, sc_y );
+
+  if( add_bezier_is_active )
+  {
+    Bezier *p_bezier = new Bezier();
+    p_bezier->ctrl_pnts_.push_back( pt0 );
+    register_crv( p_bezier );
+    add_bezier_active_crv = p_bezier;
+  }
+  else if( add_bspline_is_active )
+  {
+    BSpline *p_bspline = new BSpline();
+    p_bspline->ctrl_pnts_.push_back( pt0 );
+    register_crv( p_bspline );
+    add_bspline_active_crv = p_bspline;
+  }
+
+  cagdRedraw();
+
+  if( !IS_DEBUG )
+    show_add_curve_help_text();
+}
+
+/******************************************************************************
 * lmb_down_cb
 ******************************************************************************/
 void lmb_down_cb( int x, int y, PVOID userData )
 {
+  if( add_bezier_is_active || add_bspline_is_active )
+  {
+    return;
+  }
+
   UINT id;
 
   for( cagdPick( x, y ); id = cagdPickNext();)
@@ -540,7 +668,25 @@ void lmb_up_cb( int x, int y, PVOID userData )
 {
   set_active_pt_id( K_NOT_USED );
 
-  if( conn != ConnType::NONE )
+  if( add_bezier_is_active && add_bezier_active_crv != nullptr )
+  {
+    CAGD_POINT wc_p = screen_to_world_coord( x, y );
+    int num_ctrl_pts = add_bezier_active_crv->ctrl_pnts_.size();
+    add_bezier_active_crv->add_ctrl_pnt( wc_p, num_ctrl_pts );
+    add_bezier_active_crv->show_ctrl_poly();
+    add_bezier_active_crv->show_crv();
+    cagdRedraw();
+  }
+  else if( add_bspline_is_active && add_bspline_active_crv != nullptr )
+  {
+    CAGD_POINT wc_p = screen_to_world_coord( x, y );
+    int num_ctrl_pts = add_bspline_active_crv->ctrl_pnts_.size();
+    add_bspline_active_crv->add_ctrl_pnt( wc_p, num_ctrl_pts );
+    add_bspline_active_crv->show_ctrl_poly();
+    add_bspline_active_crv->show_crv();
+    cagdRedraw();
+  }
+  else if( conn != ConnType::NONE )
   {
     int sec_seg_id = get_crv_by_pick( x, y );
 
@@ -586,6 +732,11 @@ UINT get_crv_by_pick( int x, int y )
 ******************************************************************************/
 void rmb_up_cb( int x, int y, PVOID userData )
 {
+  if( add_bezier_is_active || add_bspline_is_active )
+  {
+    return;
+  }
+
   UINT id;
   UINT pt_id = K_NOT_USED;
   UINT polyline_id = K_NOT_USED;
@@ -602,6 +753,9 @@ void rmb_up_cb( int x, int y, PVOID userData )
     if( pt_id != K_NOT_USED && polyline_id != K_NOT_USED )
       break;
   }
+
+  cur_rmb_screen_pick[0] = x;
+  cur_rmb_screen_pick[1] = y;
 
   if( polyline_id != K_NOT_USED )
   {
@@ -625,8 +779,6 @@ void rmb_up_cb( int x, int y, PVOID userData )
   {
     active_rmb_curve = get_pnt_crv( std::get< 1 >( neibor_pts ) );
     active_rmb_ctrl_polyline = polyline_id;
-    cur_rmb_screen_pick[0] = x;
-    cur_rmb_screen_pick[1] = y;
     show_rmb_on_ctrl_polyline_menu( x, y );
   }
   else
@@ -697,6 +849,8 @@ void show_rmb_on_ctrl_pt_menu( int x, int y )
 
   HMENU rmb_menu = CreatePopupMenu();
   AppendMenu( rmb_menu, MF_STRING, CAGD_REMOVE_CTRL_PT, TEXT( "Remove Control Point" ) );
+  AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_CHANGE_WEIGHT, TEXT( "Change Weight" ) );
 
   TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
   DestroyMenu( rmb_menu );
@@ -714,6 +868,12 @@ void show_no_selection_rmb_menu( int x, int y )
   ClientToScreen( hWnd, &pt );
 
   HMENU rmb_menu = CreatePopupMenu();
+  AppendMenu( rmb_menu, MF_STRING, CAGD_ADD_BEZIER_CURVE, TEXT( "Add Bezier Curve" ) );
+
+  // not working currently
+  AppendMenu( rmb_menu, MF_STRING, CAGD_ADD_BSPLINE_CURVE, TEXT( "Add BSpline Curve" ) );
+
+  AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( rmb_menu, MF_STRING, CAGD_SETTINGS, TEXT( "Settings" ) );
   AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CLEAN_ALL, TEXT( "Clean All" ) );
@@ -762,4 +922,16 @@ void mouse_move_cb( int x, int y, PVOID userData )
 
     hilited_pt_id = K_NOT_USED;
   }
+}
+
+/******************************************************************************
+* mmb_cb (Middle mouse button up)
+******************************************************************************/
+void mmb_up_cb( int x, int y, PVOID userData )
+{
+  add_bezier_is_active = false;
+  add_bspline_is_active = false;
+
+  add_bezier_active_crv = nullptr;
+  add_bspline_active_crv = nullptr;
 }
