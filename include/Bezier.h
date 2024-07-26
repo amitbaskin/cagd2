@@ -44,4 +44,5 @@ public:
 
 private:
   mutable std::vector< CAGD_POINT > MP_cache_;
+  mutable std::vector< double >     MW_cache_;
 };

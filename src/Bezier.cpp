@@ -184,6 +184,7 @@ void Bezier::connectG1_bspline( const BSpline *bspline )
 bool Bezier::show_crv( int chg_ctrl_idx, CtrlOp ) const
 {
   MP_cache_.clear();
+  MW_cache_.clear();
 
   cagdSetColor( color_[ 0 ], color_[ 1 ], color_[ 2 ] );
 
@@ -257,6 +258,7 @@ void Bezier::computeMP() const
 {
   int n = ctrl_pnts_.size() - 1;
   MP_cache_.resize( n + 1 );
+  MW_cache_.resize( n + 1 );
 
   // Construct the Bernstein basis matrix M
   std::vector<std::vector<GLdouble>> base_matrix;
@@ -269,20 +271,15 @@ void Bezier::computeMP() const
 
     MP_cache_[ i ].x = 0.0;
     MP_cache_[ i ].y = 0.0;
+    MW_cache_[i] = 0.0;
 
     for( int j = 0; j <= n; ++j )
     {
-      double w_base = base_matrix[ i ][ j ]/* * ctrl_pnts_[ j ].z*/;
+      double w_base = base_matrix[ i ][ j ] * ctrl_pnts_[ j ].z;
       MP_cache_[ i ].x += w_base * ctrl_pnts_[ j ].x;
       MP_cache_[ i ].y += w_base * ctrl_pnts_[ j ].y;
-      /*weight_sum += w_base;*/
+      MW_cache_[i] += w_base;
     }
-
-    /*if( double_cmp( weight_sum, 0.0 ) != 0 )
-    {
-      MP_cache_[ i ].x /= weight_sum;
-      MP_cache_[ i ].y /= weight_sum;
-    }*/
   }
 }
 
@@ -304,16 +301,24 @@ CAGD_POINT Bezier::evaluate( GLdouble t ) const
   }
 
   // Ensure MP is cached
-  if( MP_cache_.empty() )
+  if( MP_cache_.empty() || MW_cache_.empty() )
     computeMP();
 
   // Compute the final result using T * MP
   CAGD_POINT point = { 0.0, 0.0, 0.0 };
+  double w_sum = 0;
 
   for( int i = 0; i <= n; ++i )
   {
     point.x += T[ i ] * MP_cache_[ i ].x;
     point.y += T[ i ] * MP_cache_[ i ].y;
+    w_sum += T[i] * MW_cache_[i];
+  }
+
+  if( double_cmp( w_sum, 0.0 ) != 0 )
+  {
+    point.x /= w_sum;
+    point.y /= w_sum;
   }
 
   return point;

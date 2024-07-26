@@ -560,7 +560,7 @@ void handle_change_weight_menu()
   {
     double new_weight = 1;
 
-    if( sscanf( buffer1, "%lf", &new_weight ) == 1 )
+    if( sscanf( buffer1, "%lf", &new_weight ) == 1 && new_weight > 0 )
     {
       Curve *p_curve = active_rmb_curve;
       auto ctrl_idx = p_curve->get_pnt_id_idx( active_pnt_id );
@@ -925,7 +925,7 @@ void mouse_move_cb( int x, int y, PVOID userData )
 }
 
 /******************************************************************************
-* mmb_cb (Middle mouse button up)
+* mmb_up_cb (Middle mouse button up)
 ******************************************************************************/
 void mmb_up_cb( int x, int y, PVOID userData )
 {
