@@ -200,7 +200,7 @@ bool Bezier::show_crv( int chg_ctrl_idx, CtrlOp ) const
 
   unsigned int def_num_steps = get_default_num_steps();
 
-  double jump = 1.0 / ( double )def_num_steps;
+  double jump = 1.0 / ( ( double )def_num_steps - 1 );
 
   auto pnts = new CAGD_POINT[ def_num_steps ];
 
