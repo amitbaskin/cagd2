@@ -44,6 +44,7 @@ public:
     return ctrl_pnts_.size() < knots_.size() - order_;
   }
 
+  void insertKnot( double u );
   void update_u_vec();
 
   void makeUniformKnotVector( bool use = false, double mn = 0.0, double mx = 1.0 );

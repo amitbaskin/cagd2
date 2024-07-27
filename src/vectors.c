@@ -199,9 +199,16 @@ void add_vecs_2d( const CAGD_POINT *p_v1,
 }
 
 /******************************************************************************
+* multiply_vecs_2d
+******************************************************************************/
+double multiply_vecs_2d( const CAGD_POINT *p_v1, const CAGD_POINT *p_v2 )
+{
+  return p_v1->x * p_v2->x + p_v1->y * p_v2->y;
+}
+
+/******************************************************************************
 * multiply_vecs
 ******************************************************************************/
-
 double multiply_vecs( const CAGD_POINT *p_v1, const CAGD_POINT *p_v2 )
 {
   return p_v1->x * p_v2->x + p_v1->y * p_v2->y + p_v1->z * p_v2->z;

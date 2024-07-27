@@ -313,6 +313,9 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
   case CAGD_MOD_KNOTS:
     handle_rmb_mod_knots();
     break;
+  case CAGD_ADD_KNOT:
+    handle_rmb_mod_knots();
+    break;
   case CAGD_OPEN_KNOTS:
     handle_rmb_open_knots();
     break;

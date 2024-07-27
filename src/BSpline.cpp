@@ -17,6 +17,74 @@
 #include "crv_utils.h"
 
 /******************************************************************************
+* BSpline::insertKnot
+******************************************************************************/
+void BSpline::insertKnot( double new_knot )
+{
+  int num_ctrl_points = ctrl_pnts_.size();
+  int degree = order_ - 1;
+  int num_knots = knots_.size();
+
+  // Find the knot span
+  int knot_span = -1;
+  for( int i = 0; i < num_knots - 1; ++i )
+  {
+    if( new_knot >= knots_[ i ] && new_knot < knots_[ i + 1 ] )
+    {
+      knot_span = i;
+      break;
+    }
+  }
+
+  // Check if knot_span is valid
+  if( knot_span == -1 )
+  {
+    std::cerr << "Invalid knot value." << std::endl;
+    return;
+  }
+
+  // Create new control points
+  std::vector<CAGD_POINT> new_ctrl_pnts( num_ctrl_points + 1 );
+  for( int i = 0; i <= knot_span - degree; ++i )
+  {
+    new_ctrl_pnts[ i ] = ctrl_pnts_[ i ];
+  }
+
+  for( int i = knot_span - degree + 1; i <= knot_span; ++i )
+  {
+    double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + degree + 1 ] - knots_[ i ] );
+    CAGD_POINT scaled_diff;
+    diff_vecs_2d( &ctrl_pnts_[ i ], &ctrl_pnts_[ i - 1 ], &scaled_diff );
+    scaled_diff.x *= alpha;
+    scaled_diff.y *= alpha;
+    add_vecs_2d( &ctrl_pnts_[ i - 1 ], &scaled_diff, &new_ctrl_pnts[ i ] );
+  }
+
+  for( int i = knot_span + 1; i < num_ctrl_points + 1; ++i )
+  {
+    new_ctrl_pnts[ i ] = ctrl_pnts_[ i - 1 ];
+  }
+
+  // Update the knot vector
+  std::vector<double> new_knots( num_knots + 1 );
+  for( int i = 0; i <= knot_span; ++i )
+  {
+    new_knots[ i ] = knots_[ i ];
+  }
+
+  new_knots[ knot_span + 1 ] = new_knot;
+
+  for( int i = knot_span + 1; i < num_knots; ++i )
+  {
+    new_knots[ i + 1 ] = knots_[ i ];
+  }
+
+  // Replace old control points and knots with the new ones
+  ctrl_pnts_ = new_ctrl_pnts;
+  knots_ = new_knots;
+}
+
+/******************************************************************************
 * BSpline::dump
 ******************************************************************************/
 void BSpline::dump( std::ofstream &ofs ) const

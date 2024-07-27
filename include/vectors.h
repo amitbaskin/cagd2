@@ -42,6 +42,8 @@ void add_vecs( const CAGD_POINT *p_v1,
                const CAGD_POINT *p_v2,
                CAGD_POINT *rp_out );
 
+double multiply_vecs_2d( const CAGD_POINT *p_v1, const CAGD_POINT *p_v2 );
+
 void diff_vecs_2d( const CAGD_POINT *p_v1,
                    const CAGD_POINT *p_v2,
                    CAGD_POINT *rp_out );
