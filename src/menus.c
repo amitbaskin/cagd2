@@ -717,7 +717,7 @@ void handle_add_curve_menu()
   if( add_bezier_is_active )
   {
     Bezier *p_bezier = new Bezier();
-    p_bezier->order_ = get_def_degree();
+    p_bezier->order_ = 0;
     p_bezier->add_ctrl_pnt( pt0, 0 );
     register_crv( p_bezier );
     add_bezier_active_crv = p_bezier;
