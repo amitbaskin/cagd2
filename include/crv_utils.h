@@ -34,7 +34,8 @@ enum class ConnType
   G1 = 3
 };
 
-void save_curve( int seg_crv, int dummy2, void *p_data );
+void save_all_curves( int seg_crv, int dummy2, void *p_data );
+void save_curve( int seg_crv, int is_close, void *p_data );
 void load_curves( int dummy1, int dummy2, void *p_data );
 
 void register_crv( Curve *p_crv );

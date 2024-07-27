@@ -37,17 +37,10 @@ Curve::Curve( int order, point_vec ctrl_pnts ) :
 /******************************************************************************
 * Curve::dump
 ******************************************************************************/
-void Curve::dump( const std::string &path ) const
+void Curve::dump( std::ofstream &ofs ) const
 {
-  std::ofstream ofs( path );
-  if( !ofs )
-  {
-    print_error( "Error opening file for writing" );
-    return;
-  }
   dumpOrder( ofs );
   dumpControlPoints( ofs );
-  ofs.close();
 }
 
 /******************************************************************************

@@ -104,6 +104,18 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
       return 0;
 
+    case CAGD_SAVE:
+      openFileName.hwndOwner = auxGetHWND();
+      openFileName.lpstrTitle = "Load File";
+
+      if( GetOpenFileName( &openFileName ) )
+      {
+        cagdRegisterCallback( CAGD_SAVEFILE, save_all_curves, ( PVOID )openFileName.lpstrFile );
+        callback( CAGD_SAVEFILE, 0, 0 );
+      }
+
+      return 0;
+
     case CAGD_SAVE_CURVE:
       openFileName.hwndOwner = auxGetHWND();
       openFileName.lpstrTitle = "Save File";
@@ -430,7 +442,7 @@ void createMenu()
   HMENU hMenu = CreateMenu();
   HMENU hSubMenu = CreatePopupMenu();
   AppendMenu( hSubMenu, MF_STRING, CAGD_LOAD, "Load..." );
-  //AppendMenu( hSubMenu, MF_STRING, CAGD_SAVE, "Save..." );
+  AppendMenu( hSubMenu, MF_STRING, CAGD_SAVE, "Save..." );
   AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
   AppendMenu( hSubMenu, MF_STRING, CAGD_EXIT, "Exit" );
   AppendMenu( hMenu, MF_POPUP, ( UINT )hSubMenu, "File" );
