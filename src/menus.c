@@ -692,17 +692,20 @@ void lmb_up_cb( int x, int y, PVOID userData )
 
     if( sec_seg_id != 0 )
     {
-      active_rmb_curve->change_color( 255, 0, 0 );
-
       if( get_crv_type( active_rmb_curve ) != CurveType::BSPLINE ||
           active_rmb_curve->seg_ids_[ 0 ] != sec_seg_id )
       {
-        connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn );
+        bool res = connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn );
+
+        if( res )
+        {
+          active_rmb_curve->change_color( 255, 0, 0 );
+          conn = ConnType::NONE;
+          active_rmb_curve = NULL;
+        }
       }
       else
         print_error( "Please avoid trying to connect a bspline to itself." );
-
-      conn = ConnType::NONE;
     }
   }
 }

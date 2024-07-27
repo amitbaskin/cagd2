@@ -23,6 +23,20 @@ int get_scale_inv_or_zero( double scale, double *rp_res )
 }
 
 /******************************************************************************
+* scale_div_vec_2d
+******************************************************************************/
+int scale_div_vec_2d( double denom, CAGD_POINT *rp_out )
+{
+  double res = K_NOT_USED;
+
+  int is_error = get_scale_inv_or_zero( denom, &res );
+
+  scale_vec_2d( res, rp_out );
+
+  return is_error;
+}
+
+/******************************************************************************
 * scale_div_vec
 ******************************************************************************/
 int scale_div_vec( double denom, CAGD_POINT *rp_out )
@@ -34,6 +48,14 @@ int scale_div_vec( double denom, CAGD_POINT *rp_out )
   scale_vec( res, rp_out );
 
   return is_error;
+}
+
+/******************************************************************************
+* normalize_vec_2d
+******************************************************************************/
+int normalize_vec_2d( CAGD_POINT *p_vec )
+{
+  return scale_div_vec_2d( vec_len_2d( p_vec ), p_vec );
 }
 
 /******************************************************************************
@@ -89,6 +111,17 @@ void copy_vec( const CAGD_POINT *p_in, CAGD_POINT *rp_out )
 }
 
 /******************************************************************************
+* vec_len_2d
+******************************************************************************/
+double vec_len_2d( const CAGD_POINT *p_vec )
+{
+  double sum = p_vec->x * p_vec->x +
+               p_vec->y * p_vec->y;
+
+  return sqrt( sum );
+}
+
+/******************************************************************************
 * vec_len
 ******************************************************************************/
 double vec_len( const CAGD_POINT *p_vec )
@@ -98,6 +131,15 @@ double vec_len( const CAGD_POINT *p_vec )
     p_vec->z * p_vec->z;;
 
   return sqrt( sum );
+}
+
+/******************************************************************************
+* scale_vec_2d
+******************************************************************************/
+void scale_vec_2d( double scale, CAGD_POINT *p_vec )
+{
+  p_vec->x *= scale;
+  p_vec->y *= scale;
 }
 
 /******************************************************************************
@@ -132,6 +174,28 @@ void add_vecs( const CAGD_POINT *p_v1,
   rp_out->x = p_v1->x + p_v2->x;
   rp_out->y = p_v1->y + p_v2->y;
   rp_out->z = p_v1->z + p_v2->z;
+}
+
+/******************************************************************************
+* diff_vecs_2d
+******************************************************************************/
+void diff_vecs_2d( const CAGD_POINT *p_v1,
+                   const CAGD_POINT *p_v2,
+                   CAGD_POINT *rp_out )
+{
+  rp_out->x = p_v1->x - p_v2->x;
+  rp_out->y = p_v1->y - p_v2->y;
+}
+
+/******************************************************************************
+* add_vecs_2d
+******************************************************************************/
+void add_vecs_2d( const CAGD_POINT *p_v1,
+                  const CAGD_POINT *p_v2,
+                  CAGD_POINT *rp_out )
+{
+  rp_out->x = p_v1->x + p_v2->x;
+  rp_out->y = p_v1->y + p_v2->y;
 }
 
 /******************************************************************************

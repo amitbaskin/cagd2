@@ -10,6 +10,7 @@
 #include "BSpline.h"
 #include "Bezier.h"
 #include "crv_utils.h"
+#include <algorithm>
 
 std::vector< Curve * > cur_curves;
 std::map< int, Curve * > seg_to_crv;
@@ -216,7 +217,7 @@ CurveType get_crv( int seg_id, Curve **rp_crv )
   *rp_crv = get_seg_crv( seg_id );
 
   if( *rp_crv == nullptr )
-    throw std::runtime_error( "bad map for seg id to crv" );
+    return CurveType::NONE;
 
   BSpline *p_bspline = dynamic_cast< BSpline * >( *rp_crv );
 
@@ -234,7 +235,7 @@ CurveType get_crv( int seg_id, Curve **rp_crv )
 /******************************************************************************
 * connect_crv_callback
 ******************************************************************************/
-void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
+bool connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
 {
   try
   {
@@ -243,6 +244,12 @@ void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
     CurveType crv_type_1 = get_crv( seg_id_1, &p_crv_1 );
     CurveType crv_type_2 = get_crv( seg_id_2, &p_crv_2 );
 
+    if( crv_type_2 == CurveType::NONE )
+      return false;
+
+    /*createBSplineFromCurves( p_crv_1, p_crv_2, conn );
+    cagdRedraw();
+    return true;*/
     switch( conn )
     {
       case ConnType::C0:
@@ -293,7 +300,7 @@ void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
     p_crv_1->show_crv();
     cagdRedraw();
 
-    if( crv_type_1 == CurveType::BEZIER )
+    /*if( crv_type_1 == CurveType::BEZIER )
     {
       if( crv_type_2 == CurveType::BEZIER )
         createBSplineFromBezierCurves( ( Bezier * )p_crv_1, ( Bezier * )p_crv_2 );
@@ -302,12 +309,15 @@ void connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
     {
       if( crv_type_2 == CurveType::BSPLINE )
         createBSplineFromBSplines( ( BSpline * )p_crv_1, ( BSpline * )p_crv_2 );
-    }
+    }*/
   }
   catch( const std::runtime_error &err )
   {
     throw err;
   }
+
+  //cagdRedraw();
+  return true;
 }
 
 /******************************************************************************
@@ -362,6 +372,210 @@ BSpline *createBSplineFromBSplines( BSpline *bspline1, BSpline *bspline2 )
   register_crv( new_bspline );
 
   return new BSpline( order, combined_ctrl_pnts, knots );
+}
+
+/******************************************************************************
+* computeTangent
+******************************************************************************/
+CAGD_POINT computeTangent( const Curve *curve, double param )
+{
+  const double h = 1e-5; // Small delta for numerical differentiation
+
+  double domainStart = curve->get_dom_start();
+  double domainEnd = curve->get_dom_end();
+
+  double t1 = max( domainStart, param - h );
+  double t2 = min( domainEnd, param + h );
+
+  CAGD_POINT p1 = curve->evaluate( t1 );
+  CAGD_POINT p2 = curve->evaluate( t2 );
+
+  CAGD_POINT tangent;
+  diff_vecs_2d( &p2, &p1, &tangent );
+  normalize_vec_2d( &tangent );
+
+  return tangent;
+}
+
+/******************************************************************************
+* constructKnotVector
+******************************************************************************/
+std::vector<double> constructKnotVector( const Curve *crv1, const Curve *crv2, ConnType continuityType )
+{
+  if( crv1 == nullptr || crv2 == nullptr )
+    throw std::runtime_error( "bad crvs to connect" );
+
+  std::vector<double> knots1;
+  std::vector<double> knots2;
+
+  // Extract knots from the first curve
+  if( const Bezier *b1 = dynamic_cast< const Bezier * >( crv1 ) )
+  {
+    knots1.resize( b1->ctrl_pnts_.size() + b1->order_, 0.0 );
+    std::fill( knots1.begin() + b1->ctrl_pnts_.size(), knots1.end(), 1.0 );
+  }
+  else if( const BSpline *bs1 = dynamic_cast< const BSpline * >( crv1 ) )
+  {
+    knots1 = bs1->knots_;
+  }
+
+  // Extract knots from the second curve
+  if( const Bezier *b2 = dynamic_cast< const Bezier * >( crv2 ) )
+  {
+    knots2.resize( b2->ctrl_pnts_.size() + b2->order_, 0.0 );
+    std::fill( knots2.begin() + b2->ctrl_pnts_.size(), knots2.end(), 1.0 );
+  }
+  else if( const BSpline *bs2 = dynamic_cast< const BSpline * >( crv2 ) )
+  {
+    knots2 = bs2->knots_;
+  }
+
+  double maxKnot1 = *std::max_element( knots1.begin(), knots1.end() );
+
+  // Adjust knots2 to match the maximum value of knots1
+  for( double &knot : knots2 )
+  {
+    knot += maxKnot1 + 1;
+  }
+
+  int min_order = min( crv1->order_, crv2->order_ );
+  int order = max( crv1->order_, crv2->order_ );
+  double ratio = ( double )min_order / ( double )order;
+
+  int num1 = min_order / 2;
+  int num2 = min_order - num1;
+
+  // Merge the two knot vectors
+  std::vector<double> newKnotVector;
+  newKnotVector.insert( newKnotVector.end(), knots1.begin(), knots1.end() - num1 );
+  newKnotVector.insert( newKnotVector.end(), knots2.begin() + num2, knots2.end() );
+
+  return newKnotVector;
+}
+
+/******************************************************************************
+* adjustControlPointsForContinuity
+******************************************************************************/
+void adjustControlPointsForContinuity( Curve *crv1, Curve *crv2, ConnType continuityType )
+{
+  if( continuityType == ConnType::C1 )
+  {
+    // Ensure C1 continuity: The first curve's end tangent should match the second curve's start tangent
+    CAGD_POINT tangent1 = computeTangent( crv1, crv1->get_dom_end() );
+    CAGD_POINT tangent2 = computeTangent( crv2, crv2->get_dom_start() );
+
+    // Compute the control points adjustment for C1 continuity
+    CAGD_POINT end1 = crv1->ctrl_pnts_.back();
+    CAGD_POINT start2 = crv2->ctrl_pnts_.front();
+
+    CAGD_POINT tangentAdjustment;
+    diff_vecs_2d( &tangent1, &tangent2, &tangentAdjustment );
+    add_vecs_2d( &end1, &tangentAdjustment, &crv2->ctrl_pnts_.front() );
+  }
+  else if( continuityType == ConnType::G1 )
+  {
+    // Ensure G1 continuity: The tangent vectors at the connection point should be collinear
+    CAGD_POINT tangent1 = computeTangent( crv1, crv1->get_dom_end() );
+    CAGD_POINT tangent2 = computeTangent( crv2, crv2->get_dom_start() );
+
+    // Normalize tangents
+    normalize_vec_2d( &tangent1 );
+    normalize_vec_2d( &tangent2 );
+
+    // Adjust control points for G1 continuity
+    CAGD_POINT end1 = crv1->ctrl_pnts_.back();
+    CAGD_POINT start2 = crv2->ctrl_pnts_.front();
+
+    CAGD_POINT adjustedStart2;
+    CAGD_POINT tangentDifference;
+    diff_vecs_2d( &tangent2, &tangent1, &tangentDifference );
+    double dotProduct = tangent1.x * tangent2.x + tangent1.y * tangent2.y;
+
+    // Adjust the start control point of crv2 to align with the tangent of crv1
+    if( dotProduct > 0 )
+    {
+      add_vecs_2d( &end1, &tangent1, &adjustedStart2 );
+      add_vecs_2d( &adjustedStart2, &tangentDifference, &crv2->ctrl_pnts_.front() );
+    }
+  }
+}
+
+/******************************************************************************
+* createBSplineFromCurves
+******************************************************************************/
+BSpline *createBSplineFromCurves( Curve *crv1, Curve *crv2, ConnType continuityType )
+{
+  if( !crv1 || !crv2 )
+    throw std::invalid_argument( "Curve pointers must not be null" );
+
+  std::vector<double> knots1;
+  std::vector<double> knots2;
+
+  // Extract knots from the first curve
+  if( const Bezier *b1 = dynamic_cast< const Bezier * >( crv1 ) )
+  {
+    knots1.resize( b1->ctrl_pnts_.size() + b1->order_, 0.0 );
+    std::fill( knots1.begin() + b1->ctrl_pnts_.size(), knots1.end(), 1.0 );
+  }
+  else if( const BSpline *bs1 = dynamic_cast< const BSpline * >( crv1 ) )
+  {
+    knots1 = bs1->knots_;
+  }
+
+  // Extract knots from the second curve
+  if( const Bezier *b2 = dynamic_cast< const Bezier * >( crv2 ) )
+  {
+    knots2.resize( b2->ctrl_pnts_.size() + b2->order_, 0.0 );
+    std::fill( knots2.begin() + b2->ctrl_pnts_.size(), knots2.end(), 1.0 );
+  }
+  else if( const BSpline *bs2 = dynamic_cast< const BSpline * >( crv2 ) )
+  {
+    knots2 = bs2->knots_;
+  }
+
+  // Prepare control points for the new B-spline
+  std::vector<CAGD_POINT> combinedCtrlPoints = crv1->ctrl_pnts_;
+  combinedCtrlPoints.insert( combinedCtrlPoints.end(), crv2->ctrl_pnts_.begin(), crv2->ctrl_pnts_.end() );
+
+  // Adjust control points for continuity
+  Curve *mutableCrv1 = const_cast< Curve * >( crv1 );
+  Curve *mutableCrv2 = const_cast< Curve * >( crv2 );
+  adjustControlPointsForContinuity( mutableCrv1, mutableCrv2, continuityType );
+
+  //// Construct the knot vector using the helper function
+  //std::vector<double> knotVector = constructKnotVector( crv1, crv2, continuityType );
+
+  // Determine the order of the new B-spline
+  int order1 = crv1->order_;
+  int order2 = crv2->order_;
+  int order = max( order1, order2 );
+
+  // Create the new B-spline curve
+  BSpline *newBSpline = new BSpline();
+  newBSpline->order_ = order;
+  newBSpline->ctrl_pnts_ = combinedCtrlPoints;
+  //newBSpline->knots_ = knotVector;
+  newBSpline->makeUniformKnotVector( true, knots2[ crv2->order_ - 1 ], knots2[ crv2->ctrl_pnts_.size() ] );
+
+  double add_knot = knots2[ crv2->ctrl_pnts_.size() ];
+
+  for( size_t i = 0; i < knots2.size(); ++i )
+    knots2[ i ] += add_knot;
+
+  int diff = newBSpline->knots_.size() - knots2.size();
+
+  for( size_t i = 0; i < knots2.size(); ++i )
+    newBSpline->knots_[ i + diff ] = knots2[ i ];
+
+  // Set the spline as open or uniform based on its structure (for simplicity, assuming uniform here)
+  newBSpline->is_open_ = false;
+  newBSpline->is_uni_ = false;
+
+  free_crv( crv1 );
+  free_crv( crv2 );
+  register_crv( newBSpline );
+
+  return newBSpline;
 }
 
 /******************************************************************************
@@ -639,13 +853,13 @@ void remove_crv_data( Curve *p_crv )
       cagdFreeSegment( p_crv->seg_ids_[0] );
     }
 
-    for( int i = 0; i < p_crv->poly_seg_ids_.size(); ++i )
+    for( size_t i = 0; i < p_crv->poly_seg_ids_.size(); ++i )
     {
       erase_seg_to_crv( p_crv->poly_seg_ids_[i] );
       cagdFreeSegment( p_crv->poly_seg_ids_[i] );
     }
 
-    for( int i = 0; i < p_crv->pnt_ids_.size(); ++i )
+    for( size_t i = 0; i < p_crv->pnt_ids_.size(); ++i )
     {
       erase_pnt_to_crv( p_crv->pnt_ids_[i] );
       erase_ctrl_seg_to_pnts( p_crv->pnt_ids_[i] );

@@ -344,13 +344,13 @@ void BSpline::update_u_vec()
 /******************************************************************************
 * BSpline::makeUniformKnotVector
 ******************************************************************************/
-void BSpline::makeUniformKnotVector()
+void BSpline::makeUniformKnotVector( bool use, double mn, double mx )
 {
   int numControlPoints = ctrl_pnts_.size();
   int degree = order_ - 1;
 
-  double minKnotValue = get_dom_start();
-  double maxKnotValue = get_dom_end();
+  double minKnotValue = use ? mn : get_dom_start();
+  double maxKnotValue = use ? mx : get_dom_end();
 
   double prev_knot = -HUGE_DOUBLE;
   double cur_knot = -HUGE_DOUBLE;

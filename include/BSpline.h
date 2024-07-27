@@ -42,7 +42,7 @@ public:
 
   void update_u_vec();
 
-  void makeUniformKnotVector();
+  void makeUniformKnotVector( bool use = false, double mn = 0.0, double mx = 1.0 );
   void interpolateEnd();
   void makeOpenKnotVector();
 
@@ -52,8 +52,8 @@ public:
 
   std::vector< int > findAffectedSegments( int controlPointIndex ) const;
 
-  double get_dom_start() const;
-  double get_dom_end() const;
+  virtual double get_dom_start() const;
+  virtual double get_dom_end() const;
 
   virtual void connectC0_bezier( const Bezier *other );
   virtual void connectC1_bezier( const Bezier *other );
