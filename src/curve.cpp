@@ -195,5 +195,9 @@ void Curve::change_color( BYTE red, BYTE green, BYTE blue )
   for( auto seg_id : seg_ids_ )
     cagdSetSegmentColor( seg_id, red, green, blue );
 
+  color_[0] = red;
+  color_[1] = green;
+  color_[2] = blue;
+
   cagdRedraw();
 }

@@ -60,8 +60,6 @@ void init_menus()
 
   // Curve
   AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default Color" );
-  //AppendMenu( op_menu, MF_STRING, CAGD_SHOW_EVOLUTE_MENU, "Show Evolute Curve" );
-  //AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
 
   // Options
   AppendMenu( op_menu, MF_STRING, CAGD_SETTINGS, "Settings" );
@@ -647,14 +645,16 @@ void handle_add_curve_menu()
     p_bezier->add_ctrl_pnt( pt0, 0 );
     register_crv( p_bezier );
     add_bezier_active_crv = p_bezier;
+    p_bezier->change_color( 204, 102, 0 );
   }
   else if( add_bspline_is_active )
   {
     BSpline *p_bspline = new BSpline();
-    p_bspline->order_ = DEF_ORDER;
+    p_bspline->order_ = get_def_degree();
     p_bspline->add_ctrl_pnt( pt0, 0 );
     register_crv( p_bspline );
     add_bspline_active_crv = p_bspline;
+    p_bspline->change_color( 204, 102, 0 );
   }
 
   cagdRedraw();
@@ -919,6 +919,7 @@ void clean_active_rmb_data()
   active_rmb_curve = nullptr;
   active_rmb_ctrl_polyline = K_NOT_USED;
   cur_rmb_screen_pick[0] = K_NOT_USED;
+  cur_rmb_screen_pick[1] = K_NOT_USED;
   hilited_pt_id = K_NOT_USED;
 }
 
@@ -958,6 +959,20 @@ void mouse_move_cb( int x, int y, PVOID userData )
 ******************************************************************************/
 void mmb_up_cb( int x, int y, PVOID userData )
 {
+  if( add_bezier_is_active && add_bezier_active_crv != nullptr )
+  {
+    BYTE def_color[3];
+    get_curve_color( &def_color[0], &def_color[1], &def_color[2] );
+    add_bezier_active_crv->change_color( def_color[0], def_color[1], def_color[2] );
+  }
+
+  if( add_bspline_is_active && add_bspline_active_crv != nullptr )
+  {
+    BYTE def_color[3];
+    get_curve_color( &def_color[0], &def_color[1], &def_color[2] );
+    add_bspline_active_crv->change_color( def_color[0], def_color[1], def_color[2] );
+  }
+
   add_bezier_is_active = false;
   add_bspline_is_active = false;
 

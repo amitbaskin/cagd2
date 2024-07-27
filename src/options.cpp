@@ -17,6 +17,13 @@ void set_curve_color( unsigned char new_curve_color[ 3 ] )
   CURVE_COLOR[ 2 ] = new_curve_color[ 2 ];
 }
 
+void get_curve_color( unsigned char *red, unsigned char *green, unsigned char *blue )
+{
+  *red   = CURVE_COLOR[0];
+  *green = CURVE_COLOR[1];
+  *blue  = CURVE_COLOR[2];
+}
+
 unsigned int get_def_degree()
 {
   return DEF_DEGREE;
