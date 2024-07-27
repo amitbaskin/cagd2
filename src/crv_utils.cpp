@@ -1040,6 +1040,16 @@ BSpline *create_bspline( int order,
   auto bspline = new BSpline();
   bspline->order_ = order;
 
+  // Set is_open_ and is_uni_ based on the found prefix
+  if( line.find( "open" ) != std::string::npos )
+  {
+    bspline->is_open_ = true;
+  }
+  if( line.find( "uni" ) != std::string::npos )
+  {
+    bspline->is_uni_ = true;
+  }
+
   size_t numKnots;
   if( !extract_knots_information( line, bspline, numKnots ) )
   {
