@@ -61,9 +61,18 @@ void BSpline::insertKnot( double new_knot )
   for( int i = knot_span - degree + 1; i <= knot_span; ++i )
   {
     double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + degree + 1 ] - knots_[ i ] );
-    new_ctrl_pnts[ i ].x = alpha * ctrl_pnts_[ i ].x + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].x;
-    new_ctrl_pnts[ i ].y = alpha * ctrl_pnts_[ i ].y + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].y;
+
     new_ctrl_pnts[ i ].z = alpha * ctrl_pnts_[ i ].z + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].z;
+
+    new_ctrl_pnts[ i ].x = alpha * ctrl_pnts_[ i ].x * ctrl_pnts_[ i ].z +
+                           ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].x * ctrl_pnts_[ i - 1 ].z;
+
+    new_ctrl_pnts[ i ].x /= new_ctrl_pnts[ i ].z;
+
+    new_ctrl_pnts[ i ].y = alpha * ctrl_pnts_[ i ].y * ctrl_pnts_[ i ].z +
+                           ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].y * ctrl_pnts_[ i - 1 ].z;
+
+    new_ctrl_pnts[ i ].y /= new_ctrl_pnts[ i ].z;
   }
 
   for( int i = knot_span + 1; i < num_ctrl_points + 1; ++i )
@@ -77,10 +86,11 @@ void BSpline::insertKnot( double new_knot )
   {
     new_knots[ i ] = knots_[ i ];
   }
+
   new_knots[ knot_span + 1 ] = new_knot;
-  for( int i = knot_span + 1; i < num_knots; ++i )
+  for( int i = knot_span + 2; i < num_knots + 1; ++i )
   {
-    new_knots[ i + 1 ] = knots_[ i ];
+    new_knots[ i ] = knots_[ i - 1 ];
   }
 
   // Replace old control points and knots with the new ones
