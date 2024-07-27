@@ -43,15 +43,22 @@ void Curve::rmv_ctrl_pnt( int idx )
 /******************************************************************************
 * Curve::add_ctrl_pnt
 ******************************************************************************/
-void Curve::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
+void Curve::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 {
+  ctrl_pnt.z = 1.0;
+
   set_norm_color();
   int pnt_id = cagdAddPoint( &ctrl_pnt );
 
   map_pnt_to_crv( pnt_id, this );
 
-  pnt_ids_.insert( pnt_ids_ .begin() + idx, pnt_id );
+  if( idx > pnt_ids_.size() )
+  {
+    pnt_ids_.resize( idx );
+    ctrl_pnts_.resize( idx );
+  }
 
+  pnt_ids_.insert( pnt_ids_ .begin() + idx, pnt_id );
   ctrl_pnts_.insert( ctrl_pnts_.begin() + idx, ctrl_pnt );
 }
 

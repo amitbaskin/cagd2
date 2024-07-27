@@ -25,8 +25,30 @@ bool add_bezier_is_active = false;
 Bezier *add_bezier_active_crv = nullptr;
 bool add_bspline_is_active = false;
 BSpline *add_bspline_active_crv = nullptr;
+Curve *active_lmb_curve = nullptr;
+CAGD_POINT lmb_pnt = { 0 };
 
 extern void myMessage( PSTR title, PSTR message, UINT crv_type );
+
+/******************************************************************************
+* reset_active
+******************************************************************************/
+void reset_active()
+{
+  conn = ConnType::NONE;
+  active_rmb_curve = nullptr;
+  active_pnt_id = K_NOT_USED;
+  active_rmb_ctrl_polyline = K_NOT_USED;
+  cur_rmb_screen_pick[ 0 ] = K_NOT_USED;
+  cur_rmb_screen_pick[ 1 ] = K_NOT_USED;
+  hilited_pt_id = K_NOT_USED;
+  add_bezier_is_active = false;
+  add_bezier_active_crv = nullptr;
+  add_bspline_is_active = false;
+  add_bspline_active_crv = nullptr;
+  active_lmb_curve = nullptr;
+  lmb_pnt = { 0 };
+}
 
 /******************************************************************************
 * init_menus
@@ -607,6 +629,7 @@ void handle_settings_menu()
 void handle_clean_all_menu()
 {
   clean_all_curves();
+  reset_active();
 }
 
 /******************************************************************************
@@ -628,6 +651,7 @@ void handle_add_curve_menu()
   else if( add_bspline_is_active )
   {
     BSpline *p_bspline = new BSpline();
+    p_bspline->order_ = DEF_ORDER;
     p_bspline->ctrl_pnts_.push_back( pt0 );
     register_crv( p_bspline );
     add_bspline_active_crv = p_bspline;
@@ -682,6 +706,8 @@ void lmb_up_cb( int x, int y, PVOID userData )
     CAGD_POINT wc_p = screen_to_world_coord( x, y );
     int num_ctrl_pts = add_bspline_active_crv->ctrl_pnts_.size();
     add_bspline_active_crv->add_ctrl_pnt( wc_p, num_ctrl_pts );
+    add_bspline_active_crv->makeUniformKnotVector( true, 0.0, 1.0 );
+    add_bspline_active_crv->makeOpenKnotVector();
     add_bspline_active_crv->show_ctrl_poly();
     add_bspline_active_crv->show_crv();
     cagdRedraw();

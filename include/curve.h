@@ -48,7 +48,7 @@ public:
   virtual void connectC1_bspline( const BSpline *bspline ) = 0;
   virtual void connectG1_bspline( const BSpline *bspline ) = 0;
 
-  virtual void add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx );
+  virtual void add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx );
   virtual void rmv_ctrl_pnt( int idx );
   virtual void print() const;
 

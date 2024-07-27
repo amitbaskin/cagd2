@@ -305,7 +305,7 @@ void BSpline::rmv_ctrl_pnt( int idx )
 /******************************************************************************
 * Bezier::add_ctrl_pnt
 ******************************************************************************/
-void BSpline::add_ctrl_pnt( const CAGD_POINT &ctrl_pnt, int idx )
+void BSpline::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 {
   Curve::add_ctrl_pnt( ctrl_pnt, idx );
 
@@ -346,6 +346,8 @@ void BSpline::update_u_vec()
 ******************************************************************************/
 void BSpline::makeUniformKnotVector( bool use, double mn, double mx )
 {
+  is_uni_ = true;
+
   int numControlPoints = ctrl_pnts_.size();
   int degree = order_ - 1;
 
@@ -359,7 +361,7 @@ void BSpline::makeUniformKnotVector( bool use, double mn, double mx )
 
   double range = maxKnotValue - minKnotValue;
 
-  for( int i = 0; i <= numControlPoints + degree; ++i )
+  for( int i = 0; i < numControlPoints + order_; ++i )
   {
     cur_knot = minKnotValue + ( range * i ) /
                ( ( double )numControlPoints + ( double )degree );
@@ -389,22 +391,27 @@ void BSpline::interpolateEnd()
 ******************************************************************************/
 void BSpline::makeOpenKnotVector()
 {
-  int numControlPoints = ctrl_pnts_.size();
-  int degree = order_ - 1;
+  if( ctrl_pnts_.size() >= ( size_t )order_ )
+  {
+    is_open_ = true;
 
-  double minKnotValue = knots_.front();
-  double maxKnotValue = knots_.back();
+    int numControlPoints = ctrl_pnts_.size();
+    int degree = order_ - 1;
 
-  if( knots_.empty() )
-    knots_.resize( numControlPoints + order_ );
+    double minKnotValue = knots_.front();
+    double maxKnotValue = knots_.back();
 
-  for( int i = 0; i <= degree; ++i )
-    knots_[ i ] = minKnotValue;
+    if( knots_.empty() )
+      knots_.resize( numControlPoints + order_ );
 
-  for( int i = numControlPoints; i < numControlPoints + order_; ++i )
-    knots_[ i ] = maxKnotValue;
+    for( int i = 0; i < order_; ++i )
+      knots_[ i ] = minKnotValue;
 
-  update_u_vec();
+    for( int i = numControlPoints; i < numControlPoints + order_; ++i )
+      knots_[ i ] = maxKnotValue;
+
+    update_u_vec();
+  }
 }
 
 /******************************************************************************
@@ -421,7 +428,7 @@ void BSpline::show_ctrl_poly()
 ******************************************************************************/
 bool BSpline::show_crv( int chg_ctrl_idx, CtrlOp op ) const
 {
-  if( knots_.size() != ctrl_pnts_.size() + order_ )
+  if( ctrl_pnts_.size() < ( size_t )order_ || knots_.size() != ctrl_pnts_.size() + order_ )
     return false;
 
   if( false && chg_ctrl_idx != K_NOT_USED )

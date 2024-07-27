@@ -819,7 +819,9 @@ void skip_blank_and_comment_lines( std::ifstream &file )
 ******************************************************************************/
 void register_crv( Curve *p_crv )
 {
-  p_crv->show_crv();
+  if( p_crv->ctrl_pnts_.size() > 1 )
+    p_crv->show_crv();
+
   p_crv->show_ctrl_poly();
   cur_curves.push_back( p_crv );
 }

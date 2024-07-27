@@ -28,8 +28,8 @@ static PSTR defaultHelpText =
 static CALLBACK_ENTRY list[ CAGD_LAST ] = { { NULL, NULL } };
 static WORD state = 0;
 
-Curve *active_lmb_curve = nullptr;
-CAGD_POINT lmb_pnt = { 0 };
+extern Curve *active_lmb_curve;
+extern CAGD_POINT lmb_pnt;
 
 static char fileName[ 0xffff ];
 static OPENFILENAME openFileName = {
