@@ -697,7 +697,10 @@ void lmb_up_cb( int x, int y, PVOID userData )
       if( get_crv_type( active_rmb_curve ) != CurveType::BSPLINE ||
           active_rmb_curve->seg_ids_[ 0 ] != sec_seg_id )
       {
-        connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn );
+        bool res = connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn );
+
+        if( res )
+          active_rmb_curve = NULL;
       }
       else
         print_error( "Please avoid trying to connect a bspline to itself." );
