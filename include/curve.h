@@ -48,6 +48,8 @@ public:
   virtual void connectC1_bspline( const BSpline *bspline ) = 0;
   virtual void connectG1_bspline( const BSpline *bspline ) = 0;
 
+  void connect_tangents( const Curve *other, bool is_g1 );
+
   virtual void add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx );
   virtual void rmv_ctrl_pnt( int idx );
   virtual void print() const;

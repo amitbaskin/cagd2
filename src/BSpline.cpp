@@ -148,21 +148,18 @@ void BSpline::connectC0_bezier( const Bezier *other )
 void BSpline::connectC1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
-
-  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
+  connect_tangents( other, false );
+  /*if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
     CAGD_POINT startPointOther = other->ctrl_pnts_.front();
     CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
-    CAGD_POINT new_pnt =
-    {
-      startPointOther.x - ( secondCtrlPointOther.x - startPointOther.x ),
-      startPointOther.y - ( secondCtrlPointOther.y - startPointOther.y ),
-      startPointOther.z - ( secondCtrlPointOther.z - startPointOther.z )
-    };
+    double dxOther = secondCtrlPointOther.x - startPointOther.x;
+    double dyOther = secondCtrlPointOther.y - startPointOther.y;
 
-    ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
-  }
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ].x = startPointOther.x - dxOther;
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ].y = startPointOther.y - dyOther;
+  }*/
 }
 
 /******************************************************************************
@@ -171,25 +168,21 @@ void BSpline::connectC1_bezier( const Bezier *other )
 void BSpline::connectG1_bezier( const Bezier *other )
 {
   connectC0_bezier( other );
-
-  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
+  connect_tangents( other, true );
+  /*if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
   {
     CAGD_POINT startPointOther = other->ctrl_pnts_.front();
     CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
 
     double dxOther = secondCtrlPointOther.x - startPointOther.x;
     double dyOther = secondCtrlPointOther.y - startPointOther.y;
-    double dzOther = secondCtrlPointOther.z - startPointOther.z;
 
-    double lengthOther = sqrt( dxOther * dxOther +
-                               dyOther * dyOther +
-                               dzOther * dzOther );
+    double lengthOther = sqrt( dxOther * dxOther + dyOther * dyOther );
 
     if( lengthOther != 0 )
     {
       dxOther /= lengthOther;
       dyOther /= lengthOther;
-      dzOther /= lengthOther;
     }
 
     CAGD_POINT endPointThis = ctrl_pnts_.back();
@@ -198,11 +191,12 @@ void BSpline::connectG1_bezier( const Bezier *other )
     {
       endPointThis.x - dxOther,
       endPointThis.y - dyOther,
-      endPointThis.z - dzOther
     };
 
+    new_pnt.z = endPointThis.z;
+
     ctrl_pnts_[ ctrl_pnts_.size() - 2 ] = new_pnt;
-  }
+  }*/
 }
 
 /******************************************************************************
@@ -274,7 +268,9 @@ void BSpline::adjustForContinuity( const BSpline *other, bool isG1 )
 ******************************************************************************/
 void BSpline::connectC1_bspline( const BSpline *other )
 {
-  adjustForContinuity( other, false );
+  connectC0_bspline( other );
+  connect_tangents( other, false );
+  /*adjustForContinuity( other, false );*/
 }
 
 /******************************************************************************
@@ -282,7 +278,9 @@ void BSpline::connectC1_bspline( const BSpline *other )
 ******************************************************************************/
 void BSpline::connectG1_bspline( const BSpline *other )
 {
-  adjustForContinuity( other, true );
+  connectC0_bspline( other );
+  connect_tangents( other, true );
+  /*adjustForContinuity( other, true );*/
 }
 
 
@@ -650,6 +648,8 @@ CAGD_POINT BSpline::evaluate( double param ) const
   }
 
   delete[] NN;
+
+  CC.z = 1.0;
 
   return CC;
 }

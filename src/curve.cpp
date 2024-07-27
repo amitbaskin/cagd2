@@ -30,6 +30,35 @@ Curve::Curve( int order, point_vec ctrl_pnts ) :
 }
 
 /******************************************************************************
+* Curve::connect_tangents
+******************************************************************************/
+void Curve::connect_tangents( const Curve *other, bool is_g1 )
+{
+  if( ctrl_pnts_.size() > 1 && other->ctrl_pnts_.size() > 1 )
+  {
+    CAGD_POINT startPointOther = other->ctrl_pnts_.front();
+    CAGD_POINT secondCtrlPointOther = other->ctrl_pnts_[ 1 ];
+
+    double dxOther = secondCtrlPointOther.x - startPointOther.x;
+    double dyOther = secondCtrlPointOther.y - startPointOther.y;
+
+    if( is_g1 )
+    {
+      double lengthOther = sqrt( dxOther * dxOther + dyOther * dyOther );
+
+      if( lengthOther != 0 )
+      {
+        dxOther /= lengthOther;
+        dyOther /= lengthOther;
+      }
+    }
+
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ].x = startPointOther.x - dxOther;
+    ctrl_pnts_[ ctrl_pnts_.size() - 2 ].y = startPointOther.y - dyOther;
+  }
+}
+
+/******************************************************************************
 * Curve::rmv_ctrl_pnt
 ******************************************************************************/
 void Curve::rmv_ctrl_pnt( int idx )

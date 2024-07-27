@@ -97,7 +97,9 @@ void Bezier::connectSmoothBezier( const Bezier *other, bool isG1 )
 ******************************************************************************/
 void Bezier::connectC1_bezier( const Bezier *other )
 {
-  connectSmoothBezier( other, false );
+  connectC0_bezier( other );
+  connect_tangents( other, false );
+  /*connectSmoothBezier( other, false );*/
 }
 
 /******************************************************************************
@@ -105,7 +107,9 @@ void Bezier::connectC1_bezier( const Bezier *other )
 ******************************************************************************/
 void Bezier::connectG1_bezier( const Bezier *other )
 {
-  connectSmoothBezier( other, true );
+  connectC0_bezier( other );
+  connect_tangents( other, true );
+  /*connectSmoothBezier( other, true );*/
 }
 
 /******************************************************************************
@@ -114,7 +118,9 @@ void Bezier::connectG1_bezier( const Bezier *other )
 void Bezier::connectC0_bspline( const BSpline *bspline )
 {
   CAGD_POINT startPoint = bspline->evaluate( bspline->get_dom_start() );
-  ctrl_pnts_[ ctrl_pnts_.size() - 1 ] = startPoint;
+  ctrl_pnts_[ ctrl_pnts_.size() - 1 ].x = startPoint.x;
+  ctrl_pnts_[ ctrl_pnts_.size() - 1 ].y = startPoint.y;
+
 }
 /******************************************************************************
 * Bezier::connectSmoothBSpline
@@ -166,7 +172,9 @@ void Bezier::connectSmoothBSpline( const BSpline *bspline, bool isG1 )
 ******************************************************************************/
 void Bezier::connectC1_bspline( const BSpline *bspline )
 {
-  connectSmoothBSpline( bspline, false );
+  /*connectSmoothBSpline( bspline, false );*/
+  connectC0_bspline( bspline );
+  connect_tangents( bspline, false );
 }
 
 /******************************************************************************
@@ -174,7 +182,9 @@ void Bezier::connectC1_bspline( const BSpline *bspline )
 ******************************************************************************/
 void Bezier::connectG1_bspline( const BSpline *bspline )
 {
-  connectSmoothBSpline( bspline, true );
+  /*connectSmoothBSpline( bspline, true );*/
+  connectC0_bspline( bspline );
+  connect_tangents( bspline, true );
 }
 
 
