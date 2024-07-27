@@ -92,7 +92,6 @@ void BSpline::dump( std::ofstream &ofs ) const
   dumpOrder( ofs );
   dumpKnots( ofs );
   dumpControlPoints( ofs );
-  ofs.close();
 }
 
 /******************************************************************************
