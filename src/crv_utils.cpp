@@ -296,11 +296,11 @@ bool connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
       }
     }
 
-    /*p_crv_1->show_ctrl_poly();
+    p_crv_1->show_ctrl_poly();
     p_crv_1->show_crv();
-    cagdRedraw();*/
+    cagdRedraw();
 
-    if( crv_type_1 == CurveType::BEZIER )
+    /*if( crv_type_1 == CurveType::BEZIER )
     {
       if( crv_type_2 == CurveType::BEZIER )
         createBSplineFromBezierCurves( ( Bezier * )p_crv_1, ( Bezier * )p_crv_2 );
@@ -309,14 +309,14 @@ bool connect_crv_callback( int seg_id_1, int seg_id_2, ConnType conn )
     {
       if( crv_type_2 == CurveType::BSPLINE )
         createBSplineFromBSplines( ( BSpline * )p_crv_1, ( BSpline * )p_crv_2 );
-    }
+    }*/
   }
   catch( const std::runtime_error &err )
   {
     throw err;
   }
 
-  cagdRedraw();
+  //cagdRedraw();
   return true;
 }
 
