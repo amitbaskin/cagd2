@@ -25,6 +25,9 @@ public:
     is_open_( false )
   {}
 
+  virtual void dump( const std::string &path ) const;
+  void dumpKnots( std::ofstream &ofs ) const;
+
   virtual CAGD_POINT evaluate( double t ) const;
 
   virtual void show_ctrl_poly();

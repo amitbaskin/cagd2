@@ -2,6 +2,11 @@
 #include "crv_utils.h"
 #include "options.h"
 #include "color.h"
+#include <vector>
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
 
 /******************************************************************************
 * Curve::Curve
@@ -27,6 +32,51 @@ Curve::Curve( int order, point_vec ctrl_pnts ) :
   color_[ 0 ] = curve_color[ 0 ];
   color_[ 1 ] = curve_color[ 1 ];
   color_[ 2 ] = curve_color[ 2 ];
+}
+
+/******************************************************************************
+* Curve::dump
+******************************************************************************/
+void Curve::dump( const std::string &path ) const
+{
+  std::ofstream ofs( path );
+  if( !ofs )
+  {
+    print_error( "Error opening file for writing" );
+    return;
+  }
+  dumpOrder( ofs );
+  dumpControlPoints( ofs );
+  ofs.close();
+}
+
+/******************************************************************************
+* Curve::dumpOrder
+******************************************************************************/
+void Curve::dumpOrder( std::ofstream &ofs ) const
+{
+  ofs << order_ << "\n";
+}
+
+/******************************************************************************
+* Curve::dumpControlPoints
+******************************************************************************/
+void Curve::dumpControlPoints( std::ofstream &ofs ) const
+{
+  for( const auto &point : ctrl_pnts_ )
+  {
+    dumpPoint( ofs, point );
+    ofs << "\n";
+  }
+}
+
+/******************************************************************************
+* Curve::dumpPoint
+******************************************************************************/
+void Curve::dumpPoint( std::ofstream &ofs, const CAGD_POINT &point ) const
+{
+  ofs << std::fixed << std::setprecision( 6 ) << point.x << "\t"
+    << point.y << "\t" << point.z;
 }
 
 /******************************************************************************

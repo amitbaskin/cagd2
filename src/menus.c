@@ -19,6 +19,7 @@ HMENU g_op_menu = nullptr;
 
 ConnType conn = ConnType::NONE;
 Curve *active_rmb_curve = nullptr;
+int active_polyline_id;
 int active_pnt_id = K_NOT_USED;
 int active_rmb_ctrl_polyline = K_NOT_USED;
 int cur_rmb_screen_pick[ 2 ] = { K_NOT_USED, K_NOT_USED };
@@ -310,9 +311,20 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
     handle_rmb_connect_g1();
     break;
   case CAGD_MOD_KNOTS:
-    handle_mod_knots();
+    handle_rmb_mod_knots();
     break;
-
+  case CAGD_OPEN_KNOTS:
+    handle_rmb_open_knots();
+    break;
+  case CAGD_UNI_KNOTS:
+    handle_rmb_uni_knots();
+    break;
+  case CAGD_RMV_OPEN_KNOTS:
+    handle_rmb_rmv_open_knots();
+    break;
+  case CAGD_RMV_UNI_KNOTS:
+    handle_rmb_rmv_uni_knots();
+    break;
   case CAGD_HIDE_CTRL_POLYS:
     handle_hide_ctrl_polys_menu();
     break;
@@ -569,9 +581,45 @@ void handle_hide_ctrl_polys_menu()
 }
 
 /******************************************************************************
-* handle_mod_knots
+* handle_rmb_rmv_uni_knots
 ******************************************************************************/
-void handle_mod_knots()
+void handle_rmb_rmv_uni_knots()
+{
+  BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+  p_bspline->is_uni_ = false;
+}
+
+/******************************************************************************
+* handle_rmb_rmv_open_knots
+******************************************************************************/
+void handle_rmb_rmv_open_knots()
+{
+  BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+  p_bspline->is_open_ = false;
+}
+
+/******************************************************************************
+* handle_rmb_open_knots
+******************************************************************************/
+void handle_rmb_open_knots()
+{
+  BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+  p_bspline->makeOpenKnotVector();
+}
+
+/******************************************************************************
+* handle_rmb_uni_knots
+******************************************************************************/
+void handle_rmb_uni_knots()
+{
+  BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+  p_bspline->makeUniformKnotVector();
+}
+
+/******************************************************************************
+* handle_rmb_mod_knots
+******************************************************************************/
+void handle_rmb_mod_knots()
 {
   BSpline *p_bspline = ( BSpline * )active_rmb_curve;
 
@@ -669,6 +717,7 @@ void handle_add_curve_menu()
   if( add_bezier_is_active )
   {
     Bezier *p_bezier = new Bezier();
+    p_bezier->order_ = get_def_degree();
     p_bezier->add_ctrl_pnt( pt0, 0 );
     register_crv( p_bezier );
     add_bezier_active_crv = p_bezier;
@@ -827,6 +876,7 @@ void rmb_up_cb( int x, int y, PVOID userData )
   }
   else if( crv != nullptr ) // RMB on curve
   {
+    active_polyline_id = polyline_id;
     active_rmb_curve = crv;
     show_rmb_on_curve_menu( x, y );
   }
@@ -877,6 +927,7 @@ void show_rmb_on_curve_menu( int x, int y )
 
   HMENU rmb_menu = CreatePopupMenu();
   AppendMenu( rmb_menu, MF_STRING, CAGD_REMOVE_CURVE, TEXT( "Remove Curve" ) );
+  AppendMenu( rmb_menu, MF_STRING, CAGD_SAVE_CURVE, TEXT( "Save Curve" ) );
   AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C0, TEXT( "Connect C0" ) );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CONNECT_C1, TEXT( "Connect C1" ) );
@@ -886,6 +937,18 @@ void show_rmb_on_curve_menu( int x, int y )
   {
     AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
     AppendMenu( rmb_menu, MF_STRING, CAGD_MOD_KNOTS, TEXT( "Modify Knots" ) );
+
+    BSpline *bspline = ( BSpline * )active_rmb_curve;
+
+    if( bspline->is_open_ )
+      AppendMenu( rmb_menu, MF_STRING, CAGD_RMV_OPEN_KNOTS, TEXT( "Close Knots" ) );
+    else
+      AppendMenu( rmb_menu, MF_STRING, CAGD_OPEN_KNOTS, TEXT( "Open Knots" ) );
+
+    if( bspline->is_uni_ )
+      AppendMenu( rmb_menu, MF_STRING, CAGD_RMV_UNI_KNOTS, TEXT( "Disunify Knots" ) );
+    else
+      AppendMenu( rmb_menu, MF_STRING, CAGD_UNI_KNOTS, TEXT( "Unify Knots" ) );
   }
 
   TrackPopupMenu( rmb_menu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );

@@ -34,6 +34,7 @@ enum class ConnType
   G1 = 3
 };
 
+void save_curve( int seg_crv, int dummy2, void *p_data );
 void load_curves( int dummy1, int dummy2, void *p_data );
 
 void register_crv( Curve *p_crv );
@@ -79,6 +80,7 @@ void make_uni_callback( int seg_id );
 void update_knot_callback( int seg_id, int knot_idx, double new_val );
 void add_knot_callback( int seg_id, double val );
 void rmv_knot_callback( int seg_id, int knot_idx );
+
 
 void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y );
 bool connect_crv_callback( int seg_id_1, int seg_id_2, ConnType type );

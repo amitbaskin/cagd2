@@ -29,11 +29,15 @@ public:
   Curve();
   Curve( int order_, point_vec ctrl_pnts_ );
 
+  virtual void dump( const std::string &path ) const;
+  void dumpOrder( std::ofstream &ofs ) const;
+  void dumpControlPoints( std::ofstream &ofs ) const;
+  void dumpPoint( std::ofstream &ofs, const CAGD_POINT &point ) const;
+
   virtual bool show_crv( int chg_ctrl_idx = K_NOT_USED,
                          CtrlOp op = CtrlOp::NONE ) const = 0;
 
   virtual void show_ctrl_poly();
-
 
   virtual bool is_miss_ctrl_pnts() const = 0;
   virtual CAGD_POINT evaluate( double param ) const = 0;

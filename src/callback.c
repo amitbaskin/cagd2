@@ -28,6 +28,7 @@ static PSTR defaultHelpText =
 static CALLBACK_ENTRY list[ CAGD_LAST ] = { { NULL, NULL } };
 static WORD state = 0;
 
+extern int active_polyline_id;
 extern Curve *active_lmb_curve;
 extern CAGD_POINT lmb_pnt;
 
@@ -102,15 +103,16 @@ static LRESULT CALLBACK command( HWND hWnd, UINT message, WPARAM wParam, LPARAM 
       }
 
       return 0;
-    case CAGD_SAVE:
+
+    case CAGD_SAVE_CURVE:
       openFileName.hwndOwner = auxGetHWND();
       openFileName.lpstrTitle = "Save File";
       //Bugfix Octavian + Avishai
       //if(GetOpenFileName(&openFileName))
       if( GetSaveFileName( &openFileName ) )
       {
-        cagdRegisterCallback( CAGD_SAVEFILE, load_curves, ( PVOID )openFileName.lpstrFile );
-        callback( CAGD_SAVEFILE, ( int )openFileName.lpstrFile, 0 );
+        cagdRegisterCallback( CAGD_SAVE_CURVE, save_curve, ( PVOID )openFileName.lpstrFile );
+        callback( CAGD_SAVE_CURVE, active_polyline_id, 0 );
       }
 
       return 0;
@@ -428,7 +430,7 @@ void createMenu()
   HMENU hMenu = CreateMenu();
   HMENU hSubMenu = CreatePopupMenu();
   AppendMenu( hSubMenu, MF_STRING, CAGD_LOAD, "Load..." );
-  AppendMenu( hSubMenu, MF_STRING, CAGD_SAVE, "Save..." );
+  //AppendMenu( hSubMenu, MF_STRING, CAGD_SAVE, "Save..." );
   AppendMenu( hSubMenu, MF_SEPARATOR, 0, 0 );
   AppendMenu( hSubMenu, MF_STRING, CAGD_EXIT, "Exit" );
   AppendMenu( hMenu, MF_POPUP, ( UINT )hSubMenu, "File" );

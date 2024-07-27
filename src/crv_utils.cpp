@@ -737,6 +737,18 @@ void update_ctrl_pnt_callback( int pnt_id, double new_x, double new_y )
 }
 
 /******************************************************************************
+* save_curve
+******************************************************************************/
+void save_curve( int seg_crv, int dummy2, void *p_data )
+{
+  char *file_path = ( char * )p_data;
+  std::string file_str = file_path;
+  Curve *p_crv = nullptr;
+  get_crv( seg_crv, &p_crv );
+  p_crv->dump( file_str );
+}
+
+/******************************************************************************
 * load_curves
 ******************************************************************************/
 void load_curves( int dummy1, int dummy2, void *p_data )

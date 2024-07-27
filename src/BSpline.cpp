@@ -6,6 +6,10 @@
 #include <vectors.h>
 #include <cmath>
 #include <sstream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <iostream>
 #include <iomanip>
 
 #include "BSpline.h"
@@ -13,12 +17,77 @@
 #include "crv_utils.h"
 
 /******************************************************************************
+* BSpline::dump
+******************************************************************************/
+void BSpline::dump( const std::string &path ) const
+{
+  std::ofstream ofs( path );
+
+  if( !ofs )
+  {
+    print_error( "Error opening file for writing" );
+    return;
+  }
+
+  dumpOrder( ofs );
+  dumpKnots( ofs );
+  dumpControlPoints( ofs );
+  ofs.close();
+}
+
+/******************************************************************************
+* BSpline::dumpKnots
+******************************************************************************/
+void BSpline::dumpKnots( std::ofstream &ofs ) const
+{
+  std::string prefix = "knots[";
+  if( is_open_ && is_uni_ )
+  {
+    prefix = "uni_open_knots[";
+  }
+  else if( is_open_ )
+  {
+    prefix = "open_knots[";
+  }
+  else if( is_uni_ )
+  {
+    prefix = "uni_knots[";
+  }
+
+  ofs << prefix << knots_.size() << "] = ";
+  for( size_t i = 0; i < knots_.size(); ++i )
+  {
+    if( i > 0 && i % 6 == 0 )
+    {
+      ofs << "\n\t";
+    }
+    ofs << std::fixed << std::setprecision( 6 ) << knots_[ i ] << " ";
+  }
+  ofs << "\n";
+}
+
+/******************************************************************************
 * BSpline::getKnotsDescription
 ******************************************************************************/
 const char *BSpline::getKnotsDescription() const
 {
   std::ostringstream oss;
-  oss << "knots[" << knots_.size() << "] = ";
+  std::string prefix = "knots[";
+
+  if( is_open_ && is_uni_ )
+  {
+    prefix = "uni_open_knots[";
+  }
+  else if( is_open_ )
+  {
+    prefix = "open_knots[";
+  }
+  else if( is_uni_ )
+  {
+    prefix = "uni_knots[";
+  }
+
+  oss << prefix << knots_.size() << "] = ";
 
   for( size_t i = 0; i < knots_.size(); ++i )
     oss << knots_[ i ] << " ";
@@ -47,30 +116,47 @@ bool BSpline::parseKnotsDescription( const std::string &description )
 {
   std::istringstream iss( description );
   std::string line;
-  std::string prefix = "knots[";
+  std::vector<std::string> prefixes = { "knots[", "open_knots[", "uni_knots[", "uni_open_knots[", "open_uni_knots[" };
 
   // Temporary vector to hold the new knots
-  double_vec new_knots;
+  std::vector<double> new_knots;
+  std::string foundPrefix;
 
   // Parse the number of knots
-  bool foundPrefix = false;
   while( std::getline( iss, line ) )
   {
-    if( line.find( prefix ) == 0 )
+    for( const std::string &prefix : prefixes )
     {
-      foundPrefix = true;
+      if( line.find( prefix ) == 0 )
+      {
+        foundPrefix = prefix;
+        break;
+      }
+    }
+    if( !foundPrefix.empty() )
+    {
       break;
     }
   }
 
-  if( !foundPrefix )
+  if( foundPrefix.empty() )
   {
     print_error( "Invalid format: missing knots prefix" );
     return false;
   }
 
+  // Set is_open_ and is_uni_ based on the found prefix
+  if( foundPrefix.find( "open" ) != std::string::npos )
+  {
+    is_open_ = true;
+  }
+  if( foundPrefix.find( "uni" ) != std::string::npos )
+  {
+    is_uni_ = true;
+  }
+
   // Extract the number of knots
-  size_t start = line.find( '[' ) + 1;
+  size_t start = foundPrefix.length() - 1; // length of prefix including the '['
   size_t end = line.find( ']' );
   if( start == std::string::npos || end == std::string::npos || end <= start )
   {
@@ -78,7 +164,7 @@ bool BSpline::parseKnotsDescription( const std::string &description )
     return false;
   }
 
-  std::string numKnotsStr = line.substr( start, end - start );
+  std::string numKnotsStr = line.substr( start + 1, end - start - 1 );
   int numKnots;
   try
   {
@@ -125,8 +211,12 @@ bool BSpline::parseKnotsDescription( const std::string &description )
     return false;
   }
 
-  // Sort the knots to ensure non-decreasing order
-  std::sort( new_knots.begin(), new_knots.end() );
+  // Ensure knots are non-decreasing order
+  if( !std::is_sorted( new_knots.begin(), new_knots.end() ) )
+  {
+    print_error( "Invalid format: knots must be in non-decreasing order" );
+    return false;
+  }
 
   // If everything is valid, assign the new knots to the member variable
   knots_ = std::move( new_knots );
