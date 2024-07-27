@@ -29,7 +29,7 @@ public:
   Curve();
   Curve( int order_, point_vec ctrl_pnts_ );
 
-  virtual void dump( const std::string &path ) const;
+  virtual void dump( std::ofstream &ofs ) const;
   void dumpOrder( std::ofstream &ofs ) const;
   void dumpControlPoints( std::ofstream &ofs ) const;
   void dumpPoint( std::ofstream &ofs, const CAGD_POINT &point ) const;

@@ -25,7 +25,7 @@ public:
     is_open_( false )
   {}
 
-  virtual void dump( const std::string &path ) const;
+  virtual void dump( std::ofstream &ofs ) const;
   void dumpKnots( std::ofstream &ofs ) const;
 
   virtual CAGD_POINT evaluate( double t ) const;

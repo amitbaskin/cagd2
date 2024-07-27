@@ -745,7 +745,40 @@ void save_curve( int seg_crv, int dummy2, void *p_data )
   std::string file_str = file_path;
   Curve *p_crv = nullptr;
   get_crv( seg_crv, &p_crv );
-  p_crv->dump( file_str );
+
+  std::ofstream ofs( file_str );
+
+  if( !ofs )
+  {
+    print_error( "Error opening file for writing" );
+    return;
+  }
+
+  p_crv->dump( ofs );
+
+  ofs.close();
+}
+
+/******************************************************************************
+* save_all_curves
+******************************************************************************/
+void save_all_curves( int dummy1, int dummy2, void *p_data )
+{
+  char *file_path = ( char * )p_data;
+  std::string file_str = file_path;
+
+  std::ofstream ofs( file_str );
+
+  if( !ofs )
+  {
+    print_error( "Error opening file for writing" );
+    return;
+  }
+
+  for( size_t i = 0; i < cur_curves.size(); ++i )
+    cur_curves[ i ]->dump( ofs );
+
+  ofs.close();
 }
 
 /******************************************************************************

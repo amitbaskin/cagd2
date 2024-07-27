@@ -19,16 +19,8 @@
 /******************************************************************************
 * BSpline::dump
 ******************************************************************************/
-void BSpline::dump( const std::string &path ) const
+void BSpline::dump( std::ofstream &ofs ) const
 {
-  std::ofstream ofs( path );
-
-  if( !ofs )
-  {
-    print_error( "Error opening file for writing" );
-    return;
-  }
-
   dumpOrder( ofs );
   dumpKnots( ofs );
   dumpControlPoints( ofs );
