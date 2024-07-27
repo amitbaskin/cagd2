@@ -798,8 +798,6 @@ CAGD_POINT BSpline::evaluate( double param ) const
 
   delete[] NN;
 
-  CC.z = 1.0;
-
   return CC;
 }
 
