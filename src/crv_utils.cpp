@@ -992,10 +992,19 @@ bool extract_knots_information( const std::string &line,
     trim( numKnotsStr );
     numKnots = std::stoi( numKnotsStr );
 
-    std::string after_equal_sign = line.substr( posEnd + 3 );
-    ltrim( after_equal_sign );
-    parse_knots_from_line( after_equal_sign, bspline );
-    return true;
+    size_t equal_sign_pos = line.find( "=" );
+    if( equal_sign_pos != std::string::npos )
+    {
+      std::string after_equal_sign = line.substr( equal_sign_pos + 1 );
+      ltrim( after_equal_sign );
+      parse_knots_from_line( after_equal_sign, bspline );
+      return true;
+    }
+    else
+    {
+      print_error( "Error parsing knots" );
+      return false;
+    }
   }
   else
   {
