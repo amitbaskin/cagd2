@@ -9,3 +9,6 @@ unsigned int get_def_degree();
 void set_def_degree( unsigned int val );
 unsigned int get_default_num_steps();
 void set_default_num_steps( unsigned int val );
+
+void set_hide_ctrl_polys( bool hide );
+bool get_hide_ctrl_polys();

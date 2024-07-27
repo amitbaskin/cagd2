@@ -15,6 +15,8 @@ char knots_buf[ BUFSIZ ];
 
 UINT myText2;
 
+HMENU g_op_menu = nullptr;
+
 ConnType conn = ConnType::NONE;
 Curve *active_rmb_curve = nullptr;
 int active_pnt_id = K_NOT_USED;
@@ -58,11 +60,14 @@ void init_menus()
   HMENU op_menu = CreatePopupMenu(); // options
   HMENU curve_menu = CreatePopupMenu(); // Curve
 
+  g_op_menu = op_menu;
+
   // Curve
   AppendMenu( curve_menu, MF_STRING, CAGD_CURVE_COLOR, "Default Color" );
 
   // Options
   AppendMenu( op_menu, MF_STRING, CAGD_SETTINGS, "Settings" );
+  AppendMenu( op_menu, MF_STRING, CAGD_HIDE_CTRL_POLYS, "Hide Control Polylines" );
   AppendMenu( op_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( op_menu, MF_STRING, CAGD_CLEAN_ALL, "Clean all" );
 
@@ -307,6 +312,10 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
   case CAGD_MOD_KNOTS:
     handle_mod_knots();
     break;
+
+  case CAGD_HIDE_CTRL_POLYS:
+    handle_hide_ctrl_polys_menu();
+    break;
   }
 }
 
@@ -538,6 +547,24 @@ void handle_curve_color_menu()
     }
     else
       print_error( "Invalid RGB values" );
+  }
+}
+
+/******************************************************************************
+* handle_hide_ctrl_polys_menu
+******************************************************************************/
+void handle_hide_ctrl_polys_menu()
+{
+  toggle_check_menu( g_op_menu, CAGD_HIDE_CTRL_POLYS );
+  set_hide_ctrl_polys( !get_hide_ctrl_polys() );
+
+  if( get_hide_ctrl_polys() )
+  {
+    hide_all_ctrl_polys();
+  }
+  else
+  {
+    show_all_ctrl_polys();
   }
 }
 
@@ -904,6 +931,10 @@ void show_no_selection_rmb_menu( int x, int y )
 
   AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( rmb_menu, MF_STRING, CAGD_SETTINGS, TEXT( "Settings" ) );
+
+  AppendMenu( rmb_menu, MF_STRING, CAGD_HIDE_CTRL_POLYS, "Hide Control Polylines" );
+  CheckMenuItem( rmb_menu, CAGD_HIDE_CTRL_POLYS, get_hide_ctrl_polys() ? MF_CHECKED : MF_UNCHECKED );
+
   AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
   AppendMenu( rmb_menu, MF_STRING, CAGD_CLEAN_ALL, TEXT( "Clean All" ) );
 
@@ -978,4 +1009,15 @@ void mmb_up_cb( int x, int y, PVOID userData )
 
   add_bezier_active_crv = nullptr;
   add_bspline_active_crv = nullptr;
+}
+
+/******************************************************************************
+* toggle_check_menu
+******************************************************************************/
+void toggle_check_menu( HMENU main_menu, UINT sub_menu_id )
+{
+  if( GetMenuState( main_menu, sub_menu_id, MF_BYCOMMAND ) & MF_CHECKED )
+    CheckMenuItem( main_menu, sub_menu_id, MF_UNCHECKED );
+  else
+    CheckMenuItem( main_menu, sub_menu_id, MF_CHECKED );
 }

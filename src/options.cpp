@@ -4,6 +4,7 @@
 unsigned int DEF_NUM_STEPS = NUM_SAMPS;
 unsigned int DEF_DEGREE = 3;
 unsigned char CURVE_COLOR[ 3 ] = { 255, 0, 0 };
+bool HIDE_CTRL_POLYS = false;
 
 const unsigned char *get_curve_color()
 {
@@ -42,4 +43,14 @@ unsigned int get_default_num_steps()
 void set_default_num_steps( unsigned int val )
 {
   DEF_NUM_STEPS = val;
+}
+
+void set_hide_ctrl_polys( bool hide )
+{
+  HIDE_CTRL_POLYS = hide;
+}
+
+bool get_hide_ctrl_polys()
+{
+  return HIDE_CTRL_POLYS;
 }
