@@ -19,17 +19,18 @@
 /******************************************************************************
 * BSpline::insertKnot
 ******************************************************************************/
-void BSpline::insertKnot( double new_knot )
+void BSpline::insertKnot( double knot_to_insert )
 {
   int num_ctrl_points = ctrl_pnts_.size();
   int degree = order_ - 1;
   int num_knots = knots_.size();
 
   // Validate the new knot value
-  if( new_knot < knots_[ 0 ] || new_knot > knots_[ num_knots - 1 ] )
+  if( knot_to_insert < knots_[ 0 ] || knot_to_insert > knots_[ num_knots - 1 ] )
   {
-    std::cerr << "Invalid knot value: " << new_knot << ". It must be within the range ["
-      << knots_[ 0 ] << ", " << knots_[ num_knots - 1 ] << "]." << std::endl;
+    print_error( "Invalid knot value: " + std::to_string( knot_to_insert ) +
+                 ". It must be within the range [" + std::to_string( knots_[ 0 ] ) +
+                 ", " + std::to_string( knots_[ num_knots - 1 ] ) + "]." );
     return;
   }
 
@@ -37,7 +38,7 @@ void BSpline::insertKnot( double new_knot )
   int knot_span = -1;
   for( int i = 0; i < num_knots - 1; ++i )
   {
-    if( new_knot >= knots_[ i ] && new_knot < knots_[ i + 1 ] )
+    if( knot_to_insert >= knots_[ i ] && knot_to_insert < knots_[ i + 1 ] )
     {
       knot_span = i;
       break;
@@ -53,28 +54,37 @@ void BSpline::insertKnot( double new_knot )
 
   // Create new control points
   std::vector<CAGD_POINT> new_ctrl_pnts( num_ctrl_points + 1 );
-  for( int i = 0; i <= knot_span - degree; ++i )
+
+  // Copy unaffected control points
+  for( int i = 0; i <= max( 0, knot_span - degree ); ++i )
   {
     new_ctrl_pnts[ i ] = ctrl_pnts_[ i ];
   }
 
-  for( int i = knot_span - degree + 1; i <= knot_span; ++i )
+  // Calculate new control points
+  for( int i = max( 1, knot_span - degree + 1 ); i <= knot_span; ++i )
   {
-    double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + degree + 1 ] - knots_[ i ] );
+    double denominator = knots_[ i + degree + 1 ] - knots_[ i ];
+    if( denominator == 0 )
+    {
+      print_error( "Division by zero error: knot span contains repeated values." );
+      return;
+    }
+    double alpha = ( knot_to_insert - knots_[ i ] ) / denominator;
 
+    // Manage weights as per your approach
     new_ctrl_pnts[ i ].z = alpha * ctrl_pnts_[ i ].z + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].z;
 
     new_ctrl_pnts[ i ].x = alpha * ctrl_pnts_[ i ].x * ctrl_pnts_[ i ].z +
-                           ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].x * ctrl_pnts_[ i - 1 ].z;
-
+      ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].x * ctrl_pnts_[ i - 1 ].z;
     new_ctrl_pnts[ i ].x /= new_ctrl_pnts[ i ].z;
 
     new_ctrl_pnts[ i ].y = alpha * ctrl_pnts_[ i ].y * ctrl_pnts_[ i ].z +
-                           ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].y * ctrl_pnts_[ i - 1 ].z;
-
+      ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].y * ctrl_pnts_[ i - 1 ].z;
     new_ctrl_pnts[ i ].y /= new_ctrl_pnts[ i ].z;
   }
 
+  // Copy remaining control points
   for( int i = knot_span + 1; i < num_ctrl_points + 1; ++i )
   {
     new_ctrl_pnts[ i ] = ctrl_pnts_[ i - 1 ];
@@ -86,11 +96,10 @@ void BSpline::insertKnot( double new_knot )
   {
     new_knots[ i ] = knots_[ i ];
   }
-
-  new_knots[ knot_span + 1 ] = new_knot;
-  for( int i = knot_span + 2; i < num_knots + 1; ++i )
+  new_knots[ knot_span + 1 ] = knot_to_insert;
+  for( int i = knot_span + 1; i < num_knots; ++i )
   {
-    new_knots[ i ] = knots_[ i - 1 ];
+    new_knots[ i + 1 ] = knots_[ i ];
   }
 
   // Replace old control points and knots with the new ones
