@@ -692,6 +692,9 @@ void handle_rmb_add_knot_menu()
     if( sscanf( buffer1, "%lf", &knot_value ) == 1 )
     {
       p_bspline->insertKnot( knot_value );
+      p_bspline->show_crv();
+      p_bspline->show_ctrl_poly();
+      cagdRedraw();
     }
     else
       print_error( "Invalid input" );

@@ -25,6 +25,14 @@ void BSpline::insertKnot( double new_knot )
   int degree = order_ - 1;
   int num_knots = knots_.size();
 
+  // Validate the new knot value
+  if( new_knot < knots_[ 0 ] || new_knot > knots_[ num_knots - 1 ] )
+  {
+    std::cerr << "Invalid knot value: " << new_knot << ". It must be within the range ["
+      << knots_[ 0 ] << ", " << knots_[ num_knots - 1 ] << "]." << std::endl;
+    return;
+  }
+
   // Find the knot span
   int knot_span = -1;
   for( int i = 0; i < num_knots - 1; ++i )
@@ -39,7 +47,7 @@ void BSpline::insertKnot( double new_knot )
   // Check if knot_span is valid
   if( knot_span == -1 )
   {
-    print_error( "Invalid knot value" );
+    print_error( "Invalid knot value." );
     return;
   }
 
@@ -53,11 +61,9 @@ void BSpline::insertKnot( double new_knot )
   for( int i = knot_span - degree + 1; i <= knot_span; ++i )
   {
     double alpha = ( new_knot - knots_[ i ] ) / ( knots_[ i + degree + 1 ] - knots_[ i ] );
-    CAGD_POINT scaled_diff;
-    diff_vecs_2d( &ctrl_pnts_[ i ], &ctrl_pnts_[ i - 1 ], &scaled_diff );
-    scaled_diff.x *= alpha;
-    scaled_diff.y *= alpha;
-    add_vecs_2d( &ctrl_pnts_[ i - 1 ], &scaled_diff, &new_ctrl_pnts[ i ] );
+    new_ctrl_pnts[ i ].x = alpha * ctrl_pnts_[ i ].x + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].x;
+    new_ctrl_pnts[ i ].y = alpha * ctrl_pnts_[ i ].y + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].y;
+    new_ctrl_pnts[ i ].z = alpha * ctrl_pnts_[ i ].z + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].z;
   }
 
   for( int i = knot_span + 1; i < num_ctrl_points + 1; ++i )
@@ -71,9 +77,7 @@ void BSpline::insertKnot( double new_knot )
   {
     new_knots[ i ] = knots_[ i ];
   }
-
   new_knots[ knot_span + 1 ] = new_knot;
-
   for( int i = knot_span + 1; i < num_knots; ++i )
   {
     new_knots[ i + 1 ] = knots_[ i ];
