@@ -63,8 +63,10 @@ void Curve::dumpOrder( std::ofstream &ofs ) const
 ******************************************************************************/
 void Curve::dumpControlPoints( std::ofstream &ofs ) const
 {
-  for( const auto &point : ctrl_pnts_ )
+  for( auto point : ctrl_pnts_ )
   {
+    point.x *= point.z;
+    point.y *= point.z;
     dumpPoint( ofs, point );
     ofs << "\n";
   }
