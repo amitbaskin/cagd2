@@ -39,7 +39,7 @@ void BSpline::insertKnot( double new_knot )
   // Check if knot_span is valid
   if( knot_span == -1 )
   {
-    std::cerr << "Invalid knot value." << std::endl;
+    print_error( "Invalid knot value" );
     return;
   }
 

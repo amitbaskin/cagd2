@@ -14,6 +14,8 @@
 #define IDC_KNOTS                       1019
 #define IDD_CHANGE_WEIGHT               1020
 #define IDC_CHANGE_WEIGHT               1021
+#define IDD_INSERT_KNOT                 1022
+#define IDC_INSERT_KNOT                 1023
 
 
 // Next default values for new objects

@@ -14,6 +14,8 @@
 #define IDC_KNOTS                       1019
 #define IDD_CHANGE_WEIGHT               1020
 #define IDC_CHANGE_WEIGHT               1021
+#define IDD_INSERT_KNOT                 1022
+#define IDC_INSERT_KNOT                 1023
 
 // Next default values for new objects
 // 
@@ -21,7 +23,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40003
-#define _APS_NEXT_CONTROL_VALUE         1021
+#define _APS_NEXT_CONTROL_VALUE         1023
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

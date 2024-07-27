@@ -128,6 +128,36 @@ LRESULT CALLBACK KnotsDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPA
 }
 
 /******************************************************************************
+* AddKnotDialogProc INSERT KNOT DIALOG
+******************************************************************************/
+LRESULT CALLBACK AddKnotDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
+{
+  switch( message )
+  {
+  case WM_COMMAND:
+    switch( LOWORD( wParam ) )
+    {
+    case IDOK:
+      GetDlgItemText( hDialog, IDC_INSERT_KNOT, buffer1, sizeof( buffer1 ) );
+      EndDialog( hDialog, TRUE );
+      return TRUE;
+    case IDCANCEL:
+      EndDialog( hDialog, FALSE );
+      return TRUE;
+    default:
+      return FALSE;
+    }
+    break;
+
+  default:
+    return FALSE;
+    break;
+  }
+
+  return FALSE;
+}
+
+/******************************************************************************
 * SettingsDialogProc SETTINGS DIALOG
 ******************************************************************************/
 LRESULT CALLBACK SettingsDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam )
@@ -314,7 +344,7 @@ void menu_callbacks( int id, int unUsed, PVOID userData )
     handle_rmb_mod_knots();
     break;
   case CAGD_ADD_KNOT:
-    handle_rmb_mod_knots();
+    handle_rmb_add_knot_menu();
     break;
   case CAGD_OPEN_KNOTS:
     handle_rmb_open_knots();
@@ -647,6 +677,28 @@ void handle_rmb_mod_knots()
 }
 
 /******************************************************************************
+* handle_rmb_add_knot_menu
+******************************************************************************/
+void handle_rmb_add_knot_menu()
+{
+  if( DialogBox( cagdGetModule(),
+      MAKEINTRESOURCE( IDD_INSERT_KNOT ),
+      cagdGetWindow(),
+      ( DLGPROC )AddKnotDialogProc ) )
+  {
+    BSpline *p_bspline = ( BSpline * )active_rmb_curve;
+    double knot_value;
+
+    if( sscanf( buffer1, "%lf", &knot_value ) == 1 )
+    {
+      p_bspline->insertKnot( knot_value );
+    }
+    else
+      print_error( "Invalid input" );
+  }
+}
+
+/******************************************************************************
 * handle_change_weight_menu
 ******************************************************************************/
 void handle_change_weight_menu()
@@ -940,6 +992,7 @@ void show_rmb_on_curve_menu( int x, int y )
   {
     AppendMenu( rmb_menu, MF_SEPARATOR, 0, NULL );
     AppendMenu( rmb_menu, MF_STRING, CAGD_MOD_KNOTS, TEXT( "Modify Knots" ) );
+    AppendMenu( rmb_menu, MF_STRING, CAGD_ADD_KNOT, TEXT( "Insert Knot" ) );
 
     BSpline *bspline = ( BSpline * )active_rmb_curve;
 

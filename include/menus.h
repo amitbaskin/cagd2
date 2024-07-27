@@ -25,6 +25,7 @@ void handle_rmb_rmv_uni_knots();
 void handle_rmb_open_knots();
 void handle_rmb_uni_knots();
 void handle_rmb_mod_knots();
+void handle_rmb_add_knot_menu();
 void handle_settings_menu();
 void handle_clean_all_menu();
 void handle_hide_ctrl_polys_menu();
