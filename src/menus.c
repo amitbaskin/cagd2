@@ -644,7 +644,7 @@ void handle_add_curve_menu()
   if( add_bezier_is_active )
   {
     Bezier *p_bezier = new Bezier();
-    p_bezier->ctrl_pnts_.push_back( pt0 );
+    p_bezier->add_ctrl_pnt( pt0, 0 );
     register_crv( p_bezier );
     add_bezier_active_crv = p_bezier;
   }
@@ -652,7 +652,7 @@ void handle_add_curve_menu()
   {
     BSpline *p_bspline = new BSpline();
     p_bspline->order_ = DEF_ORDER;
-    p_bspline->ctrl_pnts_.push_back( pt0 );
+    p_bspline->add_ctrl_pnt( pt0, 0 );
     register_crv( p_bspline );
     add_bspline_active_crv = p_bspline;
   }

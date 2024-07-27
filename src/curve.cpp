@@ -52,13 +52,7 @@ void Curve::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 
   map_pnt_to_crv( pnt_id, this );
 
-  if( idx > pnt_ids_.size() )
-  {
-    pnt_ids_.resize( idx );
-    ctrl_pnts_.resize( idx );
-  }
-
-  pnt_ids_.insert( pnt_ids_ .begin() + idx, pnt_id );
+  pnt_ids_.insert( pnt_ids_.begin() + idx, pnt_id );
   ctrl_pnts_.insert( ctrl_pnts_.begin() + idx, ctrl_pnt );
 }
 
