@@ -45,6 +45,8 @@ void print_error( const std::string &message );
 void show_add_curve_help_text();
 
 void redraw_all_curves();
+void hide_all_ctrl_polys();
+void show_all_ctrl_polys();
 
 void map_seg_to_crv( int seg_id, Curve *p_curve );
 void map_pnt_to_crv( int pnt_id, Curve *p_curve );

@@ -78,6 +78,8 @@ void Curve::add_ctrl_pnt( CAGD_POINT &ctrl_pnt, int idx )
 
   set_norm_color();
   int pnt_id = cagdAddPoint( &ctrl_pnt );
+  if( get_hide_ctrl_polys() )
+    cagdHideSegment( pnt_id );
 
   map_pnt_to_crv( pnt_id, this );
 
@@ -119,10 +121,25 @@ void Curve::clean_ctrl_poly()
 }
 
 /******************************************************************************
+* Curve::hide_ctrl_poly
+******************************************************************************/
+void Curve::hide_ctrl_poly()
+{
+  for( auto seg_id : poly_seg_ids_ )
+    cagdHideSegment( seg_id );
+
+  for( auto pt_id : pnt_ids_ )
+    cagdHideSegment( pt_id );
+}
+
+/******************************************************************************
 * Curve::show_ctrl_poly
 ******************************************************************************/
 void Curve::show_ctrl_poly()
 {
+  if( get_hide_ctrl_polys() )
+    return;
+
   clean_ctrl_poly();
 
   size_t cur_pnts_num = ctrl_pnts_.size();
@@ -136,6 +153,7 @@ void Curve::show_ctrl_poly()
     {
       set_norm_color();
       cagdReusePoint( pnt_ids_[ 0 ], &prev_pnt );
+      cagdShowSegment( pnt_ids_[0] );
     }
     else
     {
@@ -157,6 +175,7 @@ void Curve::show_ctrl_poly()
       {
         pnt_id = pnt_ids_[ i ];
         cagdReusePoint( pnt_ids_[ i ], &cur_pnt );
+        cagdShowSegment( pnt_ids_[i] );
       }
       else
       {
@@ -223,6 +242,10 @@ void Curve::change_color( BYTE red, BYTE green, BYTE blue )
 {
   for( auto seg_id : seg_ids_ )
     cagdSetSegmentColor( seg_id, red, green, blue );
+
+  color_[0] = red;
+  color_[1] = green;
+  color_[2] = blue;
 
   cagdRedraw();
 }

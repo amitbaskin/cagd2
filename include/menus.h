@@ -9,6 +9,7 @@ void init_menus();
 UINT get_crv_by_pick( int x, int y );
 
 void menu_callbacks( int id, int unUsed, PVOID userData );
+void toggle_check_menu( HMENU main_menu, UINT sub_menu_id );
 
 void lmb_down_cb( int x, int y, PVOID userData );
 void lmb_up_cb( int x, int y, PVOID userData );
@@ -22,6 +23,7 @@ void mmb_up_cb( int x, int y, PVOID userData );
 void handle_mod_knots();
 void handle_settings_menu();
 void handle_clean_all_menu();
+void handle_hide_ctrl_polys_menu();
 void handle_add_curve_menu();
 void handle_curve_color_menu();
 void handle_rmb_remove_curve();
