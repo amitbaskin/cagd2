@@ -409,8 +409,17 @@ void handle_rmb_insert_ctrl_pt()
     else if( bs_crv != nullptr )
     {
       bs_crv->add_ctrl_pnt( pick_pnt, ctrl_idx );
-      bs_crv->show_ctrl_poly();
-      bs_crv->show_crv();
+
+      if( bs_crv->knots_.size() != bs_crv->ctrl_pnts_.size() + bs_crv->order_ )
+      {
+        print_error( "Please make sure the number of knots is\n"
+                     "the number of control points plus the order." );
+      }
+      else
+      {
+        bs_crv->show_ctrl_poly();
+        bs_crv->show_crv();
+      }
     }
     else
       print_error( "Error removing control point" );
@@ -638,6 +647,8 @@ void handle_rmb_open_knots()
 {
   BSpline *p_bspline = ( BSpline * )active_rmb_curve;
   p_bspline->makeOpenKnotVector();
+  p_bspline->show_crv();
+  p_bspline->show_ctrl_poly();
 }
 
 /******************************************************************************
@@ -647,6 +658,8 @@ void handle_rmb_uni_knots()
 {
   BSpline *p_bspline = ( BSpline * )active_rmb_curve;
   p_bspline->makeUniformKnotVector();
+  p_bspline->show_crv();
+  p_bspline->show_ctrl_poly();
 }
 
 /******************************************************************************
@@ -671,6 +684,7 @@ void handle_rmb_mod_knots()
     else
     {
       p_bspline->show_crv();
+      p_bspline->show_ctrl_poly();
       cagdRedraw();
     }
   }
