@@ -25,16 +25,15 @@ void BSpline::insertKnot( double knot_to_insert )
   int degree = order_ - 1;
   int num_knots = knots_.size();
 
-  // Validate the new knot value
-  if( knot_to_insert < knots_[ 0 ] || knot_to_insert > knots_[ num_knots - 1 ] )
+  if( knot_to_insert < knots_[ degree ] ||
+      knot_to_insert > knots_[ num_ctrl_points + 1 ] )
   {
     print_error( "Invalid knot value: " + std::to_string( knot_to_insert ) +
-                 ". It must be within the range [" + std::to_string( knots_[ 0 ] ) +
-                 ", " + std::to_string( knots_[ num_knots - 1 ] ) + "]." );
+                 ". It must be within the range [" + std::to_string( knots_[ degree ] ) +
+                 ", " + std::to_string( knots_[ num_ctrl_points + 1 ] ) + "]." );
     return;
   }
 
-  // Find the knot span
   int knot_span = -1;
 
   for( int i = 0; i < num_knots - 1; ++i )
@@ -46,23 +45,17 @@ void BSpline::insertKnot( double knot_to_insert )
     }
   }
 
-  // Check if knot_span is valid
   if( knot_span == -1 )
   {
     print_error( "Invalid knot value." );
     return;
   }
 
-  // Create new control points
   std::vector<CAGD_POINT> new_ctrl_pnts( num_ctrl_points + 1 );
 
-  // Copy unaffected control points
   for( int i = 0; i <= max( 0, knot_span - degree ); ++i )
-  {
     new_ctrl_pnts[ i ] = ctrl_pnts_[ i ];
-  }
 
-  // Calculate new control points
   for( int i = max( 1, knot_span - degree + 1 ); i <= knot_span; ++i )
   {
     double denominator = knots_[ i + degree + 1 ] - knots_[ i ];
@@ -83,31 +76,25 @@ void BSpline::insertKnot( double knot_to_insert )
     double x2 = pnt2.x * pnt2.z;
     double y2 = pnt2.y * pnt2.z;
 
-    new_ctrl_pnts[ i ].x = alpha * x1 + ( 1 - alpha ) * x2;
-    new_ctrl_pnts[ i ].y = alpha * y1 + ( 1 - alpha ) * y2;
+    new_ctrl_pnts[ i ].x = alpha * x1 + ( 1.0 - alpha ) * x2;
+    new_ctrl_pnts[ i ].y = alpha * y1 + ( 1.0 - alpha ) * y2;
 
     new_ctrl_pnts[ i ].z = 1.0;
   }
 
-  // Copy remaining control points
   for( int i = knot_span + 1; i < num_ctrl_points + 1; ++i )
-  {
     new_ctrl_pnts[ i ] = ctrl_pnts_[ i - 1 ];
-  }
 
-  // Update the knot vector
-  std::vector<double> new_knots( num_knots + 1 );
+  std::vector< double > new_knots( num_knots + 1 );
+
   for( int i = 0; i <= knot_span; ++i )
-  {
     new_knots[ i ] = knots_[ i ];
-  }
-  new_knots[ knot_span + 1 ] = knot_to_insert;
-  for( int i = knot_span + 1; i < num_knots; ++i )
-  {
-    new_knots[ i + 1 ] = knots_[ i ];
-  }
 
-  // Replace old control points and knots with the new ones
+  new_knots[ knot_span + 1 ] = knot_to_insert;
+
+  for( int i = knot_span + 1; i < num_knots; ++i )
+    new_knots[ i + 1 ] = knots_[ i ];
+
   ctrl_pnts_ = new_ctrl_pnts;
   knots_ = new_knots;
 }

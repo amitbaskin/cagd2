@@ -852,7 +852,7 @@ void lmb_up_cb( int x, int y, PVOID userData )
 
     if( sec_seg_id != 0 )
     {
-      if( get_crv_type( active_rmb_curve ) != CurveType::BSPLINE ||
+      if( true || get_crv_type( active_rmb_curve ) != CurveType::BSPLINE ||
           active_rmb_curve->seg_ids_[ 0 ] != sec_seg_id )
       {
         bool res = connect_crv_callback( active_rmb_curve->seg_ids_[ 0 ], sec_seg_id, conn );
