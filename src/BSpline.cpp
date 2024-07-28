@@ -36,6 +36,7 @@ void BSpline::insertKnot( double knot_to_insert )
 
   // Find the knot span
   int knot_span = -1;
+
   for( int i = 0; i < num_knots - 1; ++i )
   {
     if( knot_to_insert >= knots_[ i ] && knot_to_insert < knots_[ i + 1 ] )
@@ -65,23 +66,27 @@ void BSpline::insertKnot( double knot_to_insert )
   for( int i = max( 1, knot_span - degree + 1 ); i <= knot_span; ++i )
   {
     double denominator = knots_[ i + degree + 1 ] - knots_[ i ];
+
     if( denominator == 0 )
     {
       print_error( "Division by zero error: knot span contains repeated values." );
       return;
     }
+
     double alpha = ( knot_to_insert - knots_[ i ] ) / denominator;
 
-    // Manage weights as per your approach
-    new_ctrl_pnts[ i ].z = alpha * ctrl_pnts_[ i ].z + ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].z;
+    const CAGD_POINT &pnt1 = ctrl_pnts_[ i ];
+    const CAGD_POINT &pnt2 = ctrl_pnts_[ i - 1 ];
 
-    new_ctrl_pnts[ i ].x = alpha * ctrl_pnts_[ i ].x * ctrl_pnts_[ i ].z +
-      ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].x * ctrl_pnts_[ i - 1 ].z;
-    new_ctrl_pnts[ i ].x /= new_ctrl_pnts[ i ].z;
+    double x1 = pnt1.x * pnt1.z;
+    double y1 = pnt1.y * pnt1.z;
+    double x2 = pnt2.x * pnt2.z;
+    double y2 = pnt2.y * pnt2.z;
 
-    new_ctrl_pnts[ i ].y = alpha * ctrl_pnts_[ i ].y * ctrl_pnts_[ i ].z +
-      ( 1 - alpha ) * ctrl_pnts_[ i - 1 ].y * ctrl_pnts_[ i - 1 ].z;
-    new_ctrl_pnts[ i ].y /= new_ctrl_pnts[ i ].z;
+    new_ctrl_pnts[ i ].x = alpha * x1 + ( 1 - alpha ) * x2;
+    new_ctrl_pnts[ i ].y = alpha * y1 + ( 1 - alpha ) * y2;
+
+    new_ctrl_pnts[ i ].z = 1.0;
   }
 
   // Copy remaining control points
